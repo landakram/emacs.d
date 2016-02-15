@@ -34,7 +34,9 @@ tramp
 # server auth directory
 /server/
 
+bookmarks
 ido.last
 places
+projectile.cache
 recentf
 *.eld
