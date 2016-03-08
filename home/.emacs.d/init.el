@@ -7,11 +7,14 @@
    [default bold shadow italic underline bold bold-italic bold])
  '(ansi-color-names-vector
    (vector "#cccccc" "#f2777a" "#99cc99" "#ffcc66" "#6699cc" "#cc99cc" "#66cccc" "#2d2d2d"))
- '(custom-enabled-themes (quote (smart-mode-line-light)))
+ '(custom-enabled-themes (quote (sanityinc-tomorrow-eighties)))
  '(custom-safe-themes
    (quote
     ("c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "06f0b439b62164c6f8f84fdda32b62fb50b6d00e8b01c2208e55543a6337433a" "628278136f88aa1a151bb2d6c8a86bf2b7631fbea5f0f76cba2a0079cd910f7d" default)))
+ '(elfeed-feeds (quote ("http://lambda-the-ultimate.org/rss.xml")))
  '(fci-rule-color "#515151")
+ '(pdf-info-epdfinfo-program
+   "/Users/mark/.emacs.d/elpa/pdf-tools-20160203.1057/build/server/epdfinfo")
  '(vc-annotate-background nil)
  '(vc-annotate-color-map
    (quote
@@ -41,8 +44,9 @@
  ;; If there is more than one, they won't work right.
  )
 
-;; No splash screen please ... jeez
 (setq inhibit-startup-message t)
+
+;;;; Packages
 
 (require 'package)
 (setq package-archives
@@ -53,7 +57,8 @@
 
 (package-initialize)
 
-(defvar my-packages '(better-defaults
+(defvar my-packages)
+(setq my-packages '(better-defaults
                       evil
                       helm
                       paredit
@@ -63,19 +68,33 @@
                       projectile
                       helm-projectile
                       magit
+                      magit-gh-pulls
                       evil-magit
                       evil-leader
                       evil-org
+                      evil-surround
                       org-plus-contrib
                       smart-mode-line
                       company
                       which-key
+                      geiser
+                      sicp
                       clojure-mode
+                      json-mode
+                      swift-mode
+                      coffee-mode
+                      js-comint
+                      helm-open-github
                       cider
                       clj-refactor
+                      virtualenvwrapper
                       color-theme-sanityinc-tomorrow
-                      visual-fill-column))
-
+                      visual-fill-column
+                      elfeed
+                      circe
+                      pdf-tools
+                      haskell-mode
+                      ))
 
 (dolist (p my-packages)
   (when (not (package-installed-p p))
@@ -93,9 +112,11 @@
 (setq which-key-idle-delay 0.5)
 (which-key-mode)
 
+(setq ring-bell-function 'ignore)
+
 ;; fix the PATH variable
 (defun set-exec-path-from-shell-PATH ()
-  (let ((path-from-shell (shell-command-to-string "TERM=vt100 $SHELL -i -c 'echo $PATH'")))
+  (let ((path-from-shell (shell-command-to-string "env TERM=vt100 /bin/zsh -i -c 'echo $PATH'")))
     (setenv "PATH" path-from-shell)
     (setq exec-path (split-string path-from-shell path-separator))))
 
@@ -163,6 +184,9 @@
 (require 'evil)
 (require 'evil-leader)
 (require 'evil-magit)
+(require 'evil-surround)
+
+(global-evil-surround-mode 1)
 
 ;; Make movement keys work like they should
 (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
@@ -182,6 +206,7 @@
 
 (evil-leader/set-key "pp" 'helm-projectile-switch-project)
 (evil-leader/set-key "pf" 'helm-projectile-find-file)
+(evil-leader/set-key "pa" 'helm-projectile-ag)
 
 ;; Config load
 (evil-leader/set-key "cl" 'eval-buffer)
@@ -203,6 +228,9 @@
 ;; Allow exports with GitHub-flavored markdown
 (require 'ox-gfm)
 (require 'org-habit)
+(require 'ox-odt)
+
+(setq org-odt-preferred-output-format "rtf")
 
 (defun org-insert-subheading-after-current ()
   (interactive)
@@ -224,30 +252,37 @@
   (org-insert-todo-heading-respect-content)
   (evil-append 0))
 
-(add-hook 'org-mode-hook (lambda ()
-                           (evil-leader/set-key "*" 'org-ctrl-c-star)
-                           (evil-leader/set-key "a" 'org-agenda)
-                           (evil-leader/set-key "ih" 'org-insert-heading-after-current-and-enter-insert)
-                           (evil-leader/set-key "is" 'org-insert-subheading-after-current-and-enter-insert)
-                           (evil-leader/set-key "it" 'org-insert-todo-after-current-and-enter-insert)
-                           (evil-leader/set-key "n" 'org-narrow-to-subtree)
-                           (evil-leader/set-key "N" 'widen)
-                           (evil-leader/set-key "ml" 'org-do-demote)
-                           (evil-leader/set-key "mL" 'org-demote-subtree)
-                           (evil-leader/set-key "mh" 'org-do-promote)
-                           (evil-leader/set-key "mH" 'org-promote-subtree)
-                           (evil-leader/set-key "mk" 'org-metaup)
-                           (evil-leader/set-key "mj" 'org-metadown)
-                           (evil-leader/set-key "s" 'org-schedule)
-                           (evil-leader/set-key "t" 'org-todo)))
-(add-hook 'org-agenda-mode-hook (lambda ()
-    (define-key org-agenda-mode-map "j" 'evil-next-line)
-    (define-key org-agenda-mode-map "k" 'evil-previous-line)))
+(defun my/org-mode ()
+  (evil-leader/set-key "*" 'org-ctrl-c-star)
+  (evil-leader/set-key "a" 'org-agenda)
+  (evil-leader/set-key "ih" 'org-insert-heading-after-current-and-enter-insert)
+  (evil-leader/set-key "is" 'org-insert-subheading-after-current-and-enter-insert)
+  (evil-leader/set-key "it" 'org-insert-todo-after-current-and-enter-insert)
+  (evil-leader/set-key "n" 'org-narrow-to-subtree)
+  (evil-leader/set-key "N" 'widen)
+  (evil-leader/set-key "ml" 'org-do-demote)
+  (evil-leader/set-key "mL" 'org-demote-subtree)
+  (evil-leader/set-key "mh" 'org-do-promote)
+  (evil-leader/set-key "mH" 'org-promote-subtree)
+  (evil-leader/set-key "mk" 'org-metaup)
+  (evil-leader/set-key "mj" 'org-metadown)
+  (evil-leader/set-key "s" 'org-schedule)
+  (evil-leader/set-key "t" 'org-todo))
 
+(defun my/org-agenda-mode ()
+  (define-key org-agenda-mode-map "j" 'evil-next-line)
+  (define-key org-agenda-mode-map "k" 'evil-previous-line))
+
+(add-hook 'org-mode-hook #'my/org-mode)
+(add-hook 'org-agenda-mode-hook #'my/org-agenda-mode)
+
+(setq org-image-actual-width 300)
 (setq org-src-fontify-natively t)
 (setq org-log-done 'time)
 (setq org-agenda-files (quote ("~/org"
                                 )))
+
+(setq org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
 (setq org-todo-keywords
     (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
             (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
@@ -300,6 +335,9 @@
 
 (setq org-mobile-directory "~/Dropbox (Personal)/Apps/MobileOrgModeApp")
 
+(add-hook 'after-init-hook 'org-mobile-pull)
+(add-hook 'kill-emacs-hook 'org-mobile-push)
+
 ;;;; Paredit
 
 (autoload 'enable-paredit-mode "paredit"
@@ -313,7 +351,7 @@
 (defvar lisp '(emacs-lisp-mode-hook lisp-mode-hook lisp-interaction-mode-hook scheme-mode-hook clojure-mode-hook))
 
 (dolist (mode lisp)
-  (add-hook mode 'enable-paredit-mode)
+  (add-hook mode #'enable-paredit-mode)
   (add-hook mode #'evil-cleverparens-mode))
 
 (require 'clj-refactor)
@@ -324,6 +362,44 @@
 
 (add-hook 'clojure-mode-hook #'my/clojure-mode-hook)
 
+;;;; Python
+
+(require 'virtualenvwrapper)
+(venv-initialize-eshell)
+(venv-initialize-interactive-shells)
+(setq venv-location "~/.virtualenvs/")
+
+;;;; Elfeed
+
+(require 'elfeed)
+(setq elfeed-feeds
+      '("https://www.natashatherobot.com/feed/"
+        "http://lambda-the-ultimate.org/rss.xml"
+        "http://sachachua.com/blog/feed/"
+        ))
+
 (provide 'init)
+
+;; Circe IRC
+
+(require 'circe)
+(setq circe-network-options
+      `(("Freenode"
+         :nick "landakram"
+         :channels (:after-auth
+                    "#emacs"
+                    "#clojure"
+                    "#clojure-beginners"
+                    "#swift-lang")
+         :nickserv-password "***REMOVED***"
+         :reduce-lurker-spam t)))
+
+(eval-after-load "circe"
+  '(progn
+     (enable-circe-color-nicks)))
+
+;; Magit
+(require 'magit-gh-pulls)
+(add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls)
 
 ;;; init.el ends here
