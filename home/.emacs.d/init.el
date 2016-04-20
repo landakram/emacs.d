@@ -32,6 +32,7 @@
                       evil-org
                       evil-surround
                       org-plus-contrib
+                      ox-jira
                       smart-mode-line
                       company
                       which-key
@@ -50,8 +51,11 @@
                       visual-fill-column
                       elfeed
                       circe
+                      yasnippet
                       pdf-tools
                       haskell-mode
+                      elpakit
+                      helm-org-rifle
                       ))
 
 (dolist (p my-packages)
@@ -59,6 +63,9 @@
     (package-install p)))
 
 ;;;; Editor
+
+; Stop prompting me to follow symlinks
+(setq vc-follow-symlinks t)
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (add-hook 'after-init-hook #'global-flycheck-mode)
@@ -187,6 +194,8 @@
 (require 'ox-gfm)
 (require 'org-habit)
 (require 'ox-odt)
+(require 'ox-confluence)
+(require 'ox-jira)
 
 (setq org-odt-preferred-output-format "rtf")
 
@@ -268,23 +277,6 @@
 
 ;; Capture templates for: TODO tasks, Notes, appointments, phone calls, meetings, and org-protocol
 (defvar refile-path "~/org/refile.org")
-;; (setq org-capture-templates
-;;     (quote (("t" "todo" entry (file refile-path)
-;;             "* TODO %?\n%U\n%a\n" :clock-in t :clock-resume t)
-;;             ("r" "respond" entry (file refile-path)
-;;             "* NEXT Respond to %:from on %:subject\nSCHEDULED: %t\n%U\n%a\n" :clock-in t :clock-resume t :immediate-finish t)
-;;             ("n" "note" entry (file refile-path)
-;;             "* %? :NOTE:\n%U\n%a\n" :clock-in t :clock-resume t)
-;;             ("j" "Journal" entry (file+datetree refile-path)
-;;             "* %?\n%U\n" :clock-in t :clock-resume t)
-;;             ("w" "org-protocol" entry (file refile-path)
-;;             "* TODO Review %c\n%U\n" :immediate-finish t)
-;;             ("m" "Meeting" entry (file refile-path)
-;;             "* MEETING with %? :MEETING:\n%U" :clock-in t :clock-resume t)
-;;             ("Phone call" entry (file refile-path)
-;;             "* PHONE %? :PHONE:\n%U" :clock-in t :clock-resume t)
-;;             ("h" "Habit" entry (file refile-path)
-;;             "* NEXT %?\n%U\n%a\nSCHEDULED: %(format-time-string \"%<<%Y-%m-%d %a .+1d/3d>>\")\n:PROPERTIES:\n:STYLE: habit\n:REPEAT_TO_STATE: NEXT\n:END:\n"))))
 
 ;; Do not dim blocked tasks
 (setq org-agenda-dim-blocked-tasks nil)
@@ -334,9 +326,11 @@
       '("https://www.natashatherobot.com/feed/"
         "http://lambda-the-ultimate.org/rss.xml"
         "http://sachachua.com/blog/feed/"
+        "http://airspeedvelocity.net/feed/"
         ))
 
-(provide 'init)
+
+(setq url-queue-timeout 30)
 
 ;; Circe IRC
 
@@ -348,6 +342,7 @@
                     "#emacs"
                     "#clojure"
                     "#clojure-beginners"
+                    "#iphonedev"
                     "#swift-lang")
          :nickserv-password "***REMOVED***"
          :reduce-lurker-spam t)))
@@ -360,4 +355,13 @@
 (require 'magit-gh-pulls)
 (add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls)
 
+;; Yasnippet
+
+
+;; Org Rifle
+
+(require 'helm-org-rifle)
+
 ;;; init.el ends here
+
+(provide 'init)
