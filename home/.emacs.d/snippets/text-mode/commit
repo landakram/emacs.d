@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Conventional Changelog Commit Message
+# key: commit
+# --
+${1:feat|fix|docs|style|refactor|perf|test|chore}(${2:component}): ${3:Short imperative tense commit title}
+
+${4:Longer commit description}
+
+${0:Referenced issues}
