@@ -63,9 +63,23 @@ Follow symlinks without prompting me.
 
 #+BEGIN_SRC emacs-lisp
 
-(setq vc-follow-symlinks t)
+  (setq vc-follow-symlinks t)
 
 #+END_SRC
+** Ignore files
+Life's too short to see this many files in dired / projectile / etc.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package ignoramus
+    :ensure t
+    :config
+    (ignoramus-setup))
+
+#+END_SRC
+
+#+RESULTS:
+: t
 
 ** Change "yes or no" to "y or n"
 
