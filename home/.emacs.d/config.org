@@ -442,6 +442,14 @@ The "Tomorrow" themes look great in emacs and a terminal.
     :ensure t)
 
 #+END_SRC
+** Markdown
+#+BEGIN_SRC emacs-lisp
+  (use-package markdown-mode
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+
 ** Swift
 #+BEGIN_SRC emacs-lisp 
 
