@@ -647,7 +647,6 @@ helm-org-rifle lets me search through open org files really quickly.
   (my/configure-org-directories)
   (my/configure-org-exporters)
   (my/configure-org-todos)
-  (my/configure-org-mobile)
   (my/configure-org)
 
   (add-hook 'org-mode-hook #'my/org-mode)
