@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Emacs Lisp Source Block
+# key: <el
+# --
+#+BEGIN_SRC emacs-lisp :tangle yes
+
+$0
+
+#+END_SRC
