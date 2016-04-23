@@ -1,0 +1,698 @@
+#+TITLE: Mark's Emacs Config
+#+OPTIONS: toc:2 num:nil ^:nil
+
+* Introduction
+Welcome to my emacs config!
+* Prelude
+First, let's take care of some startup stuff.
+** Remove the startup message
+
+I don't like the startup message, so let's get rid of it.
+
+#+BEGIN_SRC emacs-lisp
+
+(setq inhibit-startup-message t)
+
+#+END_SRC
+
+** Set the Custom file
+
+Let's set ~custom-file~, which emacs writes to automatically.
+
+#+BEGIN_SRC emacs-lisp
+
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file)
+
+#+END_SRC
+* Packages
+** Set up ~package.el~
+
+#+BEGIN_SRC emacs-lisp
+
+(require 'package)
+(setq package-archives
+      '(("gnu" . "http://elpa.gnu.org/packages/")
+        ("org" . "http://orgmode.org/elpa/")
+        ("melpa" . "http://melpa.org/packages/")
+        ("marmalade" . "http://marmalade-repo.org/packages/")))
+
+(package-initialize)
+
+#+END_SRC
+** Install ~use-package~
+
+~use-package~ is used for the rest of the config. It lets me define installable packages and configure them in the same block.
+
+#+BEGIN_SRC emacs-lisp
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+
+
+#+END_SRC
+* General Configuration
+Let's configure the editor to our liking.
+** Symlinks
+
+Follow symlinks without prompting me.
+
+#+BEGIN_SRC emacs-lisp
+
+(setq vc-follow-symlinks t)
+
+#+END_SRC
+
+** Change "yes or no" to "y or n"
+
+#+BEGIN_SRC emacs-lisp 
+
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+#+END_SRC
+
+** Enable flycheck
+
+Flycheck is an on-the-fly syntax checker.
+
+#+BEGIN_SRC emacs-lisp 
+
+  (use-package flycheck
+    :ensure t
+    :config
+    (global-flycheck-mode))
+
+#+END_SRC
+
+** Disable bell ring
+
+#+BEGIN_SRC emacs-lisp 
+
+(setq ring-bell-function 'ignore)
+
+#+END_SRC
+
+** Better defaults
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package better-defaults
+  :ensure t)
+
+#+END_SRC
+
+** Better search
+
+I use ~ag~ religiously on the command line. Let's use it in emacs too.
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package ag
+  :ensure t)
+
+#+END_SRC
+
+** Visual fill column
+
+Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-column~, ~visual-fill-column~ does not *actually* wrap text in the file. It just displays it as wrapped.
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package visual-fill-column
+  :ensure t
+  :config
+  (add-hook 'text-mode-hook 'visual-fill-column-mode)
+  (global-visual-line-mode))
+
+#+END_SRC
+
+** which-key
+
+Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me of shortcuts when I start typing them.
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package which-key
+  :ensure t
+  :config
+  (setq which-key-idle-delay 0.5)
+  (which-key-mode))
+
+#+END_SRC
+
+** Fix the PATH variable
+
+This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
+
+#+BEGIN_SRC emacs-lisp 
+
+(defun set-exec-path-from-shell-PATH ()
+  (let ((path-from-shell (shell-command-to-string "env TERM=vt100 /bin/zsh -i -c 'echo $PATH'")))
+    (setenv "PATH" path-from-shell)
+    (setq exec-path (split-string path-from-shell path-separator))))
+
+(when window-system (set-exec-path-from-shell-PATH))
+
+#+END_SRC
+** Theme
+*** Change the Mode Line
+This mode line is pretty.
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package smart-mode-line
+  :ensure t
+  :config
+  (sml/setup))
+
+#+END_SRC
+*** Change the theme
+
+The "Tomorrow" themes look great in emacs and a terminal.
+
+#+BEGIN_SRC emacs-lisp 
+
+  (use-package color-theme-sanityinc-tomorrow
+    :ensure t
+    :config
+    (color-theme-sanityinc-tomorrow-eighties))
+
+#+END_SRC
+* Helm
+** TODO organize this
+
+#+BEGIN_SRC emacs-lisp 
+
+  ;;;; Helm
+
+  (use-package helm
+    :ensure t
+    :config
+
+    (require 'helm-config)
+    (require 'helm-locate)
+
+    ;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+    ;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+    ;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+    (global-set-key (kbd "C-c h") 'helm-command-prefix)
+    (global-unset-key (kbd "C-x c"))
+
+    ;; Use helm for finding files
+    (global-set-key (kbd "C-x C-f") 'helm-find-files)
+
+    (setq helm-split-window-in-side-p           t ; open helm buffer inside current window
+          helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+          helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+          helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+          helm-ff-file-name-history-use-recentf t)
+
+    ;; Use helm for M-x
+    (global-set-key (kbd "M-x") 'helm-M-x)
+
+    ;; Use helm to show the kill ring
+    (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+    ;; Use helm for buffer list
+    (global-set-key (kbd "C-x b") 'helm-mini)
+
+    (helm-mode 1))
+
+  (use-package helm-ag
+    :ensure t)
+
+  (use-package helm-projectile
+    :ensure t
+    :config
+    (helm-projectile-on))
+
+#+END_SRC
+#+RESULTS:
+: t
+
+* Keybindings
+** General keybindings
+*** Increase and decrease text size
+
+#+BEGIN_SRC emacs-lisp 
+
+(define-key global-map (kbd "C-=") 'text-scale-increase)
+(define-key global-map (kbd "C--") 'text-scale-decrease)
+
+#+END_SRC
+
+** Evil Mode
+*** TODO organize this
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package evil
+  :ensure t
+  :init
+  (setq evil-want-C-u-scroll t)
+  :config
+  ;; Make movement keys work over visual lines
+  (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+  (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+  (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+  (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+  ;; Make horizontal movement cross lines               
+  (setq-default evil-cross-lines t)
+  (evil-mode 1)
+
+  (use-package evil-surround
+    :ensure t
+    :config
+    (global-evil-surround-mode 1))
+
+  (use-package evil-magit
+    :ensure t)
+
+  (use-package evil-leader
+    :ensure t
+    :config
+
+    (evil-leader/set-leader "SPC")
+
+    (evil-leader/set-key "x" 'helm-M-x)
+    (evil-leader/set-key "f" 'helm-find-files)
+    (evil-leader/set-key "w" 'save-buffer)
+    (evil-leader/set-key "q" 'delete-window)
+    (evil-leader/set-key "b" 'helm-mini)
+
+    (evil-leader/set-key "pp" 'helm-projectile-switch-project)
+    (evil-leader/set-key "pf" 'helm-projectile-find-file)
+    (evil-leader/set-key "pa" 'helm-projectile-ag)
+
+    ;; Config load
+    (evil-leader/set-key "cl" 'eval-buffer)
+    ;; Config edit
+    (evil-leader/set-key "ce" (lambda () (interactive) (find-file (or user-init-file "~/.emacs.d/init.el"))))
+
+    (evil-leader/set-key "g" 'magit-status)
+
+    (setq evil-leader/in-all-states 1)
+    (global-evil-leader-mode)))
+
+#+END_SRC
+
+* Projects
+** Install projectile
+#+BEGIN_SRC emacs-lisp 
+
+(use-package projectile
+  :ensure t
+  :config
+  (setq projectile-enable-caching t)
+  (projectile-global-mode)
+  (setq projectile-completion-system 'helm))
+
+#+END_SRC
+* Coding
+** Autocomplete
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package company
+  :ensure t
+  :config
+  (global-company-mode))
+
+
+#+END_SRC
+** Git
+*** Magit
+#+BEGIN_SRC emacs-lisp 
+
+(use-package magit
+  :ensure t)
+
+#+END_SRC
+*** GitHub integration
+**** Open GitHub from Helm
+#+BEGIN_SRC emacs-lisp 
+
+(use-package helm-open-github
+  :ensure t)
+
+#+END_SRC
+
+**** TODO This doesn't currently work
+#+BEGIN_SRC emacs-lisp 
+
+(use-package magit-gh-pulls
+  :ensure t
+  :config
+  (add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls))
+
+#+END_SRC
+** Snippets
+
+#+BEGIN_SRC emacs-lisp 
+
+;; Yasnippet
+
+(use-package yasnippet
+  :ensure t
+  :config
+
+  ;; Make Yasnippet work in Org
+  (defun yas/org-very-safe-expand ()
+    (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
+
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (make-variable-buffer-local 'yas/trigger-key)
+              (setq yas/trigger-key [tab])
+              (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
+              (define-key yas/keymap [tab] 'yas/next-field)))
+
+  (yas-global-mode 1))
+
+
+#+END_SRC
+
+** Lisp
+*** TODO organize
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package evil-cleverparens
+  :ensure t)
+
+(use-package cider
+  :ensure t)
+
+(use-package clojure-mode
+  :ensure t)
+
+(use-package sicp
+  :ensure t)
+
+(use-package geiser
+  :ensure t)
+
+(use-package paredit
+  :ensure t
+  :config
+  (enable-paredit-mode))
+
+(add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
+(add-hook 'lisp-mode-hook             'enable-paredit-mode)
+(add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
+(add-hook 'scheme-mode-hook           'enable-paredit-mode)
+
+(defvar my/lisp-mode-hooks '(emacs-lisp-mode-hook lisp-mode-hook lisp-interaction-mode-hook scheme-mode-hook clojure-mode-hook))
+
+(dolist (mode my/lisp-mode-hooks)
+  (add-hook mode #'enable-paredit-mode)
+  (add-hook mode #'evil-cleverparens-mode))
+
+(use-package clj-refactor
+  :ensure t
+  :config
+  (add-hook 'clojure-mode-hook #'my/clojure-mode-hook))
+
+(defun my/clojure-mode-hook ()
+  (clj-refactor-mode 1)
+  (yas-minor-mode 1))
+
+#+END_SRC
+** Python
+*** Virtualenv
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package virtualenvwrapper
+  :ensure t
+  :config
+  (venv-initialize-eshell)
+  (venv-initialize-interactive-shells)
+  (setq venv-location "~/.virtualenvs/"))
+
+#+END_SRC
+** JSON
+#+BEGIN_SRC emacs-lisp 
+
+  (use-package json-mode
+    :ensure t)
+
+#+END_SRC
+** Swift
+#+BEGIN_SRC emacs-lisp 
+
+(use-package swift-mode
+  :ensure t)
+
+#+END_SRC
+** CoffeeScript
+#+BEGIN_SRC emacs-lisp 
+
+(use-package coffee-mode
+  :ensure t)
+
+#+END_SRC
+** JavaScript
+*** REPL
+js-comint lets me run a repl inside emacs where I can evaluate JavaScript.
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package js-comint
+  :ensure t)
+
+#+END_SRC
+** Haskell
+#+BEGIN_SRC emacs-lisp 
+
+(use-package haskell-mode
+  :ensure t)
+
+#+END_SRC
+
+* Org
+I use Org Mode to take notes for work and personal.
+
+** My files
+#+BEGIN_SRC emacs-lisp 
+
+  (defun my/configure-org-directories ()
+    (setq org-directory "~/org")
+    (setq org-default-notes-file "~/org/refile.org")
+    (setq org-agenda-files (quote ("~/org")))
+    (setq org-refile-targets '((org-agenda-files . (:maxlevel . 6)))))
+
+#+END_SRC
+** General configuration
+#+BEGIN_SRC emacs-lisp 
+
+(defun my/configure-org ()
+  (setq org-image-actual-width 300)
+  (setq org-src-fontify-natively t)
+  (setq org-log-done 'time)
+
+  (setq org-startup-truncated 'nil)
+  (setq org-catch-invisible-edits 'smart)
+
+  ;; Do not dim blocked tasks
+  (setq org-agenda-dim-blocked-tasks nil)
+  (setq org-startup-indented t))
+
+(defun my/org-mode ()
+  (my/org-mode-keyboard-shortcuts))
+
+(defun my/org-agenda-mode ()
+  (my/org-agenda-keyboard-shortcuts))
+
+(setq-default fill-column 85)
+(setq-default left-margin-width 1)
+
+#+END_SRC
+
+** Keyboard shortcuts
+*** Editing
+
+#+BEGIN_SRC emacs-lisp 
+
+(defun my/org-mode-keyboard-shortcuts ()
+  (evil-leader/set-key "*" 'org-ctrl-c-star)
+  (evil-leader/set-key "a" 'org-agenda)
+  (evil-leader/set-key "ih" 'org-insert-heading-after-current-and-enter-insert)
+  (evil-leader/set-key "is" 'org-insert-subheading-after-current-and-enter-insert)
+  (evil-leader/set-key "it" 'org-insert-todo-after-current-and-enter-insert)
+  (evil-leader/set-key "n" 'org-narrow-to-subtree)
+  (evil-leader/set-key "N" 'widen)
+  (evil-leader/set-key "ml" 'org-do-demote)
+  (evil-leader/set-key "mL" 'org-demote-subtree)
+  (evil-leader/set-key "mh" 'org-do-promote)
+  (evil-leader/set-key "mH" 'org-promote-subtree)
+  (evil-leader/set-key "mk" 'org-metaup)
+  (evil-leader/set-key "mj" 'org-metadown)
+  (evil-leader/set-key "s" 'org-schedule)
+  (evil-leader/set-key "t" 'org-todo))
+
+#+END_SRC
+*** Agenda
+
+#+BEGIN_SRC emacs-lisp 
+
+(defun my/org-agenda-keyboard-shortcuts ()
+  (define-key org-agenda-mode-map "j" 'evil-next-line)
+  (define-key org-agenda-mode-map "k" 'evil-previous-line))
+
+#+END_SRC
+** Editing
+*** Useful functions
+
+#+BEGIN_SRC emacs-lisp 
+
+(defun org-insert-subheading-after-current ()
+  (interactive)
+  (org-insert-heading-after-current)
+  (org-demote))
+
+(defun org-insert-subheading-after-current-and-enter-insert ()
+  (interactive)
+  (org-insert-subheading-after-current)
+  (evil-append 0))
+
+(defun org-insert-heading-after-current-and-enter-insert ()
+  (interactive)
+  (org-insert-heading-after-current)
+  (evil-append 0))
+
+(defun org-insert-todo-after-current-and-enter-insert ()
+  (interactive)
+  (org-insert-todo-heading-respect-content)
+  (evil-append 0))
+
+#+END_SRC
+
+** Tasks
+
+#+BEGIN_SRC emacs-lisp 
+
+(defun my/configure-org-todos ()
+  (setq org-todo-keywords
+        (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+                (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
+
+  (setq org-todo-keyword-faces
+        (quote (("TODO" :foreground "red" :weight bold)
+                ("NEXT" :foreground "blue" :weight bold)
+                ("DONE" :foreground "forest green" :weight bold)
+                ("WAITING" :foreground "orange" :weight bold)
+                ("HOLD" :foreground "magenta" :weight bold)
+                ("CANCELLED" :foreground "forest green" :weight bold)
+                ("MEETING" :foreground "forest green" :weight bold)
+                ("PHONE" :foreground "forest green" :weight bold))))
+
+  (setq org-use-fast-todo-selection t))
+
+#+END_SRC
+
+** Agenda
+
+#+BEGIN_SRC emacs-lisp 
+
+#+END_SRC
+** Exporters
+#+BEGIN_SRC emacs-lisp 
+
+  (defun my/configure-org-exporters ()
+    (use-package ox-gfm)
+
+    (use-package org-habit)
+
+    (use-package ox-odt
+      :config
+      (setq org-odt-preferred-output-format "rtf"))
+
+    (use-package ox-jira
+      :ensure t)
+
+    (use-package ox-rst
+      :ensure t))
+#+END_SRC
+
+** Rifle
+helm-org-rifle lets me search through open org files really quickly.
+
+#+BEGIN_SRC emacs-lisp 
+
+(use-package helm-org-rifle
+  :ensure t)
+
+#+END_SRC
+
+** Installation
+#+BEGIN_SRC emacs-lisp 
+
+(use-package org
+  :ensure org-plus-contrib
+  :config
+
+  (my/configure-org-directories)
+  (my/configure-org-exporters)
+  (my/configure-org-todos)
+  (my/configure-org-mobile)
+  (my/configure-org)
+
+  (add-hook 'org-mode-hook #'my/org-mode)
+  (add-hook 'org-agenda-mode-hook #'my/org-agenda-mode))
+
+(use-package evil-org
+  :ensure t)
+
+#+END_SRC
+
+* IRC
+** Circe
+#+BEGIN_SRC emacs-lisp 
+
+(use-package circe
+  :ensure t
+  :config
+
+  (setq circe-network-options
+        `(("Freenode"
+           :nick "landakram"
+           :channels (:after-auth
+                      "#emacs"
+                      "#clojure"
+                      "#clojure-beginners"
+                      "#iphonedev"
+                      "#swift-lang")
+           :nickserv-password "***REMOVED***"
+           :reduce-lurker-spam t)))
+  (enable-circe-color-nicks))
+
+#+END_SRC
+* RSS Feeds
+** elfeed
+#+BEGIN_SRC emacs-lisp 
+
+(use-package elfeed
+  :ensure t
+  :config
+
+  (setq elfeed-feeds
+        '("https://www.natashatherobot.com/feed/"
+          "http://lambda-the-ultimate.org/rss.xml"
+          "http://sachachua.com/blog/feed/"
+          "http://airspeedvelocity.net/feed/")))
+
+#+END_SRC
+** URL queue timeout
+This is long so that fetching feeds does not timeout.
+
+#+BEGIN_SRC emacs-lisp 
+
+(setq url-queue-timeout 30)
+
+#+END_SRC
+
