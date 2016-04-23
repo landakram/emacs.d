@@ -355,15 +355,6 @@ The "Tomorrow" themes look great in emacs and a terminal.
 
 #+END_SRC
 
-**** TODO This doesn't currently work
-#+BEGIN_SRC emacs-lisp 
-
-(use-package magit-gh-pulls
-  :ensure t
-  :config
-  (add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls))
-
-#+END_SRC
 ** Snippets
 
 #+BEGIN_SRC emacs-lisp 
