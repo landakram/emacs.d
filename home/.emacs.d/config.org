@@ -386,47 +386,65 @@ The "Tomorrow" themes look great in emacs and a terminal.
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package evil-cleverparens
-  :ensure t)
+  (defun start-figwheel ()
+    "Start figwheel. This function is meant to be called interactively after `cider-jack-in`."
+    (interactive)
+    (cider-interactive-eval
+     "(use 'figwheel-sidecar.repl-api) \n
+      (start-figwheel!) \n
+      (cljs-repl) \n"))
 
-(use-package cider
-  :ensure t)
+  (use-package evil-cleverparens
+    :ensure t)
 
-(use-package clojure-mode
-  :ensure t)
+  (use-package cider
+    :ensure t
+    :config
+    ;; Start figwheel when I run `M-x cider-jack-in-clojurescript`
+    (setq cider-cljs-lein-repl
+        "(do (require 'figwheel-sidecar.repl-api)
+             (figwheel-sidecar.repl-api/start-figwheel!)
+             (figwheel-sidecar.repl-api/cljs-repl))"))
 
-(use-package sicp
-  :ensure t)
+  (use-package clojure-mode
+    :ensure t)
 
-(use-package geiser
-  :ensure t)
+  (use-package sicp
+    :ensure t)
 
-(use-package paredit
-  :ensure t
-  :config
-  (enable-paredit-mode))
+  (use-package geiser
+    :ensure t)
 
-(add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
-(add-hook 'lisp-mode-hook             'enable-paredit-mode)
-(add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
-(add-hook 'scheme-mode-hook           'enable-paredit-mode)
+  (use-package paredit
+    :ensure t
+    :config
+    (enable-paredit-mode))
 
-(defvar my/lisp-mode-hooks '(emacs-lisp-mode-hook lisp-mode-hook lisp-interaction-mode-hook scheme-mode-hook clojure-mode-hook))
+  (add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
+  (add-hook 'lisp-mode-hook             'enable-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
+  (add-hook 'scheme-mode-hook           'enable-paredit-mode)
 
-(dolist (mode my/lisp-mode-hooks)
-  (add-hook mode #'enable-paredit-mode)
-  (add-hook mode #'evil-cleverparens-mode))
+  (defvar my/lisp-mode-hooks '(emacs-lisp-mode-hook lisp-mode-hook lisp-interaction-mode-hook scheme-mode-hook clojure-mode-hook))
 
-(use-package clj-refactor
-  :ensure t
-  :config
-  (add-hook 'clojure-mode-hook #'my/clojure-mode-hook))
+  (dolist (mode my/lisp-mode-hooks)
+    (add-hook mode #'enable-paredit-mode)
+    (add-hook mode #'evil-cleverparens-mode))
 
-(defun my/clojure-mode-hook ()
-  (clj-refactor-mode 1)
-  (yas-minor-mode 1))
+  (use-package clj-refactor
+    :ensure t
+    :config
+    (add-hook 'clojure-mode-hook #'my/clojure-mode-hook))
+
+  (defun my/clojure-mode-hook ()
+    (clj-refactor-mode 1)
+    (yas-minor-mode 1))
 
 #+END_SRC
+
+#+RESULTS:
+: my/clojure-mode-hook
+
 ** Python
 *** Virtualenv
 
