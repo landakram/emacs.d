@@ -519,6 +519,15 @@ I use Org Mode to take notes for work and personal.
 
 #+END_SRC
 ** General configuration
+*** Log drawer
+I can type timestamped notes for a given tree with ~C-c C-z~. By default, they are appending to the top of the note. Let's stash then in the ~LOGBOOK~ drawer instead.
+
+#+BEGIN_SRC emacs-lisp
+
+  (setq org-log-into-drawer t)
+
+#+END_SRC
+
 #+BEGIN_SRC emacs-lisp 
 
 (defun my/configure-org ()
