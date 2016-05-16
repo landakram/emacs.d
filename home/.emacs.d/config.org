@@ -391,13 +391,21 @@ Projectile lets me switch between projects really easily. I set it up to default
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package company
-  :ensure t
-  :config
-  (global-company-mode))
+  (use-package company
+    :ensure t
+    :config
+    (global-company-mode)
 
+    (use-package company-anaconda
+      :ensure t
+      :config
+      (add-to-list 'company-backends 'company-anaconda)))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 ** Git
 *** Magit
 #+BEGIN_SRC emacs-lisp 
@@ -508,16 +516,30 @@ Projectile lets me switch between projects really easily. I set it up to default
 ** Python
 *** Virtualenv
 
+pyvenv is nice because it lets me choose between virtualenvs made through mkvirtualenvwrapper and virtulenvs that are in other places on the filesystem.
+
 #+BEGIN_SRC emacs-lisp 
 
-(use-package virtualenvwrapper
-  :ensure t
-  :config
-  (venv-initialize-eshell)
-  (venv-initialize-interactive-shells)
-  (setq venv-location "~/.virtualenvs/"))
+  (use-package pyvenv
+    :ensure t)
 
 #+END_SRC
+
+#+RESULTS:
+*** anaconda-mode
+Lots of goodies for Python development.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package anaconda-mode
+    :ensure t
+    :config
+    (add-hook 'python-mode-hook 'anaconda-mode)
+    (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+#+END_SRC
+
+#+RESULTS:
+: t
+
 ** JSON
 #+BEGIN_SRC emacs-lisp 
 
