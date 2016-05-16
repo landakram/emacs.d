@@ -357,16 +357,35 @@ The "Tomorrow" themes look great in emacs and a terminal.
 
 * Projects
 ** Install projectile
+Projectile lets me switch between projects really easily. I set it up to default to ~projectile-commander~, which gives me options to choose what I want to do with a project once I open it.
+
 #+BEGIN_SRC emacs-lisp 
 
-(use-package projectile
-  :ensure t
-  :config
-  (setq projectile-enable-caching t)
-  (projectile-global-mode)
-  (setq projectile-completion-system 'helm))
+  (use-package projectile
+    :ensure t
+    :config
+    (setq projectile-enable-caching t)
+    (projectile-global-mode)
+    (setq projectile-completion-system 'helm)
+    (setq projectile-switch-project-action 'projectile-commander)
+
+
+    (def-projectile-commander-method ?d
+      "Open project root in dired"
+      (projectile-dired)))
+
+    (def-projectile-commander-method ?a
+      "Find ag on project."
+      (projectile-dired))
+
+    (def-projectile-commander-method ?g
+      "Open project root in magit"
+      ((projectile-vc)))
 
 #+END_SRC
+
+#+RESULTS:
+
 * Coding
 ** Autocomplete
 
