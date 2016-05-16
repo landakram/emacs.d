@@ -157,7 +157,6 @@ Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me 
   (which-key-mode))
 
 #+END_SRC
-
 ** Fix the PATH variable
 
 This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
@@ -172,6 +171,37 @@ This sets up emacs to inherit commands from ~$PATH~. Without it, some commands t
 (when window-system (set-exec-path-from-shell-PATH))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
+** Make gpg-agent work
+This function will load ~/.gpg-agent-info and source its contents into ~GPG_AGENT_INFO~.
+
+I need this to pull mail for m4ue.
+
+#+BEGIN_SRC emacs-lisp
+  (defun my/gpg-agent ()
+    "Load your gpg-agent.env file in to the environment
+
+  This is extra useful if you use gpg-agent with --enable-ssh-support"
+    (interactive)
+    (let ((home (getenv "HOME"))
+          (old-buffer (current-buffer)))
+      (with-temp-buffer
+        (insert-file-contents (concat home "/.gpg-agent-info"))
+        (goto-char (point-min))
+        (setq case-replace nil)
+        (replace-regexp "\\(.*\\)=\\(.*\\)" "(setenv \"\\1\" \"\\2\")")
+        (eval-buffer)))
+    (getenv "GPG_AGENT_INFO"))
+
+  (run-with-idle-timer 60 t 'my/gpg-agent)
+#+END_SRC
+
+#+RESULTS:
+: [nil 0 60 0 t my/gpg-agent nil idle 0]
+
 ** Theme
 *** Change the Mode Line
 This mode line is pretty.
@@ -244,9 +274,11 @@ The "Tomorrow" themes look great in emacs and a terminal.
     :config
     (helm-projectile-on))
 
+  (use-package helm-mu
+    :ensure t)
+
 #+END_SRC
 #+RESULTS:
-: t
 
 * Keybindings
 ** General keybindings
@@ -734,4 +766,73 @@ This is long so that fetching feeds does not timeout.
 (setq url-queue-timeout 30)
 
 #+END_SRC
+* Email
+** mu4e
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "/usr/local/Cellar/mu/0.9.9.5/share/emacs/site-lisp/mu/mu4e")
+
+  (use-package mu4e
+    :config
+    ;; default
+    (setq mu4e-maildir (expand-file-name "~/Maildir"))
+
+    (setq mu4e-drafts-folder "/[Gmail].Drafts")
+    (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
+    (setq mu4e-trash-folder  "/[Gmail].Trash")
+
+    ;; don't save message to Sent Messages, GMail/IMAP will take care of this
+    (setq mu4e-sent-messages-behavior 'delete)
+
+    ;; setup some handy shortcuts
+    (setq mu4e-maildir-shortcuts
+          '(("/INBOX"             . ?i)
+            ("/[Gmail].Sent Mail" . ?s)
+            ("/[Gmail].Trash"     . ?t)))
+
+    ;; allow for updating mail using 'U' in the main view:
+    (setq mu4e-get-mail-command "offlineimap")
+
+    ;; something about ourselves
+    ;; I don't use a signature...
+    (setq
+     user-mail-address "me@markhudnall.com"
+     user-full-name  "Mark Hudnall"
+     ;; message-signature
+     ;;  (concat
+     ;;    "Foo X. Bar\n"
+     ;;    "http://www.example.com\n")
+     )
+
+    ;; sending mail -- replace USERNAME with your gmail username
+    ;; also, make sure the gnutls command line utils are installed
+    ;; package 'gnutls-bin' in Debian/Ubuntu, 'gnutls' in Archlinux.
+
+    (use-package smtpmail
+      :ensure t
+      :config
+      (setq message-send-mail-function 'smtpmail-send-it
+            starttls-use-gnutls t
+            smtpmail-starttls-credentials
+            '(("smtp.gmail.com" 587 nil nil))
+            smtpmail-auth-credentials
+            (expand-file-name "~/.authinfo.gpg")
+            smtpmail-default-smtp-server "smtp.gmail.com"
+            smtpmail-smtp-server "smtp.gmail.com"
+            smtpmail-smtp-service 587
+            smtpmail-debug-info t))
+
+    (use-package evil-mu4e
+      :ensure t)
+
+    (use-package org-mu4e
+      :config)
+
+    (setq mu4e-update-interval 500))
+
+#+END_SRC
+
+#+RESULTS:
+: t
+
 
