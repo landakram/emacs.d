@@ -793,6 +793,24 @@ helm-org-rifle lets me search through open org files really quickly.
   :ensure t)
 
 #+END_SRC
+** JIRA
+I often link to JIRA issues in my tasks. This function lets me add link JIRA issues by issue title rather than needing to paste in the full link.
+
+#+BEGIN_SRC emacs-lisp
+
+  (defvar default-jira-repository)
+  (setq default-jira-repository "getclef.atlassian.net")
+
+  (defun org-jira-insert-link (issue-name description)
+    "Add links to JIRA issues by title."
+    (interactive "sIssue: \nsDescription: ")
+    (let ((desc (if (string= "" description) issue-name description))) 
+      (org-insert-link nil (concat "https://" default-jira-repository "/browse/" issue-name) desc)))
+
+#+END_SRC
+
+#+RESULTS:
+: org-jira-insert-link
 
 ** Installation
 #+BEGIN_SRC emacs-lisp 
