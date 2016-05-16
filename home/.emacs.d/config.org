@@ -264,6 +264,9 @@ The "Tomorrow" themes look great in emacs and a terminal.
     ;; Use helm for buffer list
     (global-set-key (kbd "C-x b") 'helm-mini)
 
+    ;; Use helm for apropos
+    (global-set-key (kbd "C-h a") 'helm-apropos)
+
     (helm-mode 1))
 
   (use-package helm-ag
