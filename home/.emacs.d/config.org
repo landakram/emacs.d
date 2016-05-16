@@ -661,30 +661,56 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
 #+END_SRC
 
+#+RESULTS:
+: t
+*** Variable pitch mode
+
 #+BEGIN_SRC emacs-lisp 
 
-(defun my/configure-org ()
-  (setq org-image-actual-width 300)
-  (setq org-src-fontify-natively t)
-  (setq org-log-done 'time)
-
-  (setq org-startup-truncated 'nil)
-  (setq org-catch-invisible-edits 'smart)
-
-  ;; Do not dim blocked tasks
-  (setq org-agenda-dim-blocked-tasks nil)
-  (setq org-startup-indented t))
-
-(defun my/org-mode ()
-  (my/org-mode-keyboard-shortcuts))
-
-(defun my/org-agenda-mode ()
-  (my/org-agenda-keyboard-shortcuts))
-
-(setq-default fill-column 85)
-(setq-default left-margin-width 1)
+  (defun my/org-variable-pitch ()
+    "Use variable pitch for prose text in org."
+    (interactive)
+    (variable-pitch-mode t)
+    (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-block nil :inherit 'fixed-pitch))
 
 #+END_SRC
+
+#+RESULTS:
+: my/org-variable-pitch
+
+*** Putting it together
+#+BEGIN_SRC emacs-lisp 
+
+  (defun my/configure-org ()
+    (setq org-image-actual-width 300)
+    (setq org-src-fontify-natively t)
+    (setq org-log-done 'time)
+
+    (setq org-startup-truncated 'nil)
+    (setq org-catch-invisible-edits 'smart)
+
+    ;; Do not dim blocked tasks
+    (setq org-agenda-dim-blocked-tasks nil)
+    (setq org-startup-indented t)
+
+
+  (defun my/org-mode ()
+    (my/org-mode-keyboard-shortcuts)
+   ;; (my/org-variable-pitch)
+    ))
+
+  (defun my/org-agenda-mode ()
+    (my/org-agenda-keyboard-shortcuts))
+
+  (setq-default fill-column 85)
+  (setq-default left-margin-width 1)
+
+#+END_SRC
+
+#+RESULTS:
+: 1
 
 ** Keyboard shortcuts
 *** Editing
