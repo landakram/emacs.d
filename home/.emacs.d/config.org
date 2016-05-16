@@ -296,55 +296,64 @@ The "Tomorrow" themes look great in emacs and a terminal.
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-C-u-scroll t)
-  :config
-  ;; Make movement keys work over visual lines
-  (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-  (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-  (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-  (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-  ;; Make horizontal movement cross lines               
-  (setq-default evil-cross-lines t)
-  (evil-mode 1)
-
-  (use-package evil-surround
+  (use-package evil
     :ensure t
+    :init
+    (setq evil-want-C-u-scroll t)
     :config
-    (global-evil-surround-mode 1))
+    ;; Make movement keys work over visual lines
+    (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+    (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+    (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+    (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+    ;; Make horizontal movement cross lines               
+    (setq-default evil-cross-lines t)
+    (evil-mode 1)
 
-  (use-package evil-magit
-    :ensure t)
+    (use-package evil-surround
+      :ensure t
+      :config
+      (global-evil-surround-mode 1))
 
-  (use-package evil-leader
-    :ensure t
-    :config
+    (use-package evil-magit
+      :ensure t)
 
-    (evil-leader/set-leader "SPC")
+    (use-package evil-matchit
+      :ensure t
+      :config
+      (global-evil-matchit-mode 1))
 
-    (evil-leader/set-key "x" 'helm-M-x)
-    (evil-leader/set-key "f" 'helm-find-files)
-    (evil-leader/set-key "w" 'save-buffer)
-    (evil-leader/set-key "q" 'delete-window)
-    (evil-leader/set-key "b" 'helm-mini)
+    (use-package evil-leader
+      :ensure t
+      :config
 
-    (evil-leader/set-key "pp" 'helm-projectile-switch-project)
-    (evil-leader/set-key "pf" 'helm-projectile-find-file)
-    (evil-leader/set-key "pa" 'helm-projectile-ag)
+      (evil-leader/set-leader "SPC")
 
-    ;; Config load
-    (evil-leader/set-key "cl" 'eval-buffer)
-    ;; Config edit
-    (evil-leader/set-key "ce" (lambda () (interactive) (find-file (or user-init-file "~/.emacs.d/init.el"))))
+      (evil-leader/set-key "x" 'helm-M-x)
+      (evil-leader/set-key "f" 'helm-find-files)
+      (evil-leader/set-key "w" 'save-buffer)
+      (evil-leader/set-key "q" 'delete-window)
+      (evil-leader/set-key "b" 'helm-mini)
 
-    (evil-leader/set-key "g" 'magit-status)
+      (evil-leader/set-key "pp" 'helm-projectile-switch-project)
+      (evil-leader/set-key "pf" 'helm-projectile-find-file)
+      (evil-leader/set-key "pa" 'helm-projectile-ag)
 
-    (setq evil-leader/in-all-states 1)
-    (global-evil-leader-mode)))
+      ;; Config edit
+      (evil-leader/set-key "ce" (lambda () (interactive) (find-file (or user-init-file "~/.emacs.d/config.org"))))
+
+      (evil-leader/set-key "g" 'magit-status)
+
+      (setq evil-leader/in-all-states 1)
+      (global-evil-leader-mode)))
+
+
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 
 * Projects
 ** Install projectile
