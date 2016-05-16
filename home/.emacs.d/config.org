@@ -348,7 +348,7 @@ The "Tomorrow" themes look great in emacs and a terminal.
       (evil-leader/set-key "pa" 'helm-projectile-ag)
 
       ;; Config edit
-      (evil-leader/set-key "ce" (lambda () (interactive) (find-file (or user-init-file "~/.emacs.d/config.org"))))
+      (evil-leader/set-key "ce" (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
 
       (evil-leader/set-key "g" 'magit-status)
 
