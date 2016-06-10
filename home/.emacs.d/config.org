@@ -80,6 +80,16 @@ Life's too short to see this many files in dired / projectile / etc.
 
 #+RESULTS:
 : t
+** Use org for the scratch buffer
+
+#+BEGIN_SRC emacs-lisp
+  (setq initial-major-mode 'org-mode)
+  (setq initial-scratch-message "\
+  # This buffer is for notes you don't want to save.")
+#+END_SRC
+
+#+RESULTS:
+: # This buffer is for notes you don't want to save.
 
 ** Change "yes or no" to "y or n"
 
