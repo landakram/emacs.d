@@ -506,13 +506,7 @@ Projectile lets me switch between projects really easily. I set it up to default
   (use-package company
     :ensure t
     :config
-    (global-company-mode)
-
-    (use-package company-anaconda
-      :ensure t
-      :config
-      (add-to-list 'company-backends 'company-anaconda)))
-
+    (global-company-mode)) 
 #+END_SRC
 
 #+RESULTS:
@@ -630,10 +624,15 @@ Projectile lets me switch between projects really easily. I set it up to default
 
 pyvenv is nice because it lets me choose between virtualenvs made through mkvirtualenvwrapper and virtulenvs that are in other places on the filesystem.
 
+We also set up eshell so that it shares its environment with emacs, thus using the virtualenv if it is set.
+
 #+BEGIN_SRC emacs-lisp 
 
   (use-package pyvenv
-    :ensure t)
+    :ensure t
+    :config
+    (setq eshell-modify-global-environment t)
+    (setq eshell-path-env (getenv "PATH")))
 
 #+END_SRC
 
@@ -642,11 +641,22 @@ pyvenv is nice because it lets me choose between virtualenvs made through mkvirt
 Lots of goodies for Python development.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package anaconda-mode
+ ;; (use-package anaconda-mode
+ ;;   :ensure t
+ ;;   :config
+ ;;   (add-hook 'python-mode-hook 'anaconda-mode)
+ ;;   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+#+END_SRC
+
+#+RESULTS:
+: t
+*** Refactoring
+
+#+BEGIN_SRC emacs-lisp
+  (use-package elpy
     :ensure t
     :config
-    (add-hook 'python-mode-hook 'anaconda-mode)
-    (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
+    (elpy-enable))
 #+END_SRC
 
 #+RESULTS:
