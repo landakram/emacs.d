@@ -53,8 +53,34 @@ Let's set ~custom-file~, which emacs writes to automatically.
 (eval-when-compile
   (require 'use-package))
 
+#+END_SRC
+
+#+RESULTS:
+: diminish
+** Install ~diminish~
+
+We also install ~diminish~, because ~use-package~ depends on it. ~diminish~ lets you hide minor modes from the mode-line.
+
+#+BEGIN_SRC emacs-lisp
+
+(unless (package-installed-p 'diminish)
+  (package-install 'diminish))
+
+(require 'diminish)
 
 #+END_SRC
+
+Now, we explicitly load some modes that are en
+Now, we diminish some modes (I can't figure out where they are loaded):
+
+#+BEGIN_SRC emacs-lisp
+  (global-auto-revert-mode)
+  (diminish 'auto-revert-mode)
+#+END_SRC
+
+#+RESULTS:
+|   |
+
 * General Configuration
 Let's configure the editor to our liking.
 ** Symlinks
@@ -107,10 +133,14 @@ Flycheck is an on-the-fly syntax checker.
 
   (use-package flycheck
     :ensure t
+    :diminish flycheck-mode
     :config
     (global-flycheck-mode))
 
 #+END_SRC
+
+#+RESULTS:
+: t
 
 ** Disable bell ring
 
@@ -124,10 +154,13 @@ Flycheck is an on-the-fly syntax checker.
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package better-defaults
-  :ensure t)
+  (use-package better-defaults
+    :ensure t)
 
 #+END_SRC
+
+#+RESULTS:
+|   |
 
 ** Better search
 
@@ -146,13 +179,17 @@ Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-colum
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package visual-fill-column
-  :ensure t
-  :config
-  (add-hook 'text-mode-hook 'visual-fill-column-mode)
-  (global-visual-line-mode))
+  (use-package visual-fill-column
+    :ensure t
+    :diminish visual-line-mode
+    :config
+    (add-hook 'text-mode-hook 'visual-fill-column-mode)
+    (global-visual-line-mode))
 
 #+END_SRC
+
+#+RESULTS:
+: t
 
 ** which-key
 
@@ -162,11 +199,16 @@ Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me 
 
 (use-package which-key
   :ensure t
+  :diminish which-key-mode
   :config
   (setq which-key-idle-delay 0.5)
   (which-key-mode))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 ** Fix the PATH variable
 
 This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
@@ -223,12 +265,19 @@ This mode line is pretty.
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package smart-mode-line
-  :ensure t
-  :config
-  (sml/setup))
+  (use-package smart-mode-line
+    :ensure t
+    :config
+    (setq sml/theme 'respectful)
+    (sml/setup))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
+#+RESULTS:
+
 *** Change the theme
 
 The "Tomorrow" themes look great in emacs and a terminal.
@@ -286,6 +335,7 @@ It's commented out right now because it looks terrible.
 
   (use-package helm
     :ensure t
+    :diminish helm-mode
     :config
 
     (require 'helm-config)
@@ -352,6 +402,8 @@ It's commented out right now because it looks terrible.
 
   (use-package evil
     :ensure t
+    :diminish evil-mode
+    :diminish undo-tree-mode
     :init
     (setq evil-want-C-u-scroll t)
     :config
@@ -366,6 +418,7 @@ It's commented out right now because it looks terrible.
 
     (use-package evil-surround
       :ensure t
+      :diminish evil-surround-mode
       :config
       (global-evil-surround-mode 1))
 
@@ -385,10 +438,14 @@ It's commented out right now because it looks terrible.
 
       (evil-leader/set-key "x" 'helm-M-x)
       (evil-leader/set-key "f" 'helm-find-files)
+
+      ;; Buffer
+      (evil-leader/set-key "b" 'helm-mini)
+      (evil-leader/set-key "k" 'kill-this-buffer)
       (evil-leader/set-key "w" 'save-buffer)
       (evil-leader/set-key "q" 'delete-window)
-      (evil-leader/set-key "b" 'helm-mini)
 
+      ;; Projects
       (evil-leader/set-key "pp" 'helm-projectile-switch-project)
       (evil-leader/set-key "pf" 'helm-projectile-find-file)
       (evil-leader/set-key "pa" 'helm-projectile-ag)
@@ -396,18 +453,16 @@ It's commented out right now because it looks terrible.
       ;; Config edit
       (evil-leader/set-key "ce" (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
 
+      ;; Git
       (evil-leader/set-key "g" 'magit-status)
 
       (setq evil-leader/in-all-states 1)
       (global-evil-leader-mode)))
 
-
-
 #+END_SRC
 
 #+RESULTS:
 : t
-
 
 * Projects
 ** Install projectile
@@ -417,6 +472,7 @@ Projectile lets me switch between projects really easily. I set it up to default
 
   (use-package projectile
     :ensure t
+    :diminish projectile-mode
     :config
     (setq projectile-enable-caching t)
     (projectile-global-mode)
@@ -434,11 +490,12 @@ Projectile lets me switch between projects really easily. I set it up to default
 
     (def-projectile-commander-method ?g
       "Open project root in magit"
-      ((projectile-vc)))
+      (projectile-vc))
 
 #+END_SRC
 
 #+RESULTS:
+| 63 | Commander help buffer. | #[0 \302\303\304D\305\303\306\302EDC\217\210r\307!q\210\310c\210        \311\203@ @\211\211A\262\242\211A\262\242@\312\313#c\266\211T\262A\262\202 \266eb\210\314 \210\315p\316"\210)\317 \207 [projectile-commander-help-buffer projectile-commander-methods err funcall #[0 \301!\207 [projectile-commander-help-buffer kill-buffer] 2 |
 
 * Coding
 ** Autocomplete
@@ -657,6 +714,7 @@ js-comint lets me run a repl inside emacs where I can evaluate JavaScript.
 
   (use-package docker
     :ensure t
+    :diminish docker-mode
     :config
     (docker-global-mode))
 
@@ -684,7 +742,7 @@ Fish is my default shell in the terminal, but it doesn't work well in emacs, sin
   (setq shell-file-name "/bin/zsh")
 #+END_SRC
 
-* Org
+* Org Mode
 I use Org Mode to take notes for work and personal.
 
 ** My files
@@ -739,13 +797,17 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
     ;; Do not dim blocked tasks
     (setq org-agenda-dim-blocked-tasks nil)
+
+    ;; Start up in org-indent-mode
     (setq org-startup-indented t)
+    ;; Diminish org-indent-mode in the mode-line
+    (eval-after-load 'org-indent '(diminish 'org-indent-mode)))
 
 
   (defun my/org-mode ()
     (my/org-mode-keyboard-shortcuts)
    ;; (my/org-variable-pitch)
-    ))
+    )
 
   (defun my/org-agenda-mode ()
     (my/org-agenda-keyboard-shortcuts))
