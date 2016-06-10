@@ -254,10 +254,11 @@ I need this to pull mail for m4ue.
     (getenv "GPG_AGENT_INFO"))
 
   (run-with-idle-timer 60 t 'my/gpg-agent)
+  (my/gpg-agent)
 #+END_SRC
 
 #+RESULTS:
-: [nil 0 60 0 t my/gpg-agent nil idle 0]
+: /tmp/gpg-BU8UFN/S.gpg-agent:4381:1
 
 ** Theme
 *** Change the Mode Line
