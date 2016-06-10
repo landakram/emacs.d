@@ -235,12 +235,48 @@ The "Tomorrow" themes look great in emacs and a terminal.
 
 #+BEGIN_SRC emacs-lisp 
 
-  (use-package color-theme-sanityinc-tomorrow
+  (use-package monokai-theme
     :ensure t
     :config
-    (color-theme-sanityinc-tomorrow-eighties))
+    (setq monokai-use-variable-pitch nil)
+    (load-theme 'monokai t))
+
+
+  ;; (use-package color-theme-sanityinc-tomorrow
+  ;;   :ensure t
+  ;;   :config
+  ;;   (color-theme-sanityinc-tomorrow-eighties))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
+*** Per-buffer themes
+
+I'd like to use a light theme for email and org mode.
+
+It's commented out right now because it looks terrible.
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package color-theme
+  ;;   :ensure t)
+
+
+  ;; (use-package load-theme-buffer-local
+  ;;   :ensure t
+  ;;   :config
+  ;;   (add-hook 'org-mode-hook (lambda ()
+  ;;                              (load-theme-buffer-local
+  ;;                               'leuven
+  ;;                               (current-buffer)))))
+
+  ;; (use-package color-theme-buffer-local
+  ;;   :ensure t)
+#+END_SRC
+
+#+RESULTS:
+
 * Helm
 ** TODO organize this
 
