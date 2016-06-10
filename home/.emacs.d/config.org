@@ -836,24 +836,29 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
 #+BEGIN_SRC emacs-lisp 
 
-(defun my/org-mode-keyboard-shortcuts ()
-  (evil-leader/set-key "*" 'org-ctrl-c-star)
-  (evil-leader/set-key "a" 'org-agenda)
-  (evil-leader/set-key "ih" 'org-insert-heading-after-current-and-enter-insert)
-  (evil-leader/set-key "is" 'org-insert-subheading-after-current-and-enter-insert)
-  (evil-leader/set-key "it" 'org-insert-todo-after-current-and-enter-insert)
-  (evil-leader/set-key "n" 'org-narrow-to-subtree)
-  (evil-leader/set-key "N" 'widen)
-  (evil-leader/set-key "ml" 'org-do-demote)
-  (evil-leader/set-key "mL" 'org-demote-subtree)
-  (evil-leader/set-key "mh" 'org-do-promote)
-  (evil-leader/set-key "mH" 'org-promote-subtree)
-  (evil-leader/set-key "mk" 'org-metaup)
-  (evil-leader/set-key "mj" 'org-metadown)
-  (evil-leader/set-key "s" 'org-schedule)
-  (evil-leader/set-key "t" 'org-todo))
+  (defun my/org-mode-keyboard-shortcuts ()
+    (evil-leader/set-key-for-mode 'org-mode
+      "*" 'org-ctrl-c-star
+      "a" 'org-agenda
+      "ih" 'org-insert-heading-after-current-and-enter-insert
+      "is" 'org-insert-subheading-after-current-and-enter-insert
+      "it" 'org-insert-todo-after-current-and-enter-insert
+      "n" 'org-narrow-to-subtree
+      "N" 'widen
+      "ml" 'org-do-demote
+      "mL" 'org-demote-subtree
+      "mh" 'org-do-promote
+      "mH" 'org-promote-subtree
+      "mk" 'org-metaup
+      "mj" 'org-metadown
+      "s" 'org-schedule
+      "t" 'org-todo))
 
 #+END_SRC
+
+#+RESULTS:
+: my/org-mode-keyboard-shortcuts
+
 *** Agenda
 
 #+BEGIN_SRC emacs-lisp 
