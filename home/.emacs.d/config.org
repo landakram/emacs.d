@@ -1057,24 +1057,22 @@ This is long so that fetching feeds does not timeout.
     ;; default
     (setq mu4e-maildir (expand-file-name "~/Maildir"))
 
-    (setq mu4e-drafts-folder "/[Gmail].Drafts")
-    (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
-    (setq mu4e-trash-folder  "/[Gmail].Trash")
+    ;; (setq mu4e-drafts-folder "/[Gmail].Drafts")
+    ;; (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
+    ;; (setq mu4e-trash-folder  "/[Gmail].Trash")
 
     ;; don't save message to Sent Messages, GMail/IMAP will take care of this
     (setq mu4e-sent-messages-behavior 'delete)
 
     ;; setup some handy shortcuts
-    (setq mu4e-maildir-shortcuts
-          '(("/INBOX"             . ?i)
-            ("/[Gmail].Sent Mail" . ?s)
-            ("/[Gmail].Trash"     . ?t)))
+    ;; (setq mu4e-maildir-shortcuts
+    ;;       '(("/INBOX"             . ?i)
+    ;;         ("/[Gmail].Sent Mail" . ?s)
+    ;;         ("/[Gmail].Trash"     . ?t)))
 
     ;; allow for updating mail using 'U' in the main view:
     (setq mu4e-get-mail-command "offlineimap")
 
-    ;; something about ourselves
-    ;; I don't use a signature...
     (setq
      user-mail-address "me@markhudnall.com"
      user-full-name  "Mark Hudnall"
@@ -1108,8 +1106,62 @@ This is long so that fetching feeds does not timeout.
     (use-package org-mu4e
       :config)
 
-    (setq mu4e-update-interval 500))
+    (setq mu4e-contexts
+      `( ,(make-mu4e-context
+            :name "Personal"
+            :enter-func (lambda () (mu4e-message "Switch to the Personal context"))
+            ;; leave-func not defined
+            :match-func (lambda (msg)
+                          (when msg 
+                            (mu4e-message-contact-field-matches msg 
+                              :to "me@markhudnall.com")))
+            :vars '((user-mail-address        . "me@markhudnall.com"  )
+                    (user-full-name           . "Mark Hudnall" )
+                    (mu4e-drafts-folder       . "/Personal/[Gmail].Drafts")
+                    (mu4e-sent-folder         . "/Personal/[Gmail].Sent Mail")
+                    (mu4e-trash-folder        . "/Personal/[Gmail].Trash")
+                    (mu4e-refile-folder       . "/Personal/[Gmail].All Mail")
+                    (mu4e-maildir-shortcuts   . (("/Personal/INBOX" . ?i)
+                                                  ("Personal/[Gmail].Sent Mail"  . ?s)
+                                                  ("Personal/[Gmail].Trash" . ?t)))
+                    (mu4e-compose-signature   . nil)))
+         ,(make-mu4e-context
+            :name "Work"
+            :enter-func (lambda () (mu4e-message "Switch to the Work context"))
+            ;; leave-fun not defined
+            :match-func (lambda (msg)
+                          (when msg 
+                            (mu4e-message-contact-field-matches msg 
+                              :to "mark@getclef.com")))
+            :vars '((user-mail-address        . "mark@getclef.com" )
+                    (user-full-name           . "Mark Hudnall" )
+                    (mu4e-drafts-folder       . "")
+                    (mu4e-drafts-folder       . "/Work/[Gmail].Drafts")
+                    (mu4e-sent-folder         . "/Work/[Gmail].Sent Mail")
+                    (mu4e-trash-folder        . "/Work/[Gmail].Trash")
+                    (mu4e-refile-folder       . "/Work/[Gmail].All Mail")
+                    (mu4e-maildir-shortcuts   . (("/Work/INBOX" . ?i)
+                                                  ("Work/[Gmail].Sent Mail"  . ?s)
+                                                  ("Work/[Gmail].Trash" . ?t)))
+                    (mu4e-compose-signature .
+                     (concat
+                      "---\n"
+                      "Mark Hudnall\n"
+                      "CTO and Co-founder of Clef\n"
+                      "mark@getclef.com"))))))
 
+    ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
+    ;; guess or ask the correct context, e.g.
+
+    ;; start with the first (default) context; 
+    ;; default is to ask-if-none (ask when there's no context yet, and none match)
+    ;; (setq mu4e-context-policy 'pick-first)
+
+    ;; compose with the current context is no context matches;
+    ;; default is to ask 
+    ;; '(setq mu4e-compose-context-policy nil)
+
+    (setq mu4e-update-interval 300))
 #+END_SRC
 
 #+RESULTS:
