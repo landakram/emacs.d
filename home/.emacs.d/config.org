@@ -508,8 +508,8 @@ It's commented out right now because it looks terrible.
 #+RESULTS:
 : t
 
-* Projects
-** Install projectile
+* Navigating
+** Projectile
 Projectile lets me switch between projects really easily. I set it up to default to ~projectile-commander~, which gives me options to choose what I want to do with a project once I open it.
 
 #+BEGIN_SRC emacs-lisp 
@@ -523,14 +523,27 @@ Projectile lets me switch between projects really easily. I set it up to default
     (setq projectile-completion-system 'helm)
     (setq projectile-switch-project-action 'projectile-commander)
 
+    ;; Clear out all commander commands but the help item.
+    (setq projectile-commander-methods (list (car projectile-commander-methods)))
+    ;; (delete-if (lambda (el)
+    ;;              (member (car el) '(?d ?a ?g)))
+    ;;            projectile-commander-methods)
 
     (def-projectile-commander-method ?d
       "Open project root in dired"
       (projectile-dired)))
 
     (def-projectile-commander-method ?a
-      "Find ag on project."
-      (projectile-dired))
+      "Full text search in the project."
+      (helm-projectile-ag))
+
+    (def-projectile-commander-method ?e
+      "Open an [e]shell in the project root."
+      (projectile-run-eshell))
+
+    (def-projectile-commander-method ?f
+      "Find files in the project."
+      (helm-projectile-find-file))
 
     (def-projectile-commander-method ?g
       "Open project root in magit"
