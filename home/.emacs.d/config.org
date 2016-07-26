@@ -386,6 +386,9 @@ It's commented out right now because it looks terrible.
 
     ;; Use helm for apropos
     (global-set-key (kbd "C-h a") 'helm-apropos)
+    
+    ;; Don't cut off filenames
+    (setq helm-buffer-max-length nil)
 
     (helm-mode 1))
 
