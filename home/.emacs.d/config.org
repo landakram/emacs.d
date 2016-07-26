@@ -80,6 +80,24 @@ Now, we diminish some modes (I can't figure out where they are loaded):
 
 #+RESULTS:
 |   |
+** Try packages without installing
+
+#+BEGIN_SRC emacs-lisp
+  (use-package try
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+** Better interface for packages
+
+Brought to you by Paradox:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package paradox
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
 
 * General Configuration
 Let's configure the editor to our liking.
