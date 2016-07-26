@@ -1126,24 +1126,29 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 ** Circe
 #+BEGIN_SRC emacs-lisp 
 
-(use-package circe
-  :ensure t
-  :config
+  (use-package circe
+    :ensure t
+    :config
 
-  (setq circe-network-options
-        `(("Freenode"
-           :nick "landakram"
-           :channels (:after-auth
-                      "#emacs"
-                      "#clojure"
-                      "#clojure-beginners"
-                      "#iphonedev"
-                      "#swift-lang")
-           :nickserv-password "***REMOVED***"
-           :reduce-lurker-spam t)))
-  (enable-circe-color-nicks))
+    (setq circe-network-options
+          `(("Freenode"
+             :nick "landakram"
+             :channels (:after-auth
+                        "#emacs"
+                        "#clojure"
+                        "#clojure-beginners"
+                        "#iphonedev"
+                        "#swift-lang"
+                        "#racket")
+             :nickserv-password "***REMOVED***"
+             :reduce-lurker-spam t)))
+    (enable-circe-color-nicks))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 * RSS Feeds
 ** elfeed
 #+BEGIN_SRC emacs-lisp 
@@ -1192,7 +1197,19 @@ This is long so that fetching feeds does not timeout.
     ;;         ("/[Gmail].Trash"     . ?t)))
 
     ;; allow for updating mail using 'U' in the main view:
-    (setq mu4e-get-mail-command "offlineimap")
+    (setq mu4e-get-mail-command "mbsync -a")
+
+    (setq mu4e-change-filenames-when-moving t)
+
+    ;; Show images
+    (setq mu4e-view-show-images t)
+
+    ;; Don't use mu4e's default HTML renderer. It's hard to read for most messages.
+    (setq mu4e-html2text-command "html2text -utf8 -nobs -width 72")
+  
+    ;; 
+    (add-to-list 'mu4e-view-actions
+                 '("open URL" . mu4e-view-go-to-url) t)
 
     (setq
      user-mail-address "me@markhudnall.com"
@@ -1228,48 +1245,48 @@ This is long so that fetching feeds does not timeout.
       :config)
 
     (setq mu4e-contexts
-      `( ,(make-mu4e-context
-            :name "Personal"
-            :enter-func (lambda () (mu4e-message "Switch to the Personal context"))
-            ;; leave-func not defined
-            :match-func (lambda (msg)
-                          (when msg 
-                            (mu4e-message-contact-field-matches msg 
-                              :to "me@markhudnall.com")))
-            :vars '((user-mail-address        . "me@markhudnall.com"  )
-                    (user-full-name           . "Mark Hudnall" )
-                    (mu4e-drafts-folder       . "/Personal/[Gmail].Drafts")
-                    (mu4e-sent-folder         . "/Personal/[Gmail].Sent Mail")
-                    (mu4e-trash-folder        . "/Personal/[Gmail].Trash")
-                    (mu4e-refile-folder       . "/Personal/[Gmail].All Mail")
-                    (mu4e-maildir-shortcuts   . (("/Personal/INBOX" . ?i)
-                                                  ("Personal/[Gmail].Sent Mail"  . ?s)
-                                                  ("Personal/[Gmail].Trash" . ?t)))
-                    (mu4e-compose-signature   . nil)))
-         ,(make-mu4e-context
-            :name "Work"
-            :enter-func (lambda () (mu4e-message "Switch to the Work context"))
-            ;; leave-fun not defined
-            :match-func (lambda (msg)
-                          (when msg 
-                            (mu4e-message-contact-field-matches msg 
-                              :to "mark@getclef.com")))
-            :vars '((user-mail-address        . "mark@getclef.com" )
-                    (user-full-name           . "Mark Hudnall" )
-                    (mu4e-drafts-folder       . "")
-                    (mu4e-drafts-folder       . "/Work/[Gmail].Drafts")
-                    (mu4e-sent-folder         . "/Work/[Gmail].Sent Mail")
-                    (mu4e-trash-folder        . "/Work/[Gmail].Trash")
-                    (mu4e-refile-folder       . "/Work/[Gmail].All Mail")
-                    (mu4e-maildir-shortcuts   . (("/Work/INBOX" . ?i)
-                                                  ("Work/[Gmail].Sent Mail"  . ?s)
-                                                  ("Work/[Gmail].Trash" . ?t)))
-                    (mu4e-compose-signature .
-                     (concat
-                      "---\n"
-                      "Mark Hudnall\n"
-                      "CTO and Co-founder of Clef\n"
-                      "mark@getclef.com"))))))
+          `( ,(make-mu4e-context
+               :name "Personal"
+               :enter-func (lambda () (mu4e-message "Switch to the Personal context"))
+               ;; leave-func not defined
+               :match-func (lambda (msg)
+                             (when msg 
+                               (mu4e-message-contact-field-matches msg 
+                                                                   :to "me@markhudnall.com")))
+               :vars '((user-mail-address        . "me@markhudnall.com"  )
+                       (user-full-name           . "Mark Hudnall" )
+                       (mu4e-drafts-folder       . "/Personal/[Gmail]/.Drafts")
+                       (mu4e-sent-folder         . "/Personal/[Gmail]/.Sent Mail")
+                       (mu4e-trash-folder        . "/Personal/[Gmail]/.Trash")
+                       (mu4e-refile-folder       . "/Personal/[Gmail]/.All Mail")
+                       (mu4e-maildir-shortcuts   . (("/Personal/INBOX" . ?i)
+                                                    ("Personal/[Gmail]/.Sent Mail"  . ?s)
+                                                    ("Personal/[Gmail]/.Trash" . ?t)))
+                       (mu4e-compose-signature   . nil)))
+             ,(make-mu4e-context
+               :name "Work"
+               :enter-func (lambda () (mu4e-message "Switch to the Work context"))
+               ;; leave-fun not defined
+               :match-func (lambda (msg)
+                             (when msg 
+                               (mu4e-message-contact-field-matches msg 
+                                                                   :to "mark@getclef.com")))
+               :vars '((user-mail-address        . "mark@getclef.com" )
+                       (user-full-name           . "Mark Hudnall" )
+                       (mu4e-drafts-folder       . "")
+                       (mu4e-drafts-folder       . "/Work/[Gmail]/.Drafts")
+                       (mu4e-sent-folder         . "/Work/[Gmail]/.Sent Mail")
+                       (mu4e-trash-folder        . "/Work/[Gmail]/.Trash")
+                       (mu4e-refile-folder       . "/Work/[Gmail]/.All Mail")
+                       (mu4e-maildir-shortcuts   . (("/Work/INBOX" . ?i)
+                                                    ("Work/[Gmail]/.Sent Mail"  . ?s)
+                                                    ("Work/[Gmail]/.Trash" . ?t)))
+                       (mu4e-compose-signature .
+                                               (concat
+                                                "---\n"
+                                                "Mark Hudnall\n"
+                                                "CTO and Co-founder of Clef\n"
+                                                "mark@getclef.com"))))))
 
     ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
     ;; guess or ask the correct context, e.g.
