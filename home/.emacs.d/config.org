@@ -871,6 +871,23 @@ I use Org Mode to take notes for work and personal.
 
 #+END_SRC
 ** General configuration
+*** Open links in new frames
+
+Here's a function that lets me open org links in a new frame. The default behavior is opening a link in a new buffer in the same frame, which doesn't always fit with my workflow -- sometimes I have org open in a separate frame, with the main editing frame on a different monitor.
+
+#+BEGIN_SRC emacs-lisp
+  (require 'cl)
+
+  (defun org-open-other-frame ()
+    "Jump to bookmark in another frame. See `bookmark-jump' for more."
+    (interactive)
+    (let ((org-link-frame-setup (acons 'file 'find-file-other-frame org-link-frame-setup)))
+      (org-open-at-point)))
+#+END_SRC
+
+#+RESULTS:
+: org-open-other-frame
+
 *** Log drawer
 I can type timestamped notes for a given tree with ~C-c C-z~. By default, they are appending to the top of the note. Let's stash then in the ~LOGBOOK~ drawer instead.
 
@@ -909,7 +926,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
     (setq org-startup-truncated 'nil)
     (setq org-catch-invisible-edits 'smart)
-
+    
     ;; Do not dim blocked tasks
     (setq org-agenda-dim-blocked-tasks nil)
 
