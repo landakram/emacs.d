@@ -581,6 +581,17 @@ Ace window is like avy but for windows.
 #+RESULTS:
 : t
 * Coding
+** Testing
+
+Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buffer is saved.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package tdd
+    :load-path "site-lisp/tdd/")
+#+END_SRC
+
+#+RESULTS:
+
 ** Autocomplete
 
 #+BEGIN_SRC emacs-lisp 
@@ -738,6 +749,10 @@ Lots of goodies for Python development.
   (use-package elpy
     :ensure t
     :config
+    
+    ;; Set pytest as the default test runner
+    (elpy-set-test-runner 'elpy-test-pytest-runner)
+
     (elpy-enable))
 #+END_SRC
 
@@ -834,6 +849,13 @@ Fish is my default shell in the terminal, but it doesn't work well in emacs, sin
 #+BEGIN_SRC emacs-lisp
   (setq shell-file-name "/bin/zsh")
 #+END_SRC
+** YAML
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yaml-mode
+    :ensure t)
+#+END_SRC
+
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
