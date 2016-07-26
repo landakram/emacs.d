@@ -446,6 +446,9 @@ It's commented out right now because it looks terrible.
     (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
     ;; Make horizontal movement cross lines               
     (setq-default evil-cross-lines t)
+
+    (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
+
     (evil-mode 1)
 
     (use-package evil-surround
@@ -490,6 +493,12 @@ It's commented out right now because it looks terrible.
 
       ;; Git
       (evil-leader/set-key "g" 'magit-status)
+  
+      ;; Ace window
+      ;; This keybinding matches "f" in normal mode for avy, in terms 
+      ;; of hand placement.
+      (evil-leader/set-key "j" 'ace-window)
+      (global-set-key (kbd "M-j") 'ace-window)
 
       (setq evil-leader/in-all-states 1)
       (global-evil-leader-mode)))
@@ -532,6 +541,32 @@ Projectile lets me switch between projects really easily. I set it up to default
 #+RESULTS:
 | 63 | Commander help buffer. | #[0 \302\303\304D\305\303\306\302EDC\217\210r\307!q\210\310c\210        \311\203@ @\211\211A\262\242\211A\262\242@\312\313#c\266\211T\262A\262\202 \266eb\210\314 \210\315p\316"\210)\317 \207 [projectile-commander-help-buffer projectile-commander-methods err funcall #[0 \301!\207 [projectile-commander-help-buffer kill-buffer] 2 |
 
+** Avy
+Avy lets me jump around buffers and windows with hints.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package avy
+    :ensure t
+    :config
+    ;; Favor home-row and surrounding keys
+    (setq avy-keys
+          '(?h ?j ?k ?l ?a ?s ?d ?f ?g ?y ?u ?i ?o ?p ?q ?w ?e ?r ?t ?n ?m ?z ?x ?c ?v ?b)))
+#+END_SRC
+
+#+RESULTS:
+: t
+** Ace-Window
+Ace window is like avy but for windows.
+
+#+BEGIN_SRC emacs-lisp
+    (use-package ace-window
+      :ensure t
+      :config
+      (setq aw-keys '(?h ?j ?k ?l ?a ?s ?d ?f ?g ?y ?u ?i ?o ?p ?q ?w ?e ?r ?t ?n ?m ?z ?x ?c ?v ?b)))
+#+END_SRC
+
+#+RESULTS:
+: t
 * Coding
 ** Autocomplete
 
