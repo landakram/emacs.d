@@ -422,6 +422,16 @@ It's commented out right now because it looks terrible.
 
 #+BEGIN_SRC emacs-lisp 
 
+  (defun split-window-right-and-focus ()
+    (interactive)
+    (split-window-right)
+    (other-window 1))
+
+  (defun split-window-below-and-focus ()
+    (interactive)
+    (split-window-below)
+    (other-window 1))
+
   (use-package evil
     :ensure t
     :diminish evil-mode
@@ -466,6 +476,9 @@ It's commented out right now because it looks terrible.
       (evil-leader/set-key "k" 'kill-this-buffer)
       (evil-leader/set-key "w" 'save-buffer)
       (evil-leader/set-key "q" 'delete-window)
+  
+      (evil-leader/set-key "|" 'split-window-right-and-focus)
+      (evil-leader/set-key "-" 'split-window-below-and-focus)
 
       ;; Projects
       (evil-leader/set-key "pp" 'helm-projectile-switch-project)
