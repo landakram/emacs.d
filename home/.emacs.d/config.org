@@ -269,14 +269,14 @@ I need this to pull mail for m4ue.
         (setq case-replace nil)
         (replace-regexp "\\(.*\\)=\\(.*\\)" "(setenv \"\\1\" \"\\2\")")
         (eval-buffer)))
-    (getenv "GPG_AGENT_INFO"))
+    (message (getenv "GPG_AGENT_INFO")))
 
   (run-with-idle-timer 60 t 'my/gpg-agent)
   (my/gpg-agent)
 #+END_SRC
 
 #+RESULTS:
-: /tmp/gpg-BU8UFN/S.gpg-agent:4381:1
+: /tmp/gpg-slIax0/S.gpg-agent:787:1
 
 ** Theme
 *** Change the Mode Line
@@ -299,7 +299,7 @@ This mode line is pretty.
 
 *** Change the theme
 
-The "Tomorrow" themes look great in emacs and a terminal.
+The "Monokai" themes look great in emacs and a terminal.
 
 #+BEGIN_SRC emacs-lisp 
 
