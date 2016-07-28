@@ -1004,7 +1004,6 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     (my/org-agenda-keyboard-shortcuts))
 
   (setq-default fill-column 85)
-  (setq-default left-margin-width 1)
 
 #+END_SRC
 
