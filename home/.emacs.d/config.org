@@ -1276,17 +1276,30 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 ** elfeed
 #+BEGIN_SRC emacs-lisp 
 
-(use-package elfeed
-  :ensure t
-  :config
+  (use-package elfeed
+    :ensure t
+    :config
 
-  (setq elfeed-feeds
-        '("https://www.natashatherobot.com/feed/"
-          "http://lambda-the-ultimate.org/rss.xml"
-          "http://sachachua.com/blog/feed/"
-          "http://airspeedvelocity.net/feed/")))
+    (setq elfeed-feeds
+          '("http://lambda-the-ultimate.org/rss.xml"
+            "http://planet.emacsen.org/atom.xml"
+            "http://www.overcomingbias.com/feed"
+            "http://slatestarcodex.com/feed/"
+            "http://worrydream.com/feed.xml"
+            "https://xkcd.com/rss.xml"
+            "http://existentialcomics.com/rss.xml"
+            "http://joshldavis.com/atom.xml"
+            "https://rationalconspiracy.com/feed/"
+            "https://feeds.feedburner.com/Metafilter"
+            "http://feeds.feedburner.com/thoughtsfromtheredplanet?format=xml"
+            "http://www.gwern.net/atom.xml"
+            "http://airspeedvelocity.net/feed/")))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 ** URL queue timeout
 This is long so that fetching feeds does not timeout.
 
