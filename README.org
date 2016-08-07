@@ -1,0 +1,22 @@
+* Mark's Emacs Config 
+
+This is my Emacs config. Peruse it if you wish -- it is highly personal and tweaked often.
+
+A few things to note:
+
+- My configuration is implemented as a [[https://en.wikipedia.org/wiki/Literate_programming][literate]] [[http://orgmode.org/worg/org-contrib/babel/intro.html][org]] document.
+- As a recovering vim user, I use [[https://www.emacswiki.org/emacs/Evil][evil-mode]]. Maybe one day I will learn the default Emacs keybindings.
+- I use [[http://oremacs.com/2015/04/16/ivy-mode/][ivy]] for completion. Previously, I used helm. They both change the experience of using Emacs pretty significantly -- I think for the better. 
+- I make some assumptions that I am running on OS X, but it loads and mostly works in a linux environment.
+
+Emacs took me a really long time to get into. I started my journey with [[http://spacemacs.org/][Spacemacs]], a fantastic Emacs starter kit that works well for vim users. After some time, I wanted to understand what was going on under the hood, and so I stopped using Spacemacs and made my own config.
+
+Learning Emacs was/is hard work, but well worth it. Emacs has reshaped my understanding of what is possible with an editor, and I feel like I could use Emacs /for the rest of my life/.
+
+** Installation
+
+This repository is set up for use with [[https://github.com/andsens/homeshick][homeshick]]. To install it: 
+
+1. Install homeshick.
+2. ~git clone git@github.com:landakram/emacs.d.git ~/.homesick/repos/emacs~
+3. ~homeshick link emacs~
