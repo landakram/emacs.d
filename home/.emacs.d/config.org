@@ -1248,6 +1248,12 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 * IRC
 ** Circe
 #+BEGIN_SRC emacs-lisp 
+  (setq my-credentials-file "~/.private.el")
+
+  (defun my/nickserv-password (_)
+    (with-temp-buffer
+      (insert-file-contents-literally my-credentials-file)
+      (plist-get (read (buffer-string)) :nickserv-password)))
 
   (use-package circe
     :ensure t
@@ -1263,7 +1269,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
                         "#iphonedev"
                         "#swift-lang"
                         "#racket")
-             :nickserv-password "***REMOVED***"
+             :nickserv-password my/nickserv-password
              :reduce-lurker-spam t)))
     (enable-circe-color-nicks))
 
