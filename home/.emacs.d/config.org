@@ -371,99 +371,118 @@ It's commented out right now because it looks terrible.
 
 #+BEGIN_SRC emacs-lisp 
 
-    (use-package ivy
-      :ensure t
+  (defun my/ivy-format-function (cands)
+    "Transform CAND-PAIRS into a string for minibuffer."
+    (ivy--format-function-generic
+     (lambda (str)
+       (concat "-> " (ivy--add-face str 'ivy-current-match)))
+     (lambda (str)
+       (concat "   " str))
+     cands
+     "\n"))
+
+  (use-package ivy
+    :ensure t
+    :config
+    (ivy-mode 1)
+
+    (setq ivy-use-virtual-buffers t)
+    ;;(setq ivy-virtual-abbreviate 'full)
+    (setq ivy-height 30)
+    (setq ivy-count-format "%d ")
+    (setq ivy-display-style 'fancy)
+    (setq ivy-format-function 'my/ivy-format-function)
+
+
+    (use-package flx
+      :ensure t)
+
+    ;; Enable fuzzy searching
+    (setq ivy-initial-inputs-alist nil)
+    (setq ivy-re-builders-alist
+          '((t . ivy--regex-fuzzy)))
+
+    (use-package counsel
+      :ensure t)
+
+    (use-package swiper
+      :ensure t)
+
+    (use-package ivy-hydra
+      :ensure t)
+
+    ;; Shows additional information in the 'ivy-switch-buffer command.
+    (use-package ivy_buffer_extend
+      :load-path "~/.emacs.d/site-lisp/ivy_buffer_extend/"
       :config
-      (ivy-mode 1)
+      (setq ivy-buffer-format '(buffer-name   "<col>"  "   "
+                                mode process  "<col>"  "   "
+                                dir file-name "<col>"  "   ")))
 
-      (setq ivy-use-virtual-buffers t)
-      (setq ivy-virtual-abbreviate 'full)
-      (setq ivy-height 30)
-      (setq ivy-count-format "(%d/%d) ")
-      (setq ivy-display-style 'plain)
-  
-      (use-package flx
-        :ensure t)
-
-      ;; Enable fuzzy searching
-      (setq ivy-initial-inputs-alist nil)
-      (setq ivy-re-builders-alist
-            '((t . ivy--regex-fuzzy)))
-
-      (use-package counsel
-        :ensure t)
-
-      (use-package swiper
-        :ensure t)
-
-      (use-package ivy-hydra
-        :ensure t)
-
-      (global-set-key (kbd "C-s") 'swiper)
-      (global-set-key (kbd "M-x") 'counsel-M-x)
-      (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-      (global-set-key (kbd "<f1> f") 'counsel-describe-function)
-      (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-      (global-set-key (kbd "<f1> l") 'counsel-load-library)
-      (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-      (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+    (global-set-key (kbd "C-s") 'swiper)
+    (global-set-key (kbd "M-x") 'counsel-M-x)
+    (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+    (global-set-key (kbd "<f1> f") 'counsel-describe-function)
+    (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+    (global-set-key (kbd "<f1> l") 'counsel-load-library)
+    (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+    (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
 
 
-      ;; The following functions taken from https://github.com/fgeller/emacs.d/blob/master/ivy.el, which deserves a closer look.
+    ;; The following functions taken from https://github.com/fgeller/emacs.d/blob/master/ivy.el, which deserves a closer look.
 
-      (defun add-ivy-action (str action)
-        "Adds ACTION as text-property to start of STR"
-        (put-text-property 0 1 'ivy-action action str))
+    (defun add-ivy-action (str action)
+      "Adds ACTION as text-property to start of STR"
+      (put-text-property 0 1 'ivy-action action str))
 
-      (defun get-ivy-action (str)
-        "Returns text-property `ivy-action' at start of STR"
-        (get-text-property 0 'ivy-action str))
+    (defun get-ivy-action (str)
+      "Returns text-property `ivy-action' at start of STR"
+      (get-text-property 0 'ivy-action str))
 
 
-      (defun string-copy (str)
-        "Uses `substring' to return a copy of STR without text properties"
-        (substring str 0 (length str)))
+    (defun string-copy (str)
+      "Uses `substring' to return a copy of STR without text properties"
+      (substring str 0 (length str)))
 
-      (defun ivy-apropos-candidates ()
-        (let ((start-time (current-time))
-              cs)
-          (mapatoms
-           (lambda (e)
-             (cond
-              ((fboundp e)
-               (let ((c (string-copy (symbol-name e))))
-                 (add-ivy-action c 'describe-function)
-                 (push c cs)))
-              ((or (get e 'variable-documentation)
-                   (and (boundp e) (not (keywordp e))))
-               (let ((c (string-copy (symbol-name e))))
-                 (add-ivy-action c 'describe-variable)
-                 (push c cs))))))
-          cs))
+    (defun ivy-apropos-candidates ()
+      (let ((start-time (current-time))
+            cs)
+        (mapatoms
+         (lambda (e)
+           (cond
+            ((fboundp e)
+             (let ((c (string-copy (symbol-name e))))
+               (add-ivy-action c 'describe-function)
+               (push c cs)))
+            ((or (get e 'variable-documentation)
+                 (and (boundp e) (not (keywordp e))))
+             (let ((c (string-copy (symbol-name e))))
+               (add-ivy-action c 'describe-variable)
+               (push c cs))))))
+        cs))
 
-      (defun ivy-apropos ()
-        "apropos interface for ivy."
-        (interactive)
-        (ivy-read "Describe: " (ivy-apropos-candidates)
-                  :initial-input (thing-at-point 'symbol)
-                  :action (lambda (s) (funcall (get-ivy-action s) (intern s)))))
+    (defun ivy-apropos ()
+      "apropos interface for ivy."
+      (interactive)
+      (ivy-read "Describe: " (ivy-apropos-candidates)
+                :initial-input (thing-at-point 'symbol)
+                :action (lambda (s) (funcall (get-ivy-action s) (intern s)))))
  
-      ;; These ones are my own:
+    ;; These ones are my own:
 
 
-      (defun counsel-projectile-ag ()
-        (interactive)
-        (counsel-ag nil (projectile-project-root)))
+    (defun counsel-projectile-ag ()
+      (interactive)
+      (counsel-ag nil (projectile-project-root)))
 
 
-      (global-set-key (kbd "C-h a") 'ivy-apropos)
-      (global-set-key (kbd "M-y") 'counsel-yank-pop))
+    (global-set-key (kbd "C-h a") 'ivy-apropos)
+    (global-set-key (kbd "M-y") 'counsel-yank-pop))
 
 
 #+END_SRC
 #+RESULTS:
 : t
-
 * Keybindings
 ** General keybindings
 *** Increase and decrease text size
