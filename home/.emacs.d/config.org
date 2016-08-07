@@ -309,6 +309,14 @@ This mode line is pretty.
 : t
 
 #+RESULTS:
+*** Display time in modeline
+
+#+BEGIN_SRC emacs-lisp
+(display-time-mode 1)
+#+END_SRC
+
+#+RESULTS:
+: t
 
 *** Change the theme
 
