@@ -104,6 +104,11 @@ Brought to you by Paradox:
 #+END_SRC
 
 #+RESULTS:
+** Start up maximized
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+#+END_SRC
 
 * General Configuration
 
@@ -164,7 +169,14 @@ Flycheck is an on-the-fly syntax checker.
     :ensure t
     :diminish flycheck-mode
     :config
-    (global-flycheck-mode))
+    (global-flycheck-mode)
+
+    (flycheck-add-mode 'javascript-eslint 'js2-mode)
+    (flycheck-add-mode 'javascript-eslint 'js-mode)
+
+    (setq-default flycheck-disabled-checkers
+                  (append flycheck-disabled-checkers
+                          '(javascript-jshint))))
 
 #+END_SRC
 
@@ -219,7 +231,6 @@ Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-colum
 
 #+RESULTS:
 : t
-
 ** which-key
 
 Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me of shortcuts when I start typing them.
@@ -237,6 +248,14 @@ Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me 
 
 #+RESULTS:
 : t
+
+** Disable file locking
+
+The bizarre symlink-based file locking isn't really necessary for me since I never have more than one instance of emacs open. It causes problems with tools that watch directories for files, so let's disable it.
+
+#+BEGIN_SRC emacs-lisp
+(setq create-lockfiles nil)
+#+END_SRC
 
 ** Fix the PATH variable
 
@@ -289,7 +308,6 @@ I need this to pull mail for m4ue.
 
 #+RESULTS:
 : /tmp/gpg-slIax0/S.gpg-agent:787:1
-
 ** Theme
 *** Change the Mode Line
 
@@ -366,6 +384,26 @@ It's commented out right now because it looks terrible.
 
 #+RESULTS:
 
+** ~delete-this-file~
+
+#+BEGIN_SRC emacs-lisp
+  (defun delete-this-file ()
+    "Kill the current buffer and deletes the file it is visiting."
+    (interactive)
+    (let ((filename (buffer-file-name)))
+      (when filename
+        (when (y-or-n-p (format "Are you sure you want to delete %s?" filename))
+          (if (vc-backend filename)
+              (vc-delete-file filename)
+            (progn
+              (delete-file filename)
+              (message "Deleted file %s" filename)
+              (kill-buffer)))))))
+#+END_SRC
+
+#+RESULTS:
+: delete-this-file
+
 * UI
 ** Ivy
 
@@ -400,10 +438,14 @@ It's commented out right now because it looks terrible.
     ;; Enable fuzzy searching
     (setq ivy-initial-inputs-alist nil)
     (setq ivy-re-builders-alist
-          '((t . ivy--regex-fuzzy)))
+          '((t . ivy--regex-ignore-order)))
 
     (use-package counsel
-      :ensure t)
+      :ensure t
+      :config
+
+      (use-package smex
+        :ensure t))
 
     (use-package swiper
       :ensure t)
@@ -419,14 +461,9 @@ It's commented out right now because it looks terrible.
                                 mode process  "<col>"  "   "
                                 dir file-name "<col>"  "   ")))
 
-    (global-set-key (kbd "C-s") 'swiper)
+    ;; (global-set-key (kbd "C-s") 'swiper)
     (global-set-key (kbd "M-x") 'counsel-M-x)
     (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-    (global-set-key (kbd "<f1> f") 'counsel-describe-function)
-    (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-    (global-set-key (kbd "<f1> l") 'counsel-load-library)
-    (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-    (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
 
 
     ;; The following functions taken from https://github.com/fgeller/emacs.d/blob/master/ivy.el, which deserves a closer look.
@@ -465,9 +502,9 @@ It's commented out right now because it looks terrible.
       "apropos interface for ivy."
       (interactive)
       (ivy-read "Describe: " (ivy-apropos-candidates)
-                :initial-input (thing-at-point 'symbol)
+                :preselect (ivy-thing-at-point)
                 :action (lambda (s) (funcall (get-ivy-action s) (intern s)))))
- 
+
     ;; These ones are my own:
 
 
@@ -489,68 +526,84 @@ It's commented out right now because it looks terrible.
 
 #+BEGIN_SRC emacs-lisp 
 
-(define-key global-map (kbd "C-=") 'text-scale-increase)
+(define-key global-map (kbd "C-+") 'text-scale-increase)
 (define-key global-map (kbd "C--") 'text-scale-decrease)
 
 #+END_SRC
 
 ** Evil Mode
-*** TODO organize this
 
 #+BEGIN_SRC emacs-lisp 
 
-    (defun split-window-right-and-focus ()
-      (interactive)
-      (split-window-right)
-      (other-window 1))
+  (defun split-window-right-and-focus ()
+    (interactive)
+    (split-window-right)
+    (other-window 1))
 
-    (defun split-window-below-and-focus ()
-      (interactive)
-      (split-window-below)
-      (other-window 1))
+  (defun split-window-below-and-focus ()
+    (interactive)
+    (split-window-below)
+    (other-window 1))
 
-    (use-package evil
+  (use-package evil
+    :ensure t
+    :diminish evil-mode
+    :diminish undo-tree-mode
+    :init
+    ;; (setq evil-want-C-u-scroll t)
+    :config
+    ;; Make movement keys work over visual lines
+    (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+    (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+    (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+    (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+
+    ;; Make * search over whole symbols instead of words. This means 
+    ;; it will match "this-variable" rather than just "this".
+    (setq-default evil-symbol-word-search 1)
+    (setq-default evil-want-fine-undo t)
+
+    ;; Make insert mode just like regular emacs
+
+    (define-key evil-emacs-state-map [escape] 'evil-normal-state)
+    (defalias 'evil-insert-state 'evil-emacs-state)
+    (setq evil-emacs-state-cursor '((bar . 2) "white"))
+
+
+    (setq evil-move-cursor-back nil)
+
+    ;; Search by symbol instead of word. This matches things like
+    ;; "this-variable", instead of just "this". 
+    (setq evil-symbol-word-search 1)
+
+
+    (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
+    (define-key evil-normal-state-map (kbd "C-k") (lambda ()
+                                                    (interactive)
+                                                    (evil-scroll-up nil)))
+    (define-key evil-normal-state-map (kbd "C-j") (lambda ()
+                                                    (interactive)
+                                                    (evil-scroll-down nil)))
+
+
+    ;; Use swiper for search
+    ;; (define-key evil-normal-state-map "/" 'swiper)
+
+    (evil-mode 1)
+
+    (use-package evil-surround
       :ensure t
-      :diminish evil-mode
-      :diminish undo-tree-mode
-      :init
-      ;; (setq evil-want-C-u-scroll t)
+      :diminish evil-surround-mode
       :config
-      ;; Make movement keys work over visual lines
-      (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-      (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-      (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-      (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-      ;; Make horizontal movement cross lines               
-      (setq-default evil-cross-lines t)
+      (global-evil-surround-mode 1))
 
-      (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
-      (define-key evil-normal-state-map (kbd "C-k") (lambda ()
-                                                      (interactive)
-                                                      (evil-scroll-up nil)))
-      (define-key evil-normal-state-map (kbd "C-j") (lambda ()
-                                                      (interactive)
-                                                      (evil-scroll-down nil)))
+    (use-package evil-magit
+      :ensure t)
 
-
-      ;; Use swiper for search
-      (define-key evil-normal-state-map "/" 'swiper)
-
-      (evil-mode 1)
-
-      (use-package evil-surround
-        :ensure t
-        :diminish evil-surround-mode
-        :config
-        (global-evil-surround-mode 1))
-
-      (use-package evil-magit
-        :ensure t)
-
-      (use-package evil-matchit
-        :ensure t
-        :config
-        (global-evil-matchit-mode 1)))
+    (use-package evil-matchit
+      :ensure t
+      :config
+      (global-evil-matchit-mode 1)))
 
 #+END_SRC
 
@@ -565,7 +618,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
   (use-package general
     :ensure t
     :config
-    (setq general-default-keymaps 'evil-normal-state-map)
+    (setq general-default-states '(normal motion))
 
     (general-define-key :prefix "SPC b"
                         "" '(:ignore t :which-key "buffers")
@@ -573,13 +626,28 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "k" 'kill-this-buffer
                         "q" 'delete-window)
 
+    ;; Bookmarks
+    (general-define-key :prefix "SPC bo"
+                        "" '(:ignore t :which-key "b[o]okmarks")
+                        "c" '(:which-key "config-file"
+                             :command (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
+                        "m" '(:which-key "mu4e"
+                             :command mu4e)
+                        "o" '(:which-key "org-file"
+                             :command (lambda () (interactive) (find-file "~/org/projects.org"))))
+
     (general-define-key :prefix "SPC w"
                         "" '(:ignore t :which-key "windows")
+                        "d" 'ace-delete-window
                         "j" 'ace-window)
 
     (general-define-key :prefix "SPC"
                         "|" 'split-window-right-and-focus
                         "-" 'split-window-below-and-focus)
+
+    (general-define-key :prefix "SPC"
+                        "a" 'org-agenda
+                        "c" 'org-capture)
 
     (general-define-key :prefix "SPC"
                         "g" 'magit-status)
@@ -596,11 +664,6 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "" '(nil :which-key "ivy")
                         "r" 'ivy-resume)
 
-    (general-define-key :prefix "SPC c"
-                        "" '(nil :which-key "config")
-                        "e" '(:which-key "edit-config"
-                                         :command (lambda () (interactive) (find-file "~/.emacs.d/config.org"))))
-
     ;; Help
     (general-define-key :prefix "SPC"
                         "h" (general-simulate-keys "C-h"))
@@ -608,7 +671,15 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (general-define-key :prefix "SPC f"
                         "" '(:ignore t :which-key "files")
                         "f" 'counsel-find-file
+                        "d" 'delete-this-file
                         "s" 'save-buffer)
+
+    (general-define-key :states '(emacs normal motion)
+                        "C-x k" 'kill-this-buffer)
+
+    (general-define-key :states '(emacs) :keymaps 'org-agenda-mode-map
+                        "j" 'org-agenda-next-line
+                        "k" 'org-agenda-previous-line)
 
     (general-define-key :prefix "SPC p"
                         "" '(:ignore t :which-key "projects")
@@ -675,7 +746,6 @@ Projectile lets me switch between projects really easily. I set it up to default
 #+RESULTS:
 | 63 | Commander help buffer. | #[0 \302\303\304D\305\303\306\302EDC\217\210r\307!q\210\310c\210        \311\203@ @\211\211A\262\242\211A\262\242@\312\313#c\266\211T\262A\262\202 \266eb\210\314 \210\315p\316"\210)\317 \207 [projectile-commander-help-buffer projectile-commander-methods err funcall #[0 \301!\207 [projectile-commander-help-buffer kill-buffer] 2 |
 
-
 ** Avy
 Avy lets me jump around buffers and windows with hints.
 
@@ -702,6 +772,34 @@ Ace window is like avy but for windows.
 
 #+RESULTS:
 : t
+** Winner mode
+It records window configuration and lets you undo: 
+
+#+BEGIN_SRC emacs-lisp
+(winner-mode 1)
+#+END_SRC
+** Expand-region
+
+#+BEGIN_SRC emacs-lisp
+  (use-package expand-region
+    :ensure t
+    :config
+    (global-set-key (kbd "C-=") 'er/expand-region))
+#+END_SRC
+
+#+RESULTS:
+: t
+** Mouse scrolling
+
+Reduce the amount that the mouse scrolls.
+
+#+BEGIN_SRC emacs-lisp
+(setq mouse-wheel-scroll-amount '(3 ((shift) . 1) ((control) . nil)))
+(setq mouse-wheel-progressive-speed nil)
+#+END_SRC
+
+#+RESULTS:
+
 * Coding
 ** Testing
 
@@ -713,6 +811,18 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 #+END_SRC
 
 #+RESULTS:
+** Indentation
+Autodetect indentation: 
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dtrt-indent
+    :ensure t
+    :config
+    (dtrt-indent-mode))
+#+END_SRC
+
+#+RESULTS:
+: t
 
 ** Autocomplete
 
@@ -721,7 +831,11 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
   (use-package company
     :ensure t
     :config
-    (global-company-mode)) 
+    (global-company-mode)
+    (define-key company-active-map (kbd "M-n") nil)
+    (define-key company-active-map (kbd "M-p") nil)
+    (define-key company-active-map (kbd "C-n") #'company-select-next)
+    (define-key company-active-map (kbd "C-p") #'company-select-previous)) 
 #+END_SRC
 
 #+RESULTS:
@@ -731,10 +845,17 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 *** Magit
 #+BEGIN_SRC emacs-lisp 
 
-(use-package magit
-  :ensure t)
+    (use-package magit
+      :ensure t
+      :config
+      (use-package magithub
+        :ensure t))
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 *** GitHub integration
 **** Open GitHub from Helm
 #+BEGIN_SRC emacs-lisp 
@@ -743,12 +864,9 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 ;;  :ensure t)
 
 #+END_SRC
-
 ** Snippets
 
 #+BEGIN_SRC emacs-lisp 
-
-;; Yasnippet
 
 (use-package yasnippet
   :ensure t
@@ -770,8 +888,22 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 
 #+END_SRC
 
+** Multiple Cursors
+#+BEGIN_SRC emacs-lisp
+  (use-package multiple-cursors
+    :ensure t
+    :config
+
+    (general-define-key :states '(normal motion visual)
+                        "C-n" 'mc/mark-next-like-this
+                        "C-p" 'mc/mark-previous-like-this
+                        "C-*" 'mc/mark-all-like-this))
+#+END_SRC
+
+#+RESULTS:
+: t
+
 ** Lisp
-*** TODO organize
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -809,12 +941,12 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
     :config
     (enable-paredit-mode))
 
-  (add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
-  (add-hook 'lisp-mode-hook             'enable-paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
-  (add-hook 'scheme-mode-hook           'enable-paredit-mode)
-
-  (defvar my/lisp-mode-hooks '(emacs-lisp-mode-hook lisp-mode-hook lisp-interaction-mode-hook scheme-mode-hook clojure-mode-hook))
+  (defvar my/lisp-mode-hooks
+    '(emacs-lisp-mode-hook
+      lisp-mode-hook
+      lisp-interaction-mode-hook
+      scheme-mode-hook
+      clojure-mode-hook))
 
   (dolist (mode my/lisp-mode-hooks)
     (add-hook mode #'enable-paredit-mode)
@@ -823,7 +955,8 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
   (use-package clj-refactor
     :ensure t
     :config
-    (add-hook 'clojure-mode-hook #'my/clojure-mode-hook))
+    (add-hook 'clojure-mode-hook #'my/clojure-mode-hook)
+    (cljr-add-keybindings-with-prefix "C-c RET"))
 
   (defun my/clojure-mode-hook ()
     (clj-refactor-mode 1)
@@ -847,11 +980,16 @@ We also set up eshell so that it shares its environment with emacs, thus using t
     :ensure t
     :config
     (setq eshell-modify-global-environment t)
-    (setq eshell-path-env (getenv "PATH")))
+    (add-hook 'pyvenv-post-activate-hooks (lambda ()
+                                            (setq eshell-path-env (getenv "PATH"))))
+    (add-hook 'pyvenv-post-deactivate-hooks (lambda ()
+                                            (setq eshell-path-env (getenv "PATH"))))
+    )
 
 #+END_SRC
 
 #+RESULTS:
+: t
 *** anaconda-mode
 Lots of goodies for Python development.
 
@@ -869,13 +1007,24 @@ Lots of goodies for Python development.
 
 #+BEGIN_SRC emacs-lisp
   (use-package elpy
-    :ensure t
+    :load-path "site-lisp/elpy"
     :config
-    
+  
     ;; Set pytest as the default test runner
     (elpy-set-test-runner 'elpy-test-pytest-runner)
 
     (elpy-enable))
+#+END_SRC
+
+#+RESULTS:
+: t
+*** Formatting
+
+#+BEGIN_SRC emacs-lisp
+  (use-package py-yapf
+    :ensure t
+    :config
+    (add-hook 'python-mode-hook 'py-yapf-enable-on-save))
 #+END_SRC
 
 #+RESULTS:
@@ -916,9 +1065,24 @@ js-comint lets me run a repl inside emacs where I can evaluate JavaScript.
 
 #+BEGIN_SRC emacs-lisp 
 
-(use-package js-comint
-  :ensure t)
+  (use-package js-comint
+    :ensure t)
 
+#+END_SRC
+*** Ember
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ember-mode
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+*** Indentation
+
+I typically use 2 spaces to indent.
+
+#+BEGIN_SRC emacs-lisp
+  (setq js-indent-level 2)
 #+END_SRC
 ** Haskell
 #+BEGIN_SRC emacs-lisp 
@@ -977,6 +1141,47 @@ Fish is my default shell in the terminal, but it doesn't work well in emacs, sin
   (use-package yaml-mode
     :ensure t)
 #+END_SRC
+** Lua
+
+#+BEGIN_SRC emacs-lisp
+  (use-package lua-mode
+    :ensure t)
+#+END_SRC
+** HTML
+
+Let's use web-mode, which supports font locking for templating.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package web-mode
+    :mode (("\\.html\\'" . web-mode)
+           ("\\.html\\.erb\\'" . web-mode)
+           ("\\.mustache\\'" . web-mode)
+           ("\\.jinja\\'" . web-mode)
+           ("\\.hbs\\'" . web-mode))
+    :ensure t
+    :config
+    (setq web-mode-markup-indent-offset 2)
+    (setq web-mode-css-indent-offset 2)
+    (setq web-mode-code-indent-offset 2))
+#+END_SRC
+
+#+RESULTS:
+** PHP
+
+#+BEGIN_SRC emacs-lisp
+  (use-package php-mode
+    :ensure t)
+#+END_SRC
+** LaTeX
+
+#+BEGIN_SRC emacs-lisp
+  (use-package auctex
+    :ensure t
+    :mode ("\\.tex\\'" . latex-mode)
+    :commands (latex-mode LaTeX-mode plain-tex-mode))
+#+END_SRC
+
+#+RESULTS:
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
@@ -986,11 +1191,17 @@ I use Org Mode to take notes for work and personal.
 
   (defun my/configure-org-directories ()
     (setq org-directory "~/org")
-    (setq org-default-notes-file "~/org/refile.org")
+    (setq org-default-notes-file "~/org/inbox.org")
+    (setq org-refile-use-outline-path 'file)
+    (setq org-outline-path-complete-in-steps nil)
     (setq org-agenda-files (quote ("~/org")))
-    (setq org-refile-targets '((org-agenda-files . (:maxlevel . 6)))))
+    (setq org-refile-targets '((org-agenda-files . (:maxlevel . 2)))))
 
 #+END_SRC
+
+#+RESULTS:
+: my/configure-org-directories
+
 ** General configuration
 *** Open links in new frames
 
@@ -1008,7 +1219,6 @@ Here's a function that lets me open org links in a new frame. The default behavi
 
 #+RESULTS:
 : org-open-other-frame
-
 *** Log drawer
 I can type timestamped notes for a given tree with ~C-c C-z~. By default, they are appending to the top of the note. Let's stash then in the ~LOGBOOK~ drawer instead.
 
@@ -1020,6 +1230,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
 #+RESULTS:
 : t
+
 *** Variable pitch mode
 
 #+BEGIN_SRC emacs-lisp 
@@ -1047,14 +1258,15 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
     (setq org-startup-truncated 'nil)
     (setq org-catch-invisible-edits 'smart)
-    
+
     ;; Do not dim blocked tasks
     (setq org-agenda-dim-blocked-tasks nil)
 
     ;; Start up in org-indent-mode
     (setq org-startup-indented t)
     ;; Diminish org-indent-mode in the mode-line
-    (eval-after-load 'org-indent '(diminish 'org-indent-mode)))
+    (eval-after-load 'org-indent '(diminish 'org-indent-mode))
+    (setq org-hide-emphasis-markers t))
 
 
   (defun my/org-mode ()
@@ -1070,7 +1282,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 #+END_SRC
 
 #+RESULTS:
-: 1
+: 85
 
 ** Keyboard shortcuts
 *** Editing
@@ -1108,10 +1320,15 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 #+BEGIN_SRC emacs-lisp 
 
 (defun my/org-agenda-keyboard-shortcuts ()
-  (define-key org-agenda-mode-map "j" 'evil-next-line)
-  (define-key org-agenda-mode-map "k" 'evil-previous-line))
+  ;;(define-key org-agenda-mode-map "j" 'evil-next-line)
+  ;;(define-key org-agenda-mode-map "k" 'evil-previous-line))
+)
 
 #+END_SRC
+
+#+RESULTS:
+: my/org-agenda-keyboard-shortcuts
+
 ** Editing
 *** Useful functions
 
@@ -1139,28 +1356,34 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
 #+END_SRC
 
+#+RESULTS:
+: org-insert-todo-after-current-and-enter-insert
+
 ** Tasks
 
 #+BEGIN_SRC emacs-lisp 
 
-(defun my/configure-org-todos ()
-  (setq org-todo-keywords
-        (quote ((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-                (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
+  (defun my/configure-org-todos ()
+    (setq org-todo-keywords
+          (quote ((sequence "TODO(t)" "STARTED(s)" "MAYBE(m)" "|" "DONE(d)")
+                  (sequence "WAITING(w@/!)" "HOLD(h@/!)" "DELEGATED(e)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 
-  (setq org-todo-keyword-faces
-        (quote (("TODO" :foreground "red" :weight bold)
-                ("NEXT" :foreground "blue" :weight bold)
-                ("DONE" :foreground "forest green" :weight bold)
-                ("WAITING" :foreground "orange" :weight bold)
-                ("HOLD" :foreground "magenta" :weight bold)
-                ("CANCELLED" :foreground "forest green" :weight bold)
-                ("MEETING" :foreground "forest green" :weight bold)
-                ("PHONE" :foreground "forest green" :weight bold))))
+    (setq org-todo-keyword-faces
+          (quote (("TODO" :foreground "red" :weight bold)
+                  ("NEXT" :foreground "blue" :weight bold)
+                  ("DONE" :foreground "forest green" :weight bold)
+                  ("WAITING" :foreground "orange" :weight bold)
+                  ("HOLD" :foreground "magenta" :weight bold)
+                  ("CANCELLED" :foreground "forest green" :weight bold)
+                  ("MEETING" :foreground "forest green" :weight bold)
+                  ("PHONE" :foreground "forest green" :weight bold))))
 
-  (setq org-use-fast-todo-selection t))
+    (setq org-use-fast-todo-selection t))
 
 #+END_SRC
+
+#+RESULTS:
+: my/configure-org-todos
 
 ** Agenda
 
@@ -1171,7 +1394,8 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 #+BEGIN_SRC emacs-lisp 
 
   (defun my/configure-org-exporters ()
-    (use-package ox-gfm)
+    (use-package ox-gfm
+      :ensure t)
 
     (use-package org-habit)
 
@@ -1186,15 +1410,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
       :ensure t))
 #+END_SRC
 
-** Rifle
-helm-org-rifle lets me search through open org files really quickly.
+#+RESULTS:
+: my/configure-org-exporters
 
-#+BEGIN_SRC emacs-lisp 
-
-;;(use-package helm-org-rifle
-;;  :ensure t)
-
-#+END_SRC
 ** JIRA
 I often link to JIRA issues in my tasks. This function lets me add link JIRA issues by issue title rather than needing to paste in the full link.
 
@@ -1213,17 +1431,42 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 
 #+RESULTS:
 : org-jira-insert-link
-
 ** Capture
 
 #+BEGIN_SRC emacs-lisp
+  (setq org-tag-alist '((:startgroup . nil)
+                        ("OFFICE" . ?o)
+                        ("HOME" . ?h)
+                        ("ERRANDS" . ?e)
+                        (:endgroup . nil)
+                        ("COMPUTER" . ?c)
+                        ("WATCH" . ?w)
+                        ("READ" . ?r)
+                        ("PHONE" . ?p)))
+
   (setq org-capture-templates
-        '(("t" "todo" entry (file+headline "~/org/refile.org" "Tasks")
-           "* TODO [#A] %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n%a\n")))
+        '(("n" "Note" entry (file+headline "~/org/inbox.org" "Notes")
+           "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
+          ("p" "Project idea" entry (file+headline "~/org/inbox.org" "Project Ideas")
+           "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
+          ("c" "Calendar" entry (file+headline "~/org/calendar.org" "Calendar")
+           "* %?\n")
+          ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
+           "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")))
 #+END_SRC
 
 #+RESULTS:
-| t | todo | entry | (file+headline ~/org/refile.org Tasks) | * TODO [#A] %? |
+| n | Note | entry | (file+headline ~/org/inbox.org Notes) | * %? |
+
+** Org protocol
+#+BEGIN_SRC emacs-lisp
+  (defun my/configure-org-protocol ()
+    (use-package org-protocol)
+    (server-start))
+#+END_SRC
+
+#+RESULTS:
+: my/configure-org-protocol
 
 ** Installation
 #+BEGIN_SRC emacs-lisp 
@@ -1236,6 +1479,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
   (my/configure-org-exporters)
   (my/configure-org-todos)
   (my/configure-org)
+  (my/configure-org-protocol)
 
   (add-hook 'org-mode-hook #'my/org-mode)
   (add-hook 'org-agenda-mode-hook #'my/org-agenda-mode))
@@ -1272,7 +1516,6 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
              :nickserv-password my/nickserv-password
              :reduce-lurker-spam t)))
     (enable-circe-color-nicks))
-
 #+END_SRC
 
 #+RESULTS:
@@ -1296,7 +1539,11 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
             "http://existentialcomics.com/rss.xml"
             "http://joshldavis.com/atom.xml"
             "https://rationalconspiracy.com/feed/"
-            "https://feeds.feedburner.com/Metafilter"
+            "https://soylentnews.org/index.rss"
+            "http://meaningness.com/rss.xml"
+            "http://feeds.ribbonfarm.com/Ribbonfarm"
+            "http://www.cs.uni.edu/~wallingf/blog/index.xml"
+            ;;"https://feeds.feedburner.com/Metafilter"
             "http://feeds.feedburner.com/thoughtsfromtheredplanet?format=xml"
             "http://www.gwern.net/atom.xml"
             "http://airspeedvelocity.net/feed/")))
@@ -1318,7 +1565,10 @@ This is long so that fetching feeds does not timeout.
 ** mu4e
 
 #+BEGIN_SRC emacs-lisp
+
   (add-to-list 'load-path "/usr/local/Cellar/mu/0.9.9.5/share/emacs/site-lisp/mu/mu4e")
+  
+  (setq mm-sign-option 'guided)
 
   (use-package mu4e
     :config
@@ -1441,10 +1691,18 @@ This is long so that fetching feeds does not timeout.
     ;; default is to ask 
     ;; '(setq mu4e-compose-context-policy nil)
 
-    (setq mu4e-update-interval 300))
+    ;; (setq mu4e-update-interval 300)
+)
 #+END_SRC
 
 #+RESULTS:
 : t
+* Budgeting
 
+#+BEGIN_SRC emacs-lisp
+  (use-package ledger-mode
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
 
