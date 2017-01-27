@@ -565,9 +565,9 @@ It's commented out right now because it looks terrible.
 
     ;; Make insert mode just like regular emacs
 
-    (define-key evil-emacs-state-map [escape] 'evil-normal-state)
-    (defalias 'evil-insert-state 'evil-emacs-state)
-    (setq evil-emacs-state-cursor '((bar . 2) "white"))
+    ;; (define-key evil-emacs-state-map [escape] 'evil-normal-state)
+    ;; (defalias 'evil-insert-state 'evil-emacs-state)
+    ;; (setq evil-emacs-state-cursor '((bar . 2) "white"))
 
 
     (setq evil-move-cursor-back nil)
