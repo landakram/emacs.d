@@ -528,6 +528,49 @@ It's commented out right now because it looks terrible.
 #+END_SRC
 #+RESULTS:
 : t
+** Window / popup management (shackle)
+
+#+BEGIN_SRC emacs-lisp
+  (use-package shackle
+    :ensure t
+    :config
+    (setq shackle-rules '((compilation-mode :noselect t)
+                          ("*Help*" :select t :align below :inhibit-window-quit nil :popup t)
+                          ("\\*magit.*popup\\*" :regexp t :popup t :align below)
+                          (".*Calendar.*" :regexp t :popup t :align below :select t)
+                          (".*Org Src.*" :regexp t :same t)
+                          (".*CAPTURE.*"           :regexp t :align below :ratio 20)
+                          ("*Org Select*"                  :align below :ratio 20)
+                          (" *Org todo*" :align below :select t)
+                          ("^\\*Org Agenda" :regexp t :align below :inhibit-window-quit nil)
+                          (" *Agenda Commands*" :align below)) 
+          shackle-default-rule '(:select t :same t :inhibit-window-quit t))
+    (setq org-src-window-setup 'other-window)
+    (setq org-agenda-window-setup 'other-window)
+    (shackle-mode t))
+
+  ;; Function to suppress delete-other-windows in functions
+  (defun my/suppress-delete-other-windows (old-fun &rest args)
+    (cl-flet ((silence (&rest args) (ignore)))
+      (advice-add 'delete-other-windows :around #'silence)
+      (unwind-protect
+          (apply old-fun args)
+        (advice-remove 'delete-other-windows #'silence))))
+
+  ;; Adds delete-other-windows to org-mode functions for compatibility with shackle
+  (advice-add 'org-capture-place-template :around #'my/suppress-delete-other-windows)
+  (advice-add 'org-agenda :around #'my/suppress-delete-other-windows)
+  (advice-add 'org-add-log-note :around #'my/suppress-delete-other-windows)
+
+  (defun org-switch-to-buffer-other-window (args)
+    "Switch to buffer in a second window on the current frame.
+    In particular, do not allow pop-up frames.
+    Returns the newly created buffer.
+    Redefined to allow pop-up windows."
+    ;;  (org-no-popups
+    ;;     (apply 'switch-to-buffer-other-window args)))
+    (switch-to-buffer-other-window args))
+#+END_SRC
 * Keybindings
 ** General keybindings
 *** Increase and decrease text size
