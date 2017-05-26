@@ -1304,6 +1304,17 @@ Let's use web-mode, which supports font locking for templating.
   (use-package php-mode
     :ensure t)
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package phpunit
+    :load-path "~/.emacs.d/site-lisp/phpunit"
+    :config
+      (general-define-key
+       :states '(normal)
+       :keymaps 'php-mode-map
+       :prefix "C-c"
+       "C-t" 'phpunit-current-test))
+#+END_SRC
 ** LaTeX
 
 #+BEGIN_SRC emacs-lisp
