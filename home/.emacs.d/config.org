@@ -404,6 +404,14 @@ It's commented out right now because it looks terrible.
 #+RESULTS:
 : delete-this-file
 
+** Load host specific configuration
+
+#+BEGIN_SRC emacs-lisp
+  (let ((host-specific-config (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el")))) 
+    (when (file-readable-p host-specific-config)
+      (load-file host-specific-config)))
+#+END_SRC
+
 * UI
 ** Ivy
 
