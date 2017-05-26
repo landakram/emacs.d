@@ -627,6 +627,14 @@ It's commented out right now because it looks terrible.
     ;; "this-variable", instead of just "this". 
     (setq evil-symbol-word-search 1)
 
+    (define-key evil-normal-state-map (kbd "gf")
+      (lambda () (interactive) (etags-select-find-tag-at-point)))
+
+    (define-key evil-normal-state-map (kbd "gb") 'pop-tag-mark)
+
+    (define-key evil-normal-state-map (kbd "gn")
+      (lambda () (interactive) (find-tag last-tag t)))
+
 
     (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
     (define-key evil-normal-state-map (kbd "C-k") (lambda ()
@@ -850,6 +858,21 @@ Reduce the amount that the mouse scrolls.
 #+END_SRC
 
 #+RESULTS:
+** imenu
+
+#+BEGIN_SRC emacs-lisp
+  (general-define-key :states '(normal)
+                      "F" 'counsel-imenu)
+#+END_SRC
+** ctags
+
+#+BEGIN_SRC emacs-lisp
+  (setq tags-case-fold-search nil)
+  (setq large-file-warning-threshold nil)
+
+  (use-package etags-select
+    :ensure t)
+#+END_SRC
 
 * Coding
 ** Testing
