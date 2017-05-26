@@ -919,23 +919,81 @@ Autodetect indentation:
 *** Magit
 #+BEGIN_SRC emacs-lisp 
 
-    (use-package magit
-      :ensure t
-      :config
-      (use-package magithub
-        :ensure t))
+  (use-package magit
+    :ensure t
+    :config)
 
 #+END_SRC
 
 #+RESULTS:
 : t
-
 *** GitHub integration
 **** Open GitHub from Helm
 #+BEGIN_SRC emacs-lisp 
 
 ;;(use-package helm-open-github
 ;;  :ensure t)
+
+#+END_SRC
+
+*** Open GitHub from file
+
+#+BEGIN_SRC emacs-lisp
+    (defun helm-open-github--command-one-line (cmd args)
+      (with-temp-buffer
+        (when (zerop (apply 'call-process cmd nil t nil args))
+          (goto-char (point-min))
+          (buffer-substring-no-properties
+           (line-beginning-position) (line-end-position)))))
+
+    (defun helm-open-github--branch ()
+     (let ((branch (helm-open-github--command-one-line "git" '("symbolic-ref" "HEAD"))))
+       (if (not branch)
+           (error "Failed: 'git symbolic-ref HEAD'")
+         (replace-regexp-in-string "\\`refs/heads/" "" branch))))
+
+    (defun helm-open-github--highlight-marker (start end)
+      (cond ((and start end (region-active-p))
+             (format "#L%s..L%s" start end))
+            (start
+             (format "#L%s" start))
+            (t "")))
+
+    (require 'subr-x)
+
+    (defun github-file-url ()
+      (let* ((branch (helm-open-github--branch))
+             (current-file (buffer-file-name))
+             (root (vc-git-root current-file))
+             (repo-path (file-relative-name current-file root))
+             (base-url (string-trim (car (split-string
+                                          (shell-command-to-string "hub browse -u")
+                                          "tree"))))
+             (start-line (line-number-at-pos (if (region-active-p) (region-beginning) (point))))
+             (end-line (line-number-at-pos (region-end)))
+             (marker (helm-open-github--highlight-marker start-line end-line)))
+        (format "%s/blob/%s/%s%s" base-url branch repo-path marker)))
+
+  (defun github-url-save ()
+    (interactive)
+    (let ((url (github-file-url)) ) 
+      (with-temp-buffer
+        (insert url)
+        (evil-yank (point-min) (point-max)))))
+
+  (defun github-open-file ()
+    (interactive)
+    (browse-url (github-file-url)))
+
+  (defun org-store-github-link ()
+    (interactive)
+    (let* ((current-file (buffer-file-name))
+           (root (vc-git-root current-file))
+           (repo-path (file-relative-name current-file root))
+           (github-link (github-file-url)))
+      (add-to-list 'org-stored-links (list github-link repo-path))))
+
+
 
 #+END_SRC
 ** Snippets
