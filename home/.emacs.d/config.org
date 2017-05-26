@@ -518,7 +518,7 @@ It's commented out right now because it looks terrible.
 
     (defun counsel-projectile-ag ()
       (interactive)
-      (counsel-ag nil (projectile-project-root)))
+      (counsel-ag (ivy-thing-at-point) (projectile-project-root)))
 
 
     (global-set-key (kbd "C-h a") 'ivy-apropos)
