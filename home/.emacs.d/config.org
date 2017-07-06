@@ -800,6 +800,9 @@ Projectile lets me switch between projects really easily. I set it up to default
           (concat "ag -0 -l --nocolor"
                   (mapconcat #'identity (cons "" projectile-globally-ignored-directories) " --ignore-dir=")))
 
+    ;; Workaround for tramp slowness (https://emacs.stackexchange.com/questions/17543/tramp-mode-is-much-slower-than-using-terminal-to-ssh)
+    (setq projectile-mode-line "Projectile")
+
     (def-projectile-commander-method ?d
       "Open project root in dired"
       (projectile-dired)))
@@ -893,7 +896,19 @@ Reduce the amount that the mouse scrolls.
   (use-package etags-select
     :ensure t)
 #+END_SRC
+** Tramp
 
+#+BEGIN_SRC emacs-lisp
+(setq tramp-verbose 6)
+(setq tramp-default-method "ssh")
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+;; TODO: unfortunately this doesn't quite work
+  (defun tail-this-file ()
+    (interactive)
+    (dired-do-shell-command "tail -f * &" nil (dired-get-marked-files)))
+#+END_SRC
 * Coding
 ** Testing
 
@@ -926,6 +941,7 @@ Autodetect indentation:
     :ensure t
     :config
     (global-company-mode)
+    (setq company-etags-modes nil) ;; Turn off etags since it's slow for the huge PHP codebase I work with
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
     (define-key company-active-map (kbd "C-n") #'company-select-next)
