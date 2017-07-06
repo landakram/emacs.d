@@ -27,7 +27,7 @@
  '(magit-diff-use-overlays nil)
  '(package-selected-packages
    (quote
-    (shackle etags-select geben phpunit auctex smex ledger-mode expand-region php-mode pug-mode zenburn-theme yaml-mode which-key web-mode web visual-fill-column use-package try swift-mode smart-mode-line sicp pythonic py-yapf projectile popup pinentry paradox ox-rst ox-jira ox-gfm org-plus-contrib org-jira nvm monokai-theme mmm-jinja2 markdown-mode lua-mode load-theme-buffer-local js-comint ivy-hydra ignoramus haskell-mode gh general geiser flycheck flx exec-path-from-shell evil-surround evil-mu4e evil-matchit evil-magit evil-cleverparens ember-mode elpy elpakit elfeed dtrt-indent dockerfile-mode docker counsel color-theme-zenburn color-theme-sanityinc-tomorrow color-theme-buffer-local coffee-mode clj-refactor circe better-defaults ag ace-window)))
+    (outshine smart-tab prodigy window-purpose evil-mc restclient shackle etags-select geben phpunit auctex smex ledger-mode expand-region php-mode pug-mode zenburn-theme yaml-mode which-key web-mode web visual-fill-column use-package try swift-mode smart-mode-line sicp pythonic py-yapf projectile popup pinentry paradox ox-rst ox-jira ox-gfm org-plus-contrib org-jira nvm monokai-theme mmm-jinja2 markdown-mode lua-mode load-theme-buffer-local js-comint ivy-hydra ignoramus haskell-mode gh general geiser flycheck flx exec-path-from-shell evil-surround evil-mu4e evil-matchit evil-magit evil-cleverparens ember-mode elpy elpakit elfeed dtrt-indent dockerfile-mode docker counsel color-theme-zenburn color-theme-sanityinc-tomorrow color-theme-buffer-local coffee-mode clj-refactor circe better-defaults ag ace-window)))
  '(paradox-github-token t)
  '(pdf-info-epdfinfo-program
    "/Users/mark/.emacs.d/elpa/pdf-tools-20160203.1057/build/server/epdfinfo")
@@ -36,6 +36,48 @@
  '(safe-local-variable-values
    (quote
     ((eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (when
+               (not
+                (eq tags-table-list
+                    (list
+                     (concat my-project-path "TAGS"))))
+             (setq tags-table-list
+                   (list
+                    (concat my-project-path "TAGS")))))
+     (eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (when
+               (not
+                (eq tags-table-list
+                    (list
+                     (concat my-project-path "TAGS"))))
+             (setq tags-table-list
+                   (list
+                    (concat my-project-path "TAGS")))
+             (visit-tags-table
+              (car tags-table-list))))
+     (eval and
            (set
             (make-local-variable
              (quote my-project-path))
