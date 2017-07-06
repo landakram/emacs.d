@@ -1007,9 +1007,12 @@ Lots of goodies for Python development.
   (use-package elpy
     :load-path "site-lisp/elpy"
     :config
-  
+
     ;; Set pytest as the default test runner
     (elpy-set-test-runner 'elpy-test-pytest-runner)
+
+    ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
+    (setq python-shell-completion-native-enable nil)
 
     (elpy-enable))
 #+END_SRC
