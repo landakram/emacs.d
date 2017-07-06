@@ -1365,6 +1365,41 @@ Let's use web-mode, which supports font locking for templating.
   (use-package restclient
     :ensure t)
 #+END_SRC
+** eshell
+
+#+BEGIN_SRC emacs-lisp
+  (defun eshell-complete-at-point-history-fn ()
+    (interactive)
+    (let ((bounds (bounds-of-thing-at-point 'word)))
+      (when bounds
+        (list (car bounds)
+              (cdr bounds)
+              (ring-elements eshell-history-ring)))))
+
+  (defun eshell-select-history-item ()
+    "Select eshell history item."
+    (interactive)
+    (let ((ivy-sort-functions-alist nil))
+      (insert (completing-read "History item: " (ring-elements eshell-history-ring)))))
+
+
+  (defun eshell-complete-at-point-history ()
+    (interactive)
+    (let ((completion-at-point-functions '(eshell-complete-at-point-history-fn)))
+      (completion-at-point)))
+
+  (defun eshell-history ()
+    (interactive)
+    (let ((bounds (bounds-of-thing-at-point 'word)))
+      (if bounds
+          (eshell-complete-at-point-history)
+        (eshell-select-history-item))))
+
+
+  (add-hook 'eshell-mode-hook
+            (lambda()
+              (define-key eshell-mode-map (kbd "M-r") 'eshell-history)))
+#+END_SRC
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
