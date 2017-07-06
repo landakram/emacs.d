@@ -481,6 +481,7 @@ It's commented out right now because it looks terrible.
       "Adds ACTION as text-property to start of STR"
       (put-text-property 0 1 'ivy-action action str))
 
+
     (defun get-ivy-action (str)
       "Returns text-property `ivy-action' at start of STR"
       (get-text-property 0 'ivy-action str))
@@ -529,21 +530,23 @@ It's commented out right now because it looks terrible.
 #+END_SRC
 #+RESULTS:
 : t
-** Window / popup management (shackle)
+** Window / popup management (shackle, purpose)
 
 #+BEGIN_SRC emacs-lisp
   (use-package shackle
     :ensure t
     :config
-    (setq shackle-rules '((compilation-mode :noselect t)
+    (setq shackle-rules '((compilation-mode :select t :ratio 0.2 :align below)
                           ("*Help*" :select t :align below :inhibit-window-quit nil :popup t)
                           ("\\*magit.*popup\\*" :regexp t :popup t :align below)
                           (".*Calendar.*" :regexp t :popup t :align below :select t)
                           (".*Org Src.*" :regexp t :same t)
                           (".*CAPTURE.*"           :regexp t :align below :ratio 20)
                           ("*Org Select*"                  :align below :ratio 20)
+                          ("*HTTP Response*"                  :align below :ratio 40)
                           (" *Org todo*" :align below :select t)
                           ("^\\*Org Agenda" :regexp t :align below :inhibit-window-quit nil)
+                          ("^\\*ivy-occur.*" :regexp t :align below :inhibit-window-quit nil :ratio 20 :select t)
                           (" *Agenda Commands*" :align below)) 
           shackle-default-rule '(:select t :same t :inhibit-window-quit t))
     (setq org-src-window-setup 'other-window)
@@ -571,6 +574,22 @@ It's commented out right now because it looks terrible.
     ;;  (org-no-popups
     ;;     (apply 'switch-to-buffer-other-window args)))
     (switch-to-buffer-other-window args))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package window-purpose
+  ;;   :ensure t
+  ;;   :config
+  ;;   (purpose-mode)
+  ;;   (purpose-x-magit-single-on)
+  ;;   (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(compilation-mode . repl-like))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(php-mode . edit))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(json-mode . edit))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(eshell-mode . repl-like))
+  ;;   (add-to-list 'purpose-user-regexp-purposes '("^\\*magit" . edit))
+  ;;   (purpose-compile-user-configuration))
 #+END_SRC
 * Keybindings
 ** General keybindings
@@ -772,7 +791,7 @@ Projectile lets me switch between projects really easily. I set it up to default
     ;; (delete-if (lambda (el)
     ;;              (member (car el) '(?d ?a ?g)))
     ;;            projectile-commander-methods)
-  
+
 
     ;; Use ag instead of projectile's default of find.
     ;; This lets me use .agignore files instead of projectile's
