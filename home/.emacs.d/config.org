@@ -564,10 +564,8 @@ It's commented out right now because it looks terrible.
     (setq-default evil-want-fine-undo t)
 
     ;; Make insert mode just like regular emacs
-
-    ;; (define-key evil-emacs-state-map [escape] 'evil-normal-state)
-    ;; (defalias 'evil-insert-state 'evil-emacs-state)
-    ;; (setq evil-emacs-state-cursor '((bar . 2) "white"))
+    (setq evil-insert-state-map (make-sparse-keymap))
+    (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
 
 
     (setq evil-move-cursor-back nil)
