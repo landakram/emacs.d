@@ -909,6 +909,19 @@ Reduce the amount that the mouse scrolls.
     (interactive)
     (dired-do-shell-command "tail -f * &" nil (dired-get-marked-files)))
 #+END_SRC
+** Outline mode
+
+#+BEGIN_SRC emacs-lisp
+  (defvar outline-minor-mode-prefix "\M-#")
+
+  (use-package outshine
+    :ensure t
+    :config
+    (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
+    (add-hook 'prog-mode-hook 'outline-minor-mode))
+
+#+END_SRC
+
 * Coding
 ** Testing
 
