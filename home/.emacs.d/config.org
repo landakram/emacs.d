@@ -1058,14 +1058,12 @@ Autodetect indentation:
 
 ** Multiple Cursors
 #+BEGIN_SRC emacs-lisp
-  (use-package multiple-cursors
+  (use-package evil-mc
     :ensure t
     :config
-
+    (global-evil-mc-mode 1)
     (general-define-key :states '(normal motion visual)
-                        "C-n" 'mc/mark-next-like-this
-                        "C-p" 'mc/mark-previous-like-this
-                        "C-*" 'mc/mark-all-like-this))
+                        "C-*" 'evil-mc-make-all-cursors))
 #+END_SRC
 
 #+RESULTS:
