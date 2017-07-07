@@ -109,7 +109,6 @@ Brought to you by Paradox:
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+END_SRC
-
 * General Configuration
 
 Let's configure the editor to our liking.
@@ -220,12 +219,12 @@ Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-colum
 
 #+BEGIN_SRC emacs-lisp 
 
-  (use-package visual-fill-column
-    :ensure t
-    :diminish visual-line-mode
-    :config
-    (add-hook 'text-mode-hook 'visual-fill-column-mode)
-    (global-visual-line-mode))
+  ;; (use-package visual-fill-column
+  ;;   :ensure t
+  ;;   :diminish visual-line-mode
+  ;;   :config
+  ;;   (add-hook 'text-mode-hook 'visual-fill-column-mode)
+  ;;   (global-visual-line-mode))
 
 #+END_SRC
 
@@ -263,17 +262,19 @@ This sets up emacs to inherit commands from ~$PATH~. Without it, some commands t
 
 #+BEGIN_SRC emacs-lisp 
 
-  (use-package exec-path-from-shell
-    :ensure t
-    :config
-    (exec-path-from-shell-initialize))
+    (use-package exec-path-from-shell
+      :ensure t
+      :config
+      (exec-path-from-shell-initialize)
+      (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+      (exec-path-from-shell-copy-env "SSH_AUTH_SOCK"))
 
-  ;; (defun set-exec-path-from-shell-PATH ()
-  ;;   (let ((path-from-shell (shell-command-to-string "env TERM=vt100 /bin/zsh -i -c 'echo $PATH'")))
-  ;;     (setenv "PATH" path-from-shell)
-  ;;     (setq exec-path (split-string path-from-shell path-separator))))
+    ;; (defun set-exec-path-from-shell-PATH ()
+    ;;   (let ((path-from-shell (shell-command-to-string "env TERM=vt100 /bin/zsh -i -c 'echo $PATH'")))
+    ;;     (setenv "PATH" path-from-shell)
+    ;;     (setq exec-path (split-string path-from-shell path-separator))))
 
-  ;; (when window-system (set-exec-path-from-shell-PATH))
+    ;; (when window-system (set-exec-path-from-shell-PATH))
 
 #+END_SRC
 
@@ -404,6 +405,14 @@ It's commented out right now because it looks terrible.
 #+RESULTS:
 : delete-this-file
 
+** Load host specific configuration
+
+#+BEGIN_SRC emacs-lisp
+  (let ((host-specific-config (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el")))) 
+    (when (file-readable-p host-specific-config)
+      (load-file host-specific-config)))
+#+END_SRC
+
 * UI
 ** Ivy
 
@@ -472,6 +481,7 @@ It's commented out right now because it looks terrible.
       "Adds ACTION as text-property to start of STR"
       (put-text-property 0 1 'ivy-action action str))
 
+
     (defun get-ivy-action (str)
       "Returns text-property `ivy-action' at start of STR"
       (get-text-property 0 'ivy-action str))
@@ -510,7 +520,7 @@ It's commented out right now because it looks terrible.
 
     (defun counsel-projectile-ag ()
       (interactive)
-      (counsel-ag nil (projectile-project-root)))
+      (counsel-ag (ivy-thing-at-point) (projectile-project-root)))
 
 
     (global-set-key (kbd "C-h a") 'ivy-apropos)
@@ -520,6 +530,67 @@ It's commented out right now because it looks terrible.
 #+END_SRC
 #+RESULTS:
 : t
+** Window / popup management (shackle, purpose)
+
+#+BEGIN_SRC emacs-lisp
+  (use-package shackle
+    :ensure t
+    :config
+    (setq shackle-rules '((compilation-mode :select t :ratio 0.2 :align below)
+                          ("*Help*" :select t :align below :inhibit-window-quit nil :popup t)
+                          ("\\*magit.*popup\\*" :regexp t :popup t :align below)
+                          (".*Calendar.*" :regexp t :popup t :align below :select t)
+                          (".*Org Src.*" :regexp t :same t)
+                          (".*CAPTURE.*"           :regexp t :align below :ratio 20)
+                          ("*Org Select*"                  :align below :ratio 20)
+                          ("*HTTP Response*"                  :align below :ratio 40)
+                          (" *Org todo*" :align below :select t)
+                          ("^\\*Org Agenda" :regexp t :align below :inhibit-window-quit nil)
+                          ("^\\*ivy-occur.*" :regexp t :align below :inhibit-window-quit nil :ratio 20 :select t)
+                          (" *Agenda Commands*" :align below)) 
+          shackle-default-rule '(:select t :same t :inhibit-window-quit t))
+    (setq org-src-window-setup 'other-window)
+    (setq org-agenda-window-setup 'other-window)
+    (shackle-mode t))
+
+  ;; Function to suppress delete-other-windows in functions
+  (defun my/suppress-delete-other-windows (old-fun &rest args)
+    (cl-flet ((silence (&rest args) (ignore)))
+      (advice-add 'delete-other-windows :around #'silence)
+      (unwind-protect
+          (apply old-fun args)
+        (advice-remove 'delete-other-windows #'silence))))
+
+  ;; Adds delete-other-windows to org-mode functions for compatibility with shackle
+  (advice-add 'org-capture-place-template :around #'my/suppress-delete-other-windows)
+  (advice-add 'org-agenda :around #'my/suppress-delete-other-windows)
+  (advice-add 'org-add-log-note :around #'my/suppress-delete-other-windows)
+
+  (defun org-switch-to-buffer-other-window (args)
+    "Switch to buffer in a second window on the current frame.
+    In particular, do not allow pop-up frames.
+    Returns the newly created buffer.
+    Redefined to allow pop-up windows."
+    ;;  (org-no-popups
+    ;;     (apply 'switch-to-buffer-other-window args)))
+    (switch-to-buffer-other-window args))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package window-purpose
+  ;;   :ensure t
+  ;;   :config
+  ;;   (purpose-mode)
+  ;;   (purpose-x-magit-single-on)
+  ;;   (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(compilation-mode . repl-like))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(php-mode . edit))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(json-mode . edit))
+  ;;   (add-to-list 'purpose-user-mode-purposes '(eshell-mode . repl-like))
+  ;;   (add-to-list 'purpose-user-regexp-purposes '("^\\*magit" . edit))
+  ;;   (purpose-compile-user-configuration))
+#+END_SRC
 * Keybindings
 ** General keybindings
 *** Increase and decrease text size
@@ -573,6 +644,14 @@ It's commented out right now because it looks terrible.
     ;; Search by symbol instead of word. This matches things like
     ;; "this-variable", instead of just "this". 
     (setq evil-symbol-word-search 1)
+
+    (define-key evil-normal-state-map (kbd "gf")
+      (lambda () (interactive) (etags-select-find-tag-at-point)))
+
+    (define-key evil-normal-state-map (kbd "gb") 'pop-tag-mark)
+
+    (define-key evil-normal-state-map (kbd "gn")
+      (lambda () (interactive) (find-tag last-tag t)))
 
 
     (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
@@ -710,7 +789,7 @@ Projectile lets me switch between projects really easily. I set it up to default
     ;; (delete-if (lambda (el)
     ;;              (member (car el) '(?d ?a ?g)))
     ;;            projectile-commander-methods)
-  
+
 
     ;; Use ag instead of projectile's default of find.
     ;; This lets me use .agignore files instead of projectile's
@@ -718,6 +797,9 @@ Projectile lets me switch between projects really easily. I set it up to default
     (setq projectile-generic-command
           (concat "ag -0 -l --nocolor"
                   (mapconcat #'identity (cons "" projectile-globally-ignored-directories) " --ignore-dir=")))
+
+    ;; Workaround for tramp slowness (https://emacs.stackexchange.com/questions/17543/tramp-mode-is-much-slower-than-using-terminal-to-ssh)
+    (setq projectile-mode-line "Projectile")
 
     (def-projectile-commander-method ?d
       "Open project root in dired"
@@ -797,6 +879,46 @@ Reduce the amount that the mouse scrolls.
 #+END_SRC
 
 #+RESULTS:
+** imenu
+
+#+BEGIN_SRC emacs-lisp
+  (general-define-key :states '(normal)
+                      "F" 'counsel-imenu)
+#+END_SRC
+** ctags
+
+#+BEGIN_SRC emacs-lisp
+  (setq tags-case-fold-search nil)
+  (setq large-file-warning-threshold nil)
+
+  (use-package etags-select
+    :ensure t)
+#+END_SRC
+** Tramp
+
+#+BEGIN_SRC emacs-lisp
+(setq tramp-verbose 6)
+(setq tramp-default-method "ssh")
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+;; TODO: unfortunately this doesn't quite work
+  (defun tail-this-file ()
+    (interactive)
+    (dired-do-shell-command "tail -f * &" nil (dired-get-marked-files)))
+#+END_SRC
+** Outline mode
+
+#+BEGIN_SRC emacs-lisp
+  (defvar outline-minor-mode-prefix "\M-#")
+
+  (use-package outshine
+    :ensure t
+    :config
+    (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
+    (add-hook 'prog-mode-hook 'outline-minor-mode))
+
+#+END_SRC
 
 * Coding
 ** Testing
@@ -830,6 +952,7 @@ Autodetect indentation:
     :ensure t
     :config
     (global-company-mode)
+    (setq company-etags-modes nil) ;; Turn off etags since it's slow for the huge PHP codebase I work with
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
     (define-key company-active-map (kbd "C-n") #'company-select-next)
@@ -843,23 +966,81 @@ Autodetect indentation:
 *** Magit
 #+BEGIN_SRC emacs-lisp 
 
-    (use-package magit
-      :ensure t
-      :config
-      (use-package magithub
-        :ensure t))
+  (use-package magit
+    :ensure t
+    :config)
 
 #+END_SRC
 
 #+RESULTS:
 : t
-
 *** GitHub integration
 **** Open GitHub from Helm
 #+BEGIN_SRC emacs-lisp 
 
 ;;(use-package helm-open-github
 ;;  :ensure t)
+
+#+END_SRC
+
+*** Open GitHub from file
+
+#+BEGIN_SRC emacs-lisp
+    (defun helm-open-github--command-one-line (cmd args)
+      (with-temp-buffer
+        (when (zerop (apply 'call-process cmd nil t nil args))
+          (goto-char (point-min))
+          (buffer-substring-no-properties
+           (line-beginning-position) (line-end-position)))))
+
+    (defun helm-open-github--branch ()
+     (let ((branch (helm-open-github--command-one-line "git" '("symbolic-ref" "HEAD"))))
+       (if (not branch)
+           (error "Failed: 'git symbolic-ref HEAD'")
+         (replace-regexp-in-string "\\`refs/heads/" "" branch))))
+
+    (defun helm-open-github--highlight-marker (start end)
+      (cond ((and start end (region-active-p))
+             (format "#L%s..L%s" start end))
+            (start
+             (format "#L%s" start))
+            (t "")))
+
+    (require 'subr-x)
+
+    (defun github-file-url ()
+      (let* ((branch (helm-open-github--branch))
+             (current-file (buffer-file-name))
+             (root (vc-git-root current-file))
+             (repo-path (file-relative-name current-file root))
+             (base-url (string-trim (car (split-string
+                                          (shell-command-to-string "hub browse -u")
+                                          "tree"))))
+             (start-line (line-number-at-pos (if (region-active-p) (region-beginning) (point))))
+             (end-line (line-number-at-pos (region-end)))
+             (marker (helm-open-github--highlight-marker start-line end-line)))
+        (format "%s/blob/%s/%s%s" base-url branch repo-path marker)))
+
+  (defun github-url-save ()
+    (interactive)
+    (let ((url (github-file-url)) ) 
+      (with-temp-buffer
+        (insert url)
+        (evil-yank (point-min) (point-max)))))
+
+  (defun github-open-file ()
+    (interactive)
+    (browse-url (github-file-url)))
+
+  (defun org-store-github-link ()
+    (interactive)
+    (let* ((current-file (buffer-file-name))
+           (root (vc-git-root current-file))
+           (repo-path (file-relative-name current-file root))
+           (github-link (github-file-url)))
+      (add-to-list 'org-stored-links (list github-link repo-path))))
+
+
 
 #+END_SRC
 ** Snippets
@@ -888,14 +1069,12 @@ Autodetect indentation:
 
 ** Multiple Cursors
 #+BEGIN_SRC emacs-lisp
-  (use-package multiple-cursors
+  (use-package evil-mc
     :ensure t
     :config
-
+    (global-evil-mc-mode 1)
     (general-define-key :states '(normal motion visual)
-                        "C-n" 'mc/mark-next-like-this
-                        "C-p" 'mc/mark-previous-like-this
-                        "C-*" 'mc/mark-all-like-this))
+                        "C-*" 'evil-mc-make-all-cursors))
 #+END_SRC
 
 #+RESULTS:
@@ -924,6 +1103,9 @@ Autodetect indentation:
         "(do (require 'figwheel-sidecar.repl-api)
              (figwheel-sidecar.repl-api/start-figwheel!)
              (figwheel-sidecar.repl-api/cljs-repl))"))
+
+  (use-package cljsbuild-mode
+    :ensure t)
 
   (use-package clojure-mode
     :ensure t)
@@ -1173,6 +1355,17 @@ Let's use web-mode, which supports font locking for templating.
   (use-package php-mode
     :ensure t)
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package phpunit
+    :load-path "~/.emacs.d/site-lisp/phpunit"
+    :config
+      (general-define-key
+       :states '(normal)
+       :keymaps 'php-mode-map
+       :prefix "C-c"
+       "C-t" 'phpunit-current-test))
+#+END_SRC
 ** LaTeX
 
 #+BEGIN_SRC emacs-lisp
@@ -1183,6 +1376,47 @@ Let's use web-mode, which supports font locking for templating.
 #+END_SRC
 
 #+RESULTS:
+** API exploration
+
+#+BEGIN_SRC emacs-lisp
+  (use-package restclient
+    :ensure t)
+#+END_SRC
+** eshell
+
+#+BEGIN_SRC emacs-lisp
+  (defun eshell-complete-at-point-history-fn ()
+    (interactive)
+    (let ((bounds (bounds-of-thing-at-point 'word)))
+      (when bounds
+        (list (car bounds)
+              (cdr bounds)
+              (ring-elements eshell-history-ring)))))
+
+  (defun eshell-select-history-item ()
+    "Select eshell history item."
+    (interactive)
+    (let ((ivy-sort-functions-alist nil))
+      (insert (completing-read "History item: " (ring-elements eshell-history-ring)))))
+
+
+  (defun eshell-complete-at-point-history ()
+    (interactive)
+    (let ((completion-at-point-functions '(eshell-complete-at-point-history-fn)))
+      (completion-at-point)))
+
+  (defun eshell-history ()
+    (interactive)
+    (let ((bounds (bounds-of-thing-at-point 'word)))
+      (if bounds
+          (eshell-complete-at-point-history)
+        (eshell-select-history-item))))
+
+
+  (add-hook 'eshell-mode-hook
+            (lambda()
+              (define-key eshell-mode-map (kbd "M-r") 'eshell-history)))
+#+END_SRC
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
@@ -1468,7 +1702,6 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 
 #+RESULTS:
 : my/configure-org-protocol
-
 ** Installation
 #+BEGIN_SRC emacs-lisp 
 
@@ -1489,6 +1722,51 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 
 #+RESULTS:
 : t
+
+** Archive using same hierarchy
+
+Source: https://gist.github.com/Fuco1/e86fb5e0a5bb71ceafccedb5ca22fcfb.
+
+#+BEGIN_SRC emacs-lisp
+(defadvice org-archive-subtree (around fix-hierarchy activate)
+  (let* ((fix-archive-p (and (not current-prefix-arg)
+                             (not (use-region-p))))
+         (afile (org-extract-archive-file (org-get-local-archive-location)))
+         (buffer (or (find-buffer-visiting afile) (find-file-noselect afile))))
+    ad-do-it
+    (when fix-archive-p
+      (with-current-buffer buffer
+        (goto-char (point-max))
+        (while (org-up-heading-safe))
+        (let* ((olpath (org-entry-get (point) "ARCHIVE_OLPATH"))
+               (path (and olpath (split-string olpath "/")))
+               (level 1)
+               tree-text)
+          (when olpath
+            (org-mark-subtree)
+            (setq tree-text (buffer-substring (region-beginning) (region-end)))
+            (let (this-command) (org-cut-subtree))
+            (goto-char (point-min))
+            (save-restriction
+              (widen)
+              (-each path
+                (lambda (heading)
+                  (if (re-search-forward
+                       (rx-to-string
+                        `(: bol (repeat ,level "*") (1+ " ") ,heading)) nil t)
+                      (org-narrow-to-subtree)
+                    (goto-char (point-max))
+                    (unless (looking-at "^")
+                      (insert "\n"))
+                    (insert (make-string level ?*)
+                            " "
+                            heading
+                            "\n"))
+                  (cl-incf level)))
+              (widen)
+              (org-end-of-subtree t t)
+              (org-paste-subtree level tree-text))))))))
+#+END_SRC
 
 * IRC
 ** Circe
@@ -1706,4 +1984,11 @@ This is long so that fetching feeds does not timeout.
 #+END_SRC
 
 #+RESULTS:
+* External services (prodigy)
 
+#+BEGIN_SRC emacs-lisp
+  (use-package prodigy
+    :ensure t)
+#+END_SRC
+
+Services are defined in [[*Load host specific configuration][host specific configuration files]].

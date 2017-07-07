@@ -27,7 +27,7 @@
  '(magit-diff-use-overlays nil)
  '(package-selected-packages
    (quote
-    (cljsbuild-mode emmet-mode restclient org-bullets auctex smex ledger-mode expand-region php-mode pug-mode zenburn-theme yaml-mode which-key web-mode web visual-fill-column use-package try swift-mode smart-mode-line sicp pythonic py-yapf projectile popup pinentry paradox ox-rst ox-jira ox-gfm org-plus-contrib org-jira nvm monokai-theme mmm-jinja2 markdown-mode magithub lua-mode load-theme-buffer-local js-comint ivy-hydra ignoramus haskell-mode gh general geiser flycheck flx exec-path-from-shell evil-surround evil-mu4e evil-matchit evil-magit evil-cleverparens ember-mode elpy elpakit elfeed dtrt-indent dockerfile-mode docker counsel color-theme-zenburn color-theme-sanityinc-tomorrow color-theme-buffer-local coffee-mode clj-refactor circe better-defaults ag ace-window)))
+    (etags-select shackle outshine smart-tab prodigy window-purpose evil-mc cljsbuild-mode emmet-mode restclient org-bullets auctex smex ledger-mode expand-region php-mode pug-mode zenburn-theme yaml-mode which-key web-mode web visual-fill-column use-package try swift-mode smart-mode-line sicp pythonic py-yapf projectile popup pinentry paradox ox-rst ox-jira ox-gfm org-plus-contrib org-jira nvm monokai-theme mmm-jinja2 markdown-mode magithub lua-mode load-theme-buffer-local js-comint ivy-hydra ignoramus haskell-mode gh general geiser flycheck flx exec-path-from-shell evil-surround evil-mu4e evil-matchit evil-magit evil-cleverparens ember-mode elpy elpakit elfeed dtrt-indent dockerfile-mode docker counsel color-theme-zenburn color-theme-sanityinc-tomorrow color-theme-buffer-local coffee-mode clj-refactor circe better-defaults ag ace-window)))
  '(paradox-github-token t)
  '(pdf-info-epdfinfo-program
    "/Users/mark/.emacs.d/elpa/pdf-tools-20160203.1057/build/server/epdfinfo")
@@ -35,7 +35,123 @@
  '(pos-tip-foreground-color "#272822")
  '(safe-local-variable-values
    (quote
-    ((cider-cljs-lein-repl . "(do (dev) (go) (cljs-repl))")
+    ((eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (when
+               (not
+                (eq tags-table-list
+                    (list
+                     (concat my-project-path "TAGS"))))
+             (setq tags-table-list
+                   (list
+                    (concat my-project-path "TAGS")))))
+     (eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (when
+               (not
+                (eq tags-table-list
+                    (list
+                     (concat my-project-path "TAGS"))))
+             (setq tags-table-list
+                   (list
+                    (concat my-project-path "TAGS")))
+             (visit-tags-table
+              (car tags-table-list))))
+     (eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (setq tags-table-list
+                 (list
+                  (concat my-project-path "TAGS")))
+           (visit-tags-table
+            (car tags-table-list)))
+     (eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (setq tags-table-list
+                 (list
+                  (concat my-project-path "TAGS")))
+           (visit-tags-table tags-table
+                             (car tags-table-list)))
+     (eval and
+           (set
+            (make-local-variable
+             (quote my-project-path))
+            (file-name-directory
+             (let
+                 ((d
+                   (dir-locals-find-file ".")))
+               (if
+                   (stringp d)
+                   d
+                 (car d)))))
+           (setq tags-table-list
+                 (list
+                  (concat my-project-path "TAGS"))))
+     (eval and
+           (setq dir-local-dir
+                 (locate-dominating-file
+                  (if
+                      (string-empty-p
+                       (buffer-file-name))
+                      (projectile-project-root)
+                    (buffer-file-name))
+                  ".dir-locals.el"))
+           (setq tags-table-list
+                 (list
+                  (concat dir-local-dir "TAGS"))))
+     (eval and
+           (setq dir-local-dir
+                 (locate-dominating-file
+                  (buffer-file-name)
+                  ".dir-locals.el"))
+           (setq tags-table-list
+                 (list
+                  (concat dir-local-dir "TAGS"))))
+     (tags-table-list quote
+                      ("~/Projects/php-repos/TAGS"))
+     (setq tags-table-list
+           (quote
+            ("~/Projects/php-repos/TAGS")))
+     (cider-cljs-lein-repl . "(do (dev) (go) (cljs-repl))")
      (cider-refresh-after-fn . "reloaded.repl/resume")
      (cider-refresh-before-fn . "reloaded.repl/suspend"))))
  '(vc-annotate-background nil)
