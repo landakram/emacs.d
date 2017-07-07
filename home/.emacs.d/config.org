@@ -758,6 +758,23 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "j" 'org-agenda-next-line
                         "k" 'org-agenda-previous-line)
 
+    (general-define-key :states '(normal) :keymaps 'outline-minor-mode-map
+                        "TAB" 'outline-cycle
+                        "<backtab>" 'outshine-cycle-buffer)
+
+    (general-define-key :prefix "SPC"
+                        :states '(normal)
+                        :keymaps 'outline-minor-mode-map
+                        "n" 'outshine-narrow-to-subtree
+                        "N" 'widen)
+
+    (general-define-key :states '(normal)
+                        :keymaps 'outline-minor-mode-map
+                        "M-j" 'outline-next-visible-heading
+                        "M-k" 'outline-previous-visible-heading
+                        "M-K" 'outline-backward-same-level
+                        "M-J" 'outline-forward-same-level)
+
     (general-define-key :prefix "SPC p"
                         "" '(:ignore t :which-key "projects")
                         "p" 'projectile-switch-project
