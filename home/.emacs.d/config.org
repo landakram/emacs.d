@@ -646,13 +646,9 @@ It's commented out right now because it looks terrible.
     (setq evil-symbol-word-search 1)
 
     (define-key evil-normal-state-map (kbd "gf")
-      (lambda () (interactive) (etags-select-find-tag-at-point)))
+      (lambda () (interactive) (dumb-jump-go)))
 
-    (define-key evil-normal-state-map (kbd "gb") 'pop-tag-mark)
-
-    (define-key evil-normal-state-map (kbd "gn")
-      (lambda () (interactive) (find-tag last-tag t)))
-
+    (define-key evil-normal-state-map (kbd "gb") 'dumb-jump-back)
 
     (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
     (define-key evil-normal-state-map (kbd "C-k") (lambda ()
@@ -902,14 +898,14 @@ Reduce the amount that the mouse scrolls.
   (general-define-key :states '(normal)
                       "F" 'counsel-imenu)
 #+END_SRC
-** ctags
+** Tags / dumb-jump
 
 #+BEGIN_SRC emacs-lisp
-  (setq tags-case-fold-search nil)
-  (setq large-file-warning-threshold nil)
-
-  (use-package etags-select
-    :ensure t)
+  (use-package dumb-jump
+    :ensure t
+    :config
+    (setq dumb-jump-selector 'ivy)
+    (setq dumb-jump-force-searcher 'ag))
 #+END_SRC
 ** Tramp
 
@@ -969,7 +965,6 @@ Autodetect indentation:
     :ensure t
     :config
     (global-company-mode)
-    (setq company-etags-modes nil) ;; Turn off etags since it's slow for the huge PHP codebase I work with
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
     (define-key company-active-map (kbd "C-n") #'company-select-next)
