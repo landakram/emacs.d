@@ -1519,6 +1519,20 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 #+RESULTS:
 : my/org-variable-pitch
 
+*** Org babel languages and configuration
+
+#+BEGIN_SRC emacs-lisp
+  (defun my/org-babel-config () 
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)
+       (shell . t))))
+#+END_SRC
+
+#+RESULTS:
+: my/org-babel-config
+
 *** Putting it together
 #+BEGIN_SRC emacs-lisp 
 
@@ -1741,18 +1755,19 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 ** Installation
 #+BEGIN_SRC emacs-lisp 
 
-(use-package org
-  :ensure org-plus-contrib
-  :config
+  (use-package org
+    :ensure org-plus-contrib
+    :config
 
-  (my/configure-org-directories)
-  (my/configure-org-exporters)
-  (my/configure-org-todos)
-  (my/configure-org)
-  (my/configure-org-protocol)
+    (my/configure-org-directories)
+    (my/configure-org-exporters)
+    (my/configure-org-todos)
+    (my/configure-org)
+    (my/configure-org-protocol)
+    (my/org-babel-config)
 
-  (add-hook 'org-mode-hook #'my/org-mode)
-  (add-hook 'org-agenda-mode-hook #'my/org-agenda-mode))
+    (add-hook 'org-mode-hook #'my/org-mode)
+    (add-hook 'org-agenda-mode-hook #'my/org-agenda-mode))
 
 #+END_SRC
 
