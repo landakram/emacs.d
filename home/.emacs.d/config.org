@@ -829,7 +829,7 @@ Projectile lets me switch between projects really easily. I set it up to default
 #+END_SRC
 
 #+RESULTS:
-| 63 | Commander help buffer. | #[0 \302\303\304D\305\303\306\302EDC\217\210r\307!q\210\310c\210        \311\203@ @\211\211A\262\242\211A\262\242@\312\313#c\266\211T\262A\262\202 \266eb\210\314 \210\315p\316"\210)\317 \207 [projectile-commander-help-buffer projectile-commander-methods err funcall #[0 \301!\207 [projectile-commander-help-buffer kill-buffer] 2 |
+| 63 | Commander help buffer. | #[0 \302\303\304D\305\303\306\302EDC\217\210r\307!q\210\310c\210        \311\203@@\211\211A\262\242\211A\262\242@\312\313#c\266\211T\262A\262\202\266eb\210\314 \210\315p\316"\210)\317 \207 [projectile-commander-help-buffer projectile-commander-methods err funcall #[0 \301!\207 [projectile-commander-help-buffer kill-buffer] 2 |
 
 ** Avy
 Avy lets me jump around buffers and windows with hints.
