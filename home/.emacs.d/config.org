@@ -583,21 +583,6 @@ It's commented out right now because it looks terrible.
     (switch-to-buffer-other-window args))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package window-purpose
-  ;;   :ensure t
-  ;;   :config
-  ;;   (purpose-mode)
-  ;;   (purpose-x-magit-single-on)
-  ;;   (add-to-list 'purpose-user-mode-purposes '(python-mode . py))
-  ;;   (add-to-list 'purpose-user-mode-purposes '(inferior-python-mode . py-repl))
-  ;;   (add-to-list 'purpose-user-mode-purposes '(compilation-mode . repl-like))
-  ;;   (add-to-list 'purpose-user-mode-purposes '(php-mode . edit))
-  ;;   (add-to-list 'purpose-user-mode-purposes '(json-mode . edit))
-  ;;   (add-to-list 'purpose-user-mode-purposes '(eshell-mode . repl-like))
-  ;;   (add-to-list 'purpose-user-regexp-purposes '("^\\*magit" . edit))
-  ;;   (purpose-compile-user-configuration))
-#+END_SRC
 * Keybindings
 ** General keybindings
 *** Increase and decrease text size
