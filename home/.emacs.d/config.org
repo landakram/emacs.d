@@ -2036,3 +2036,14 @@ This is long so that fetching feeds does not timeout.
 #+END_SRC
 
 Services are defined in [[*Load host specific configuration][host specific configuration files]].
+* Utility functions
+** shell-command-ignore-stderr
+
+Like shell-command, but only returns stdout.
+
+#+BEGIN_SRC emacs-lisp
+    (defun shell-command-ignore-stderr (some-command)
+      (with-output-to-string
+        (with-current-buffer standard-output
+          (process-file shell-file-name nil '(t nil)  nil shell-command-switch some-command))))
+#+END_SRC
