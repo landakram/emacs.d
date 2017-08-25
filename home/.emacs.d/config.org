@@ -2054,3 +2054,18 @@ Like shell-command, but only returns stdout.
         (with-current-buffer standard-output
           (process-file shell-file-name nil '(t nil)  nil shell-command-switch some-command))))
 #+END_SRC
+
+** request.el
+
+#+BEGIN_SRC emacs-lisp
+  (use-package request
+    :ensure t)
+
+  (use-package request-deferred
+    :ensure t)
+
+  (use-package deferred
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
