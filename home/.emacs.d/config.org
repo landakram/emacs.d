@@ -530,6 +530,13 @@ It's commented out right now because it looks terrible.
 #+END_SRC
 #+RESULTS:
 : t
+*** Keybindings
+
+#+BEGIN_SRC emacs-lisp
+  (general-define-key :keymaps 'ivy-minibuffer-map
+                      "C-RET" 'ivy-immediate-done)
+
+#+END_SRC
 ** Window / popup management (shackle, purpose)
 
 #+BEGIN_SRC emacs-lisp
