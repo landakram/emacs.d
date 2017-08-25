@@ -912,6 +912,10 @@ Reduce the amount that the mouse scrolls.
 #+BEGIN_SRC emacs-lisp
 (setq tramp-verbose 6)
 (setq tramp-default-method "ssh")
+(setq tramp-ssh-controlmaster-options "")
+(add-to-list 'backup-directory-alist
+             (cons tramp-file-name-regexp nil))
+(setq tramp-auto-save-directory temporary-file-directory)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
