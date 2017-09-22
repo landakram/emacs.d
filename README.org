@@ -4,7 +4,7 @@ This is my Emacs config. Peruse it if you wish -- it is highly personal and twea
 
 A few things to note:
 
-- My configuration is implemented as a [[https://en.wikipedia.org/wiki/Literate_programming][literate]] [[http://orgmode.org/worg/org-contrib/babel/intro.html][org]] document.
+- [[home/.emacs.d/config.org][My configuration]] is implemented as a [[https://en.wikipedia.org/wiki/Literate_programming][literate]] [[http://orgmode.org/worg/org-contrib/babel/intro.html][org]] document.
 - As a recovering vim user, I use [[https://www.emacswiki.org/emacs/Evil][evil-mode]]. Maybe one day I will learn the default Emacs keybindings.
 - I use [[http://oremacs.com/2015/04/16/ivy-mode/][ivy]] for completion. Previously, I used helm. They both change the experience of using Emacs pretty significantly -- I think for the better. 
 - I make some assumptions that I am running on OS X, but it loads and mostly works in a linux environment.
