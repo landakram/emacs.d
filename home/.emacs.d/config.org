@@ -736,6 +736,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (general-define-key :prefix "SPC f"
                         "" '(:ignore t :which-key "files")
                         "f" 'counsel-find-file
+                        "r" 'counsel-file-jump ;; i.e. "recursive"
                         "d" 'delete-this-file
                         "s" 'save-buffer)
 
@@ -828,9 +829,6 @@ Projectile lets me switch between projects really easily. I set it up to default
 
 #+END_SRC
 
-#+RESULTS:
-| 63 | Commander help buffer. | #[0 \302\303\304D\305\303\306\302EDC\217\210r\307!q\210\310c\210        \311\203@@\211\211A\262\242\211A\262\242@\312\313#c\266\211T\262A\262\202\266eb\210\314 \210\315p\316"\210)\317 \207 [projectile-commander-help-buffer projectile-commander-methods err funcall #[0 \301!\207 [projectile-commander-help-buffer kill-buffer] 2 |
-
 ** Avy
 Avy lets me jump around buffers and windows with hints.
 
@@ -916,6 +914,29 @@ Reduce the amount that the mouse scrolls.
     (interactive)
     (dired-do-shell-command "tail -f * &" nil (dired-get-marked-files)))
 #+END_SRC
+*** Disable projectile for remote files
+#+BEGIN_SRC emacs-lisp
+(defadvice projectile-project-root (around ignore-remote first activate)
+    (unless (file-remote-p default-directory) ad-do-it))
+#+END_SRC
+*** Use bash for remote shell commands
+
+#+BEGIN_SRC emacs-lisp
+  (defun my/shell-set-hook ()
+    (when (file-remote-p (buffer-file-name))
+      (let ((vec (tramp-dissect-file-name (buffer-file-name))))
+       ;; Please change "some-hostname" to your remote hostname
+        (setq-local shell-file-name "/bin/bash")
+        ;; (when (string-match-p "some-hostname" (tramp-file-name-host vec))
+        ;;  (setq-local shell-file-name "/bin/bash")
+        )))
+        
+(add-hook 'find-file-hook #'my/shell-set-hook)
+#+END_SRC
+
+#+RESULTS:
+: my/shell-set-hook
+
 ** Outline mode
 
 #+BEGIN_SRC emacs-lisp
@@ -1102,19 +1123,6 @@ Autodetect indentation:
 
 
 #+END_SRC
-
-** Multiple Cursors
-#+BEGIN_SRC emacs-lisp
-  (use-package evil-mc
-    :ensure t
-    :config
-    (global-evil-mc-mode 1)
-    (general-define-key :states '(normal motion visual)
-                        "C-*" 'evil-mc-make-all-cursors))
-#+END_SRC
-
-#+RESULTS:
-: t
 
 ** Lisp
 
@@ -1819,6 +1827,17 @@ Source: https://gist.github.com/Fuco1/e86fb5e0a5bb71ceafccedb5ca22fcfb.
               (org-paste-subtree level tree-text))))))))
 #+END_SRC
 
+** Interleave mode
+
+Take notes on PDFs in org-mode side-by-side with the PDF.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package interleave
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+
 * IRC
 ** Circe
 #+BEGIN_SRC emacs-lisp 
@@ -2043,7 +2062,7 @@ This is long so that fetching feeds does not timeout.
 #+END_SRC
 
 Services are defined in [[*Load host specific configuration][host specific configuration files]].
-* Utility functions
+* Emacs lisp utility functions and libraries
 ** shell-command-ignore-stderr
 
 Like shell-command, but only returns stdout.
@@ -2063,8 +2082,75 @@ Like shell-command, but only returns stdout.
 
   (use-package request-deferred
     :ensure t)
+#+END_SRC
 
+#+RESULTS:
+** Concurrency
+*** deferred.el
+
+#+BEGIN_SRC emacs-lisp
   (use-package deferred
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+
+*** concurrent.el
+
+Higher level wrapper on-top of deferred.el. Interesting to play around with.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package concurrent
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+
+** String manipulation (s.el)
+
+#+BEGIN_SRC emacs-lisp
+  (use-package s
+    :ensure t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (defun snake-case-thing-at-point ()
+    (interactive)
+    (let* ((bounds (bounds-of-thing-at-point 'word))
+           (start (car bounds))
+           (end (cdr bounds))
+           (thing (buffer-substring-no-properties start end))
+           (new-thing (s-snake-case
+                       (s-lower-camel-case thing))))
+      (delete-region start end)
+      (insert new-thing)))
+
+  (defun camel-case-thing-at-point ()
+    (interactive)
+    (let* ((bounds (bounds-of-thing-at-point 'word))
+           (start (car bounds))
+           (end (cdr bounds))
+           (thing (buffer-substring-no-properties start end))
+           (new-thing (s-lower-camel-case thing)))
+      (delete-region start end)
+      (insert new-thing)))
+#+END_SRC
+
+#+RESULTS:
+: camel-case-thing-at-point
+** List manipulation (dash.el)
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dash
+    :ensure t)
+#+END_SRC
+
+#+RESULTS:
+
+** Hash table manipulation (ht.el)
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ht
     :ensure t)
 #+END_SRC
 
