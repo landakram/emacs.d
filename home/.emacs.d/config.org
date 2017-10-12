@@ -945,10 +945,15 @@ Reduce the amount that the mouse scrolls.
   (use-package outshine
     :ensure t
     :config
-    (add-hook 'outline-minor-mode-hook 'outshine-hook-function)
-    (add-hook 'prog-mode-hook 'outline-minor-mode))
+    ;;(add-hook 'outline-minor-mode-hook 'outshine-hook-function)
+    ;;(add-hook 'prog-mode-hook 'outline-minor-mode)
+)
 
 #+END_SRC
+
+#+RESULTS:
+: t
+
 ** Copy file link
 
 #+BEGIN_SRC emacs-lisp
