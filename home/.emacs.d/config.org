@@ -1535,6 +1535,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
      'org-babel-load-languages
      '((emacs-lisp . t)
        (python . t)
+       (plantuml . t)
        (shell . t))))
 #+END_SRC
 
@@ -1773,6 +1774,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
     (my/configure-org)
     (my/configure-org-protocol)
     (my/org-babel-config)
+    (setq org-inline-image-overlays t)
 
     (add-hook 'org-mode-hook #'my/org-mode)
     (add-hook 'org-agenda-mode-hook #'my/org-agenda-mode))
@@ -1837,6 +1839,26 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 #+END_SRC
 
 #+RESULTS:
+
+** PlantUML
+
+#+BEGIN_SRC emacs-lisp
+  (use-package plantuml-mode
+    :ensure t
+    :config
+    (setq plantuml-jar-path (expand-file-name "~/src/plantuml.jar"))
+    (setq org-plantuml-jar-path plantuml-jar-path)
+    (add-to-list
+     'org-src-lang-modes '("plantuml" . plantuml)))
+
+  (add-hook 'org-babel-after-execute-hook
+            (lambda ()
+              (when org-inline-image-overlays
+                (org-redisplay-inline-images))))
+#+END_SRC
+
+#+RESULTS:
+| lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
 
 * IRC
 ** Circe
