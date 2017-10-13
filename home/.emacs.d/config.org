@@ -1466,6 +1466,24 @@ Let's use web-mode, which supports font locking for templating.
             (lambda()
               (define-key eshell-mode-map (kbd "M-r") 'eshell-history)))
 #+END_SRC
+** go
+
+#+BEGIN_SRC emacs-lisp
+  (use-package go-mode
+    :ensure t
+    :config
+    (add-hook 'before-save-hook 'gofmt-before-save))
+
+  (use-package company-go
+    :ensure t
+    :config
+    (add-hook 'go-mode-hook (lambda ()
+                              (set (make-local-variable 'company-backends)
+                                   '(company-go)))))
+#+END_SRC
+
+#+RESULTS:
+: t
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
