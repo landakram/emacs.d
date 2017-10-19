@@ -820,6 +820,19 @@ Ace window is like avy but for windows.
 
 #+RESULTS:
 : t
+
+ace-link is like ace-window but for links.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ace-link
+    :ensure t
+    :config
+    (ace-link-setup-default))
+#+END_SRC
+
+#+RESULTS:
+: t
+
 ** Winner mode
 It records window configuration and lets you undo: 
 
