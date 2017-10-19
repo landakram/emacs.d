@@ -537,51 +537,16 @@ It's commented out right now because it looks terrible.
                       "C-RET" 'ivy-immediate-done)
 
 #+END_SRC
-** Window / popup management (shackle, purpose)
+** Window / popup management
+
+Always focus the cursor in help windows.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package shackle
-    :ensure t
-    :config
-    (setq shackle-rules '((compilation-mode :select t :ratio 0.2 :align below)
-                          ("*Help*" :select t :align below :inhibit-window-quit nil :popup t)
-                          ("\\*magit.*popup\\*" :regexp t :popup t :align below)
-                          (".*Calendar.*" :regexp t :popup t :align below :select t)
-                          (".*Org Src.*" :regexp t :same t)
-                          (".*CAPTURE.*"           :regexp t :align below :ratio 20)
-                          ("*Org Select*"                  :align below :ratio 20)
-                          ("*HTTP Response*"                  :align below :ratio 40)
-                          (" *Org todo*" :align below :select t)
-                          ("^\\*Org Agenda" :regexp t :align below :inhibit-window-quit nil)
-                          ("^\\*ivy-occur.*" :regexp t :align below :inhibit-window-quit nil :ratio 20 :select t)
-                          (" *Agenda Commands*" :align below)) 
-          shackle-default-rule '(:select t :same t :inhibit-window-quit t))
-    (setq org-src-window-setup 'other-window)
-    (setq org-agenda-window-setup 'other-window)
-    (shackle-mode t))
-
-  ;; Function to suppress delete-other-windows in functions
-  (defun my/suppress-delete-other-windows (old-fun &rest args)
-    (cl-flet ((silence (&rest args) (ignore)))
-      (advice-add 'delete-other-windows :around #'silence)
-      (unwind-protect
-          (apply old-fun args)
-        (advice-remove 'delete-other-windows #'silence))))
-
-  ;; Adds delete-other-windows to org-mode functions for compatibility with shackle
-  (advice-add 'org-capture-place-template :around #'my/suppress-delete-other-windows)
-  (advice-add 'org-agenda :around #'my/suppress-delete-other-windows)
-  (advice-add 'org-add-log-note :around #'my/suppress-delete-other-windows)
-
-  (defun org-switch-to-buffer-other-window (args)
-    "Switch to buffer in a second window on the current frame.
-    In particular, do not allow pop-up frames.
-    Returns the newly created buffer.
-    Redefined to allow pop-up windows."
-    ;;  (org-no-popups
-    ;;     (apply 'switch-to-buffer-other-window args)))
-    (switch-to-buffer-other-window args))
+  (setq help-window-select t)
 #+END_SRC
+
+#+RESULTS:
+: t
 
 * Keybindings
 ** General keybindings
@@ -1215,19 +1180,6 @@ We also set up eshell so that it shares its environment with emacs, thus using t
                                             (setq eshell-path-env (getenv "PATH"))))
     )
 
-#+END_SRC
-
-#+RESULTS:
-: t
-*** anaconda-mode
-Lots of goodies for Python development.
-
-#+BEGIN_SRC emacs-lisp
- ;; (use-package anaconda-mode
- ;;   :ensure t
- ;;   :config
- ;;   (add-hook 'python-mode-hook 'anaconda-mode)
- ;;   (add-hook 'python-mode-hook 'anaconda-eldoc-mode))
 #+END_SRC
 
 #+RESULTS:
