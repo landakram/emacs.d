@@ -921,11 +921,7 @@ Reduce the amount that the mouse scrolls.
   (defvar outline-minor-mode-prefix "\M-#")
 
   (use-package outshine
-    :ensure t
-    :config
-    ;;(add-hook 'outline-minor-mode-hook 'outshine-hook-function)
-    ;;(add-hook 'prog-mode-hook 'outline-minor-mode)
-)
+    :ensure t)
 
 #+END_SRC
 
