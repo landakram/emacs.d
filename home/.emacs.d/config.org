@@ -547,6 +547,20 @@ Always focus the cursor in help windows.
 
 #+RESULTS:
 : t
+** Scrolling
+
+Make scrolling behavior more like vim:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package smooth-scrolling
+    :ensure t
+    :config
+    (smooth-scrolling-mode 1)
+    (setq smooth-scroll-margin 5))
+#+END_SRC
+
+#+RESULTS:
+: t
 
 * Keybindings
 ** General keybindings
