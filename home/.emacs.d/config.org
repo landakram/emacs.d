@@ -603,7 +603,11 @@ Always focus the cursor in help windows.
     (setq evil-symbol-word-search 1)
 
     (define-key evil-normal-state-map (kbd "gf")
-      (lambda () (interactive) (dumb-jump-go)))
+      (lambda () 
+        (interactive)
+        (if current-prefix-arg
+          (dumb-jump-go-other-window)
+          (dumb-jump-go))))
 
     (define-key evil-normal-state-map (kbd "gb") 'dumb-jump-back)
 
