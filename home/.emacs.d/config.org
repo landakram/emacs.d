@@ -173,9 +173,16 @@ Flycheck is an on-the-fly syntax checker.
     (flycheck-add-mode 'javascript-eslint 'js2-mode)
     (flycheck-add-mode 'javascript-eslint 'js-mode)
 
+    ;; Disable syntax checking on new-line for emacs lisp, since for some reason 
+    ;; it is really slow
+    (add-hook 'emacs-lisp-mode-hook
+              (lambda ()
+                (setq-local flycheck-check-syntax-automatically '(idle-check mode-enabled save))))
+
     (setq-default flycheck-disabled-checkers
                   (append flycheck-disabled-checkers
-                          '(javascript-jshint))))
+                          '(javascript-jshint
+                            emacs-lisp-checkdoc))))
 
 #+END_SRC
 
