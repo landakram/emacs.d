@@ -1463,6 +1463,48 @@ Let's use web-mode, which supports font locking for templating.
 
 #+RESULTS:
 : t
+** Ruby
+
+#+BEGIN_SRC emacs-lisp
+  (use-package inf-ruby
+    :ensure t
+    :config
+    (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package robe
+    :ensure t
+    :config
+    (add-hook 'ruby-mode-hook 'robe-mode))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+#+BEGIN_SRC emacs-lisp
+  (use-package seeing-is-believing
+    :ensure t
+    :config
+    (add-hook 'ruby-mode-hook 'seeing-is-believing))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rbenv
+    :ensure t
+    :config
+    (global-rbenv-mode)
+    (rbenv-use-global))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+    (use-package rspec-mode
+      :ensure t)
+#+END_SRC
+
+#+RESULTS:
+: t
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
