@@ -678,11 +678,11 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (general-define-key :prefix "SPC bo"
                         "" '(:ignore t :which-key "b[o]okmarks")
                         "c" '(:which-key "config-file"
-                             :command (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
+                             :def (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
                         "m" '(:which-key "mu4e"
-                             :command mu4e)
+                             :command 'mu4e)
                         "o" '(:which-key "org-file"
-                             :command (lambda () (interactive) (find-file "~/org/projects.org"))))
+                             :def (lambda () (interactive) (find-file "~/org/projects.org"))))
 
     (general-define-key :prefix "SPC w"
                         "" '(:ignore t :which-key "windows")
