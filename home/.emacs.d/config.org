@@ -421,129 +421,6 @@ It's commented out right now because it looks terrible.
 #+END_SRC
 
 * UI
-** Ivy
-
-#+BEGIN_SRC emacs-lisp 
-
-  (defun my/ivy-format-function (cands)
-    "Transform CAND-PAIRS into a string for minibuffer."
-    (ivy--format-function-generic
-     (lambda (str)
-       (concat "-> " (ivy--add-face str 'ivy-current-match)))
-     (lambda (str)
-       (concat "   " str))
-     cands
-     "\n"))
-
-  (use-package ivy
-    :ensure t
-    :config
-    (ivy-mode 1)
-
-    (setq ivy-use-virtual-buffers t)
-    ;;(setq ivy-virtual-abbreviate 'full)
-    (setq ivy-height 30)
-    (setq ivy-count-format "%d ")
-    (setq ivy-display-style 'fancy)
-    (setq ivy-format-function 'my/ivy-format-function)
-
-
-    (use-package flx
-      :ensure t)
-
-    ;; Enable fuzzy searching
-    (setq ivy-initial-inputs-alist nil)
-    (setq ivy-re-builders-alist
-          '((t . ivy--regex-ignore-order)))
-
-    (use-package counsel
-      :ensure t
-      :config
-
-      (use-package smex
-        :ensure t))
-
-    (use-package swiper
-      :ensure t)
-
-    (use-package ivy-hydra
-      :ensure t)
-
-    ;; Shows additional information in the 'ivy-switch-buffer command.
-    (use-package ivy_buffer_extend
-      :load-path "~/.emacs.d/site-lisp/ivy_buffer_extend/"
-      :config
-      (setq ivy-buffer-format '(buffer-name   "<col>"  "   "
-                                mode process  "<col>"  "   "
-                                dir file-name "<col>"  "   ")))
-
-    ;; (global-set-key (kbd "C-s") 'swiper)
-    (global-set-key (kbd "M-x") 'counsel-M-x)
-    (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-
-
-    ;; The following functions taken from https://github.com/fgeller/emacs.d/blob/master/ivy.el, which deserves a closer look.
-
-    (defun add-ivy-action (str action)
-      "Adds ACTION as text-property to start of STR"
-      (put-text-property 0 1 'ivy-action action str))
-
-
-    (defun get-ivy-action (str)
-      "Returns text-property `ivy-action' at start of STR"
-      (get-text-property 0 'ivy-action str))
-
-
-    (defun string-copy (str)
-      "Uses `substring' to return a copy of STR without text properties"
-      (substring str 0 (length str)))
-
-    (defun ivy-apropos-candidates ()
-      (let ((start-time (current-time))
-            cs)
-        (mapatoms
-         (lambda (e)
-           (cond
-            ((fboundp e)
-             (let ((c (string-copy (symbol-name e))))
-               (add-ivy-action c 'describe-function)
-               (push c cs)))
-            ((or (get e 'variable-documentation)
-                 (and (boundp e) (not (keywordp e))))
-             (let ((c (string-copy (symbol-name e))))
-               (add-ivy-action c 'describe-variable)
-               (push c cs))))))
-        cs))
-
-    (defun ivy-apropos ()
-      "apropos interface for ivy."
-      (interactive)
-      (ivy-read "Describe: " (ivy-apropos-candidates)
-                :preselect (ivy-thing-at-point)
-                :action (lambda (s) (funcall (get-ivy-action s) (intern s)))))
-
-    ;; These ones are my own:
-
-
-    (defun counsel-projectile-ag ()
-      (interactive)
-      (counsel-ag (ivy-thing-at-point) (projectile-project-root)))
-
-
-    (global-set-key (kbd "C-h a") 'ivy-apropos)
-    (global-set-key (kbd "M-y") 'counsel-yank-pop))
-
-
-#+END_SRC
-#+RESULTS:
-: t
-*** Keybindings
-
-#+BEGIN_SRC emacs-lisp
-  (general-define-key :keymaps 'ivy-minibuffer-map
-                      "C-RET" 'ivy-immediate-done)
-
-#+END_SRC
 ** Window / popup management
 
 Always focus the cursor in help windows.
@@ -568,6 +445,38 @@ Make scrolling behavior more like vim:
 
 #+RESULTS:
 : t
+
+** Helm
+
+#+BEGIN_SRC emacs-lisp
+  (use-package helm
+    :ensure t
+    :diminish helm-mode
+    :config
+    (require 'helm-config)
+    (helm-mode 1)
+    (global-set-key (kbd "M-x") 'helm-M-x)
+    (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+    (global-set-key (kbd "C-x b") 'helm-mini)
+    (global-set-key (kbd "C-h a") 'helm-apropos)
+    (setq helm-buffer-max-length nil)
+    (helm-autoresize-mode t)
+
+    (require 'helm-imenu))
+
+  (use-package helm-ag
+    :ensure t)
+
+  (use-package helm-projectile
+    :ensure t
+    :config
+    (helm-projectile-on))
+
+#+END_SRC
+
+#+RESULTS:
+: t
+
 
 * Keybindings
 ** General keybindings
@@ -677,7 +586,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key :prefix "SPC b"
                         "" '(:ignore t :which-key "buffers")
-                        "b" 'ivy-switch-buffer
+                        "b" 'helm-mini
                         "k" 'kill-this-buffer
                         "q" 'delete-window)
 
@@ -708,16 +617,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "g" 'magit-status)
 
     (general-define-key :prefix "SPC"
-                        "x" 'counsel-M-x)
-
-    (general-define-key :prefix "SPC l"
-                        "" '(nil :which-key "layout")
-                        "s" 'ivy-push-view
-                        "d" 'ivy-pop-view)
-
-    (general-define-key :prefix "SPC i"
-                        "" '(nil :which-key "ivy")
-                        "r" 'ivy-resume)
+                        "x" 'helm-M-x)
 
     ;; Help
     (general-define-key :prefix "SPC"
@@ -725,8 +625,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key :prefix "SPC f"
                         "" '(:ignore t :which-key "files")
-                        "f" 'counsel-find-file
-                        "r" 'counsel-file-jump ;; i.e. "recursive"
+                        "f" 'helm-find-files
                         "d" 'delete-this-file
                         "s" 'save-buffer)
 
@@ -758,7 +657,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "" '(:ignore t :which-key "projects")
                         "p" 'projectile-switch-project
                         "f" 'projectile-find-file
-                        "a" 'counsel-projectile-ag
+                        "a" 'helm-projectile-ag
                         "t" 'projectile-test-project))
 #+END_SRC
 
@@ -777,7 +676,7 @@ Projectile lets me switch between projects really easily. I set it up to default
     :config
     (setq projectile-enable-caching t)
     (projectile-global-mode)
-    (setq projectile-completion-system 'ivy)
+    (setq projectile-completion-system 'helm)
     (setq projectile-switch-project-action 'projectile-commander)
 
     ;; Clear out all commander commands but the help item.
@@ -803,7 +702,7 @@ Projectile lets me switch between projects really easily. I set it up to default
 
     (def-projectile-commander-method ?a
       "Full text search in the project."
-      (counsel-projectile-ag))
+      (helm-projectile-ag))
 
     (def-projectile-commander-method ?e
       "Open an [e]shell in the project root."
@@ -889,7 +788,7 @@ Reduce the amount that the mouse scrolls.
 
 #+BEGIN_SRC emacs-lisp
   (general-define-key :states '(normal)
-                      "F" 'counsel-imenu)
+                      "F" 'helm-semantic-or-imenu)
 #+END_SRC
 ** Tags / dumb-jump
 
@@ -897,7 +796,7 @@ Reduce the amount that the mouse scrolls.
   (use-package dumb-jump
     :ensure t
     :config
-    (setq dumb-jump-selector 'ivy)
+    (setq dumb-jump-selector 'helm)
     (setq dumb-jump-force-searcher 'ag))
 #+END_SRC
 ** Tramp
@@ -1420,38 +1319,13 @@ Let's use web-mode, which supports font locking for templating.
 ** eshell
 
 #+BEGIN_SRC emacs-lisp
-  (defun eshell-complete-at-point-history-fn ()
-    (interactive)
-    (let ((bounds (bounds-of-thing-at-point 'word)))
-      (when bounds
-        (list (car bounds)
-              (cdr bounds)
-              (ring-elements eshell-history-ring)))))
-
-  (defun eshell-select-history-item ()
-    "Select eshell history item."
-    (interactive)
-    (let ((ivy-sort-functions-alist nil))
-      (insert (completing-read "History item: " (ring-elements eshell-history-ring)))))
-
-
-  (defun eshell-complete-at-point-history ()
-    (interactive)
-    (let ((completion-at-point-functions '(eshell-complete-at-point-history-fn)))
-      (completion-at-point)))
-
-  (defun eshell-history ()
-    (interactive)
-    (let ((bounds (bounds-of-thing-at-point 'word)))
-      (if bounds
-          (eshell-complete-at-point-history)
-        (eshell-select-history-item))))
-
-
   (add-hook 'eshell-mode-hook
             (lambda()
-              (define-key eshell-mode-map (kbd "M-r") 'eshell-history)))
+              (define-key eshell-mode-map (kbd "M-r") 'helm-eshell-history)
+              (define-key eshell-mode-map [remap eshell-pcomplete] 'helm-esh-pcomplete)
+              (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history)))
 #+END_SRC
+
 ** go
 
 #+BEGIN_SRC emacs-lisp
