@@ -1401,10 +1401,15 @@ Let's use web-mode, which supports font locking for templating.
 #+BEGIN_SRC emacs-lisp
   (use-package rbenv
     :ensure t
+    :init
+    (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.1/")
     :config
     (global-rbenv-mode)
     (rbenv-use-global))
 #+END_SRC
+
+#+RESULTS:
+: t
 
 #+BEGIN_SRC emacs-lisp
     (use-package rspec-mode
