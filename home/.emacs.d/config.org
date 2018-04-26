@@ -996,8 +996,8 @@ Autodetect indentation:
 
   (require 'subr-x)
 
-  (defun github-file-url ()
-    (let* ((branch (helm-open-github--branch))
+  (defun github-file-url (&optional default-branch)
+    (let* ((branch (if default-branch default-branch (helm-open-github--branch)))
            (current-file (buffer-file-name))
            (root (vc-git-root current-file))
            (repo-path (file-relative-name current-file root))
@@ -1016,7 +1016,7 @@ Autodetect indentation:
 
   (defun github-open-file ()
     (interactive)
-    (browse-url (github-file-url)))
+    (browse-url (github-file-url (if current-prefix-arg "master" nil))))
 
   (defun org-store-github-link ()
     (interactive)
