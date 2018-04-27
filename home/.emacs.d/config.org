@@ -1003,7 +1003,7 @@ Autodetect indentation:
            (repo-path (file-relative-name current-file root))
            (base-url (infer-browse-url-from-remote "origin"))
            (start-line (line-number-at-pos (if (region-active-p) (region-beginning) (point))))
-           (end-line (line-number-at-pos (region-end)))
+           (end-line (- (line-number-at-pos (region-end)) 1))
            (marker (helm-open-github--highlight-marker start-line end-line)))
       (format "%s/blob/%s/%s%s" base-url branch repo-path marker)))
 
