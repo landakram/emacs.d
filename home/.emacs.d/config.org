@@ -1423,6 +1423,18 @@ Let's use web-mode, which supports font locking for templating.
 
 #+RESULTS:
 : t
+** Common Lisp
+
+#+BEGIN_SRC emacs-lisp
+  (use-package slime
+    :ensure t
+    :config
+    (setq inferior-lisp-program "/usr/local/bin/sbcl")
+    (setq slime-contribs '(slime-fancy)))
+#+END_SRC
+
+#+RESULTS:
+: t
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
