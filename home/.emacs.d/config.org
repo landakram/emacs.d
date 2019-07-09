@@ -931,7 +931,11 @@ Autodetect indentation:
 
   (use-package magit
     :ensure t
-    :config)
+    :config
+    ;; Uncomment this to improve performance
+    ;; (setq magit-refresh-status-buffer nil)
+    ;; (setq magit-refresh-verbose t)
+    )
 
 #+END_SRC
 
