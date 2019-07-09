@@ -422,8 +422,14 @@ It's commented out right now because it looks terrible.
     (when (file-readable-p host-specific-config)
       (load-file host-specific-config)))
 #+END_SRC
-
 * UI
+** Dark title bar
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+#+END_SRC
+
 ** Window / popup management
 
 Always focus the cursor in help windows.
@@ -479,7 +485,6 @@ Make scrolling behavior more like vim:
 
 #+RESULTS:
 : t
-
 
 * Keybindings
 ** General keybindings
@@ -577,7 +582,7 @@ Make scrolling behavior more like vim:
 #+RESULTS:
 : t
 
-** General
+** General.el
 
 General.el is like evil-leader, but lets you define multiple leader keys / prefixes.
 
@@ -1430,6 +1435,18 @@ Let's use web-mode, which supports font locking for templating.
       (local-set-key (kbd "r") 'inf-ruby-switch-from-compilation))
     (add-hook 'rspec-compilation-mode-hook 'my/rspec-init)
     :ensure t)
+#+END_SRC
+
+#+RESULTS:
+: t
+** Common Lisp
+
+#+BEGIN_SRC emacs-lisp
+  (use-package slime
+    :ensure t
+    :config
+    (setq inferior-lisp-program "/usr/local/bin/sbcl")
+    (setq slime-contribs '(slime-fancy)))
 #+END_SRC
 
 #+RESULTS:
