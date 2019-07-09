@@ -179,9 +179,12 @@ Flycheck is an on-the-fly syntax checker.
               (lambda ()
                 (setq-local flycheck-check-syntax-automatically '(idle-check mode-enabled save))))
 
+
     (setq-default flycheck-disabled-checkers
                   (append flycheck-disabled-checkers
                           '(javascript-jshint
+                            ruby-rubocop
+                            ruby-reek
                             emacs-lisp-checkdoc))))
 
 #+END_SRC
@@ -969,7 +972,7 @@ Autodetect indentation:
 
   (defun get-remote-url (remote)
     (helm-open-github--command-one-line "git" `("remote" "get-url" ,remote)))
-    
+
   (defun infer-browse-url-from-remote (remote)
     (let ((origin-url (get-remote-url remote)))
       (infer-https-url origin-url)))
@@ -1402,7 +1405,10 @@ Let's use web-mode, which supports font locking for templating.
   (use-package rbenv
     :ensure t
     :init
-    (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.1/")
+    (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.2/")
+    (defun my/ruby-init ()
+      (rbenv-use-corresponding))
+    (add-hook 'ruby-mode-hook 'my/ruby-init)
     :config
     (global-rbenv-mode)
     (rbenv-use-global))
@@ -1412,12 +1418,31 @@ Let's use web-mode, which supports font locking for templating.
 : t
 
 #+BEGIN_SRC emacs-lisp
-    (use-package rspec-mode
-      :ensure t)
+  (use-package rspec-mode
+    :init
+    (defun my/rspec-init ()
+      (setq compilation-scroll-output t)
+      (linum-mode -1)
+      (local-set-key (kbd "r") 'inf-ruby-switch-from-compilation))
+    (add-hook 'rspec-compilation-mode-hook 'my/rspec-init)
+    :ensure t)
 #+END_SRC
 
 #+RESULTS:
 : t
+
+#+BEGIN_SRC emacs-lisp
+  (use-package bundler
+    :ensure t
+    )
+#+END_SRC
+
+#+RESULTS:
+
+*** Sorbet
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
+#+END_SRC
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
