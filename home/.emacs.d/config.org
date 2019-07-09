@@ -419,8 +419,14 @@ It's commented out right now because it looks terrible.
     (when (file-readable-p host-specific-config)
       (load-file host-specific-config)))
 #+END_SRC
-
 * UI
+** Dark title bar
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+#+END_SRC
+
 ** Window / popup management
 
 Always focus the cursor in help windows.
@@ -476,7 +482,6 @@ Make scrolling behavior more like vim:
 
 #+RESULTS:
 : t
-
 
 * Keybindings
 ** General keybindings
@@ -574,7 +579,7 @@ Make scrolling behavior more like vim:
 #+RESULTS:
 : t
 
-** General
+** General.el
 
 General.el is like evil-leader, but lets you define multiple leader keys / prefixes.
 
