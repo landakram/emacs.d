@@ -349,21 +349,25 @@ This mode line is pretty.
 
 *** Change the theme
 
-The "Monokai" themes look great.
-
 #+BEGIN_SRC emacs-lisp 
+    (use-package base16-theme
+      :ensure t
+      :config
+      (setq base16-theme-256-color-source 'base16-shell)
+      (setq base16-distinct-fringe-background nil)
+      (load-theme 'base16-tomorrow-night t))
 
-  (use-package monokai-theme
-    :ensure t
-    :config
-    (setq monokai-use-variable-pitch nil)
-    (load-theme 'monokai t))
+    ;; (use-package monokai-theme
+    ;;   :ensure t
+    ;;   :config
+    ;;   (setq monokai-use-variable-pitch nil)
+    ;;   (load-theme 'monokai t))
 
 
-  ;; (use-package color-theme-sanityinc-tomorrow
-  ;;   :ensure t
-  ;;   :config
-  ;;   (color-theme-sanityinc-tomorrow-eighties))
+    ;; (use-package color-theme-sanityinc-tomorrow
+    ;;   :ensure t
+    ;;   :config
+    ;;   (color-theme-sanityinc-tomorrow-eighties))
 
 #+END_SRC
 
