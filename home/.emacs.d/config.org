@@ -892,6 +892,31 @@ Version 2017-01-27"
 
 #+RESULTS:
 : xah-copy-file-path
+* Writing
+
+** Perfect Margin
+
+#+BEGIN_SRC emacs-lisp
+  (use-package perfect-margin
+    :ensure t
+    :config
+    (setq perfect-margin-visible-width 100))
+
+  (defun write-mode ()
+    (interactive)
+    (if (bound-and-true-p perfect-margin-mode)
+        (progn (perfect-margin-mode -1)
+               (visual-line-mode -1)
+               (flyspell-mode -1))
+      (progn
+        (perfect-margin-mode)
+        (visual-line-mode)
+        (flyspell-mode))))
+
+#+END_SRC
+
+#+RESULTS:
+: write-mode
 
 * Coding
 ** Testing
