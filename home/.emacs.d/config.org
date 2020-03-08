@@ -620,6 +620,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
   (use-package general
     :ensure t
     :config
+    (general-auto-unbind-keys)
     (setq general-default-states '(normal motion))
 
     (general-define-key :prefix "SPC b"
@@ -1436,7 +1437,7 @@ Let's use web-mode, which supports font locking for templating.
               (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history)))
 #+END_SRC
 
-** go
+** Go
 
 #+BEGIN_SRC emacs-lisp
   (use-package go-mode
