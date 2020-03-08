@@ -668,6 +668,10 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "d" 'delete-this-file
                         "s" 'save-buffer)
 
+    ;; Use go-specific jumping for go-mode since it works wells
+    (general-define-key :keymaps 'go-mode-map
+                        "gf" 'godef-jump)
+
     (general-define-key :states '(emacs normal motion)
                         "C-x k" 'kill-this-buffer)
 
@@ -981,6 +985,8 @@ Autodetect indentation:
   (use-package company
     :ensure t
     :config
+    (setq company-idle-delay 0)
+    (setq company-minimum-prefix-length 1)
     (global-company-mode)
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
@@ -1443,18 +1449,12 @@ Let's use web-mode, which supports font locking for templating.
   (use-package go-mode
     :ensure t
     :config
-    (add-hook 'before-save-hook 'gofmt-before-save))
-
-  (use-package company-go
-    :ensure t
-    :config
-    (add-hook 'go-mode-hook (lambda ()
-                              (set (make-local-variable 'company-backends)
-                                   '(company-go)))))
+    (add-hook 'go-mode-hook #'lsp-go-install-save-hooks))
 #+END_SRC
 
 #+RESULTS:
 : t
+
 ** Ruby
 
 #+BEGIN_SRC emacs-lisp
@@ -1536,6 +1536,37 @@ Let's use web-mode, which supports font locking for templating.
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
 #+END_SRC
+
+** LSP
+#+begin_src emacs-lisp
+      (use-package lsp-mode
+        :ensure t
+        :commands (lsp lsp-deferred)
+        :hook (go-mode . lsp-deferred)
+        :config
+        (require 'lsp-clients)
+        (require 'lsp-go))
+
+      (defun lsp-go-install-save-hooks ()
+        (add-hook 'before-save-hook #'lsp-format-buffer t t)
+        (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
+      (use-package lsp-ui
+        :ensure t
+        :commands lsp-ui-mode)
+
+      (use-package company-lsp
+        :ensure t
+        :commands company-lsp)
+
+      (use-package yasnippet
+        :ensure t
+        :commands yas-minor-mode
+        :hook (go-mode . yas-minor-mode))
+#+end_src
+
+#+RESULTS:
+| yas-minor-mode | lsp-deferred | lsp-go-install-save-hooks |
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
