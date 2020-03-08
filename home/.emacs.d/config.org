@@ -1300,6 +1300,17 @@ I typically use 2 spaces to indent.
 #+BEGIN_SRC emacs-lisp
   (setq js-indent-level 2)
 #+END_SRC
+*** Typescript
+
+#+BEGIN_SRC emacs-lisp
+  (use-package typescript-mode
+    :ensure t
+    :config
+    (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescript-mode)))
+#+END_SRC
+
+#+RESULTS:
+
 ** Haskell
 #+BEGIN_SRC emacs-lisp 
 
