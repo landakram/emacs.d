@@ -1450,10 +1450,12 @@ Let's use web-mode, which supports font locking for templating.
     :ensure t
     :config
     (add-hook 'go-mode-hook #'lsp-go-install-save-hooks))
+
+  (use-package gotest
+    :ensure t)
 #+END_SRC
 
 #+RESULTS:
-: t
 
 ** Ruby
 
