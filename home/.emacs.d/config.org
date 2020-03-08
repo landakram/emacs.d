@@ -478,17 +478,43 @@ Make scrolling behavior more like vim:
     (require 'helm-imenu))
 
   (use-package helm-ag
-    :ensure t)
+    :ensure t
+    :config
+    (setq helm-ag-base-command "rg --no-heading --smart-case"))
 
   (use-package helm-projectile
     :ensure t
     :config
     (helm-projectile-on))
 
+  ;; Work around an issue with hitting TAB on helm-ag where it sometimes fails due to
+  ;; not finding a process
+  (defun helm-ag--do-ag-candidate-process ()
+    (let* ((non-essential nil)
+           (default-directory (or helm-ag--default-directory
+                                  helm-ag--last-default-directory
+                                  default-directory))
+           (cmd-args (helm-ag--construct-do-ag-command helm-pattern)))
+      (if cmd-args
+          (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
+            (setq helm-ag--last-query helm-pattern
+                  helm-ag--last-command cmd-args
+                  helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
+                  helm-ag--last-default-directory default-directory)
+            (prog1 proc
+              (set-process-sentinel
+               proc
+               (lambda (process event)
+                 (helm-process-deferred-sentinel-hook
+                  process event (helm-default-directory))
+                 (when (string= event "finished\n")
+                   (helm-ag--do-ag-propertize helm-input))))))
+        ;; Workaround: simply provide an empty echo process
+        (start-file-process "echo" nil "echo"))))
 #+END_SRC
 
 #+RESULTS:
-: t
+: helm-ag--do-ag-candidate-process
 
 * Keybindings
 ** General keybindings
@@ -669,7 +695,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "" '(:ignore t :which-key "projects")
                         "p" 'projectile-switch-project
                         "f" 'projectile-find-file
-                        "a" 'helm-projectile-ag
+                        "a" 'helm-do-ag-project-root
                         "t" 'projectile-test-project))
 #+END_SRC
 
@@ -714,7 +740,7 @@ Projectile lets me switch between projects really easily. I set it up to default
 
     (def-projectile-commander-method ?a
       "Full text search in the project."
-      (helm-projectile-ag))
+      (helm-do-ag-project-root))
 
     (def-projectile-commander-method ?e
       "Open an [e]shell in the project root."
@@ -729,6 +755,11 @@ Projectile lets me switch between projects really easily. I set it up to default
       (projectile-vc))
 
 #+END_SRC
+
+#+RESULTS:
+| 63 | Commander help buffer. | #[0 \3021 \303!0\202 \210\202 \210r\304!q\210\305c\210	\211\2031 \211@\306\307@A@#c\210A\266\202\202 \210eb\210\310 \210\311p\312"\210)\313 \207 [projectile-commander-help-buffer projectile-commander-methods (error) kill-buffer get-buffer-create Projectile Commander Methods: |
+
+
 
 ** Avy
 Avy lets me jump around buffers and windows with hints.
