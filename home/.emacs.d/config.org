@@ -672,6 +672,19 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (general-define-key :keymaps 'go-mode-map
                         "gf" 'godef-jump)
 
+    ;; Clojure shortcuts
+    (general-define-key :prefix "SPC ,"
+                        :keymap 'clojure-mode-map
+                        "" '(:ignore t :which-key "Mode-specific")
+                        "c" 'cider
+                        "i" 'cider-inspect
+                        "e" 'cider-eval-defun-at-point
+                        "r" 'cider-switch-to-repl-buffer 
+                        "s" 'cider-selector)
+
+    (general-define-key :keymap 'cider-stacktrace-mode-map
+                        "q" 'cider-popup-buffer-quit-function)
+
     (general-define-key :states '(emacs normal motion)
                         "C-x k" 'kill-this-buffer)
 
