@@ -549,7 +549,8 @@ Make scrolling behavior more like vim:
     :diminish evil-mode
     :diminish undo-tree-mode
     :init
-    ;; (setq evil-want-C-u-scroll t)
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
     :config
     ;; Make movement keys work over visual lines
     (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
@@ -568,10 +569,6 @@ Make scrolling behavior more like vim:
 
 
     (setq evil-move-cursor-back nil)
-
-    ;; Search by symbol instead of word. This matches things like
-    ;; "this-variable", instead of just "this". 
-    (setq evil-symbol-word-search 1)
 
     (define-key evil-normal-state-map (kbd "gf")
       (lambda () 
@@ -610,6 +607,11 @@ Make scrolling behavior more like vim:
       :config
       (global-evil-matchit-mode 1)))
 
+    (use-package evil-collection
+      :after evil
+      :ensure t
+      :config
+      (evil-collection-init))
 #+END_SRC
 
 #+RESULTS:
@@ -626,51 +628,55 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (general-auto-unbind-keys)
     (setq general-default-states '(normal motion))
 
-    (general-define-key :prefix "SPC b"
-                        "" '(:ignore t :which-key "buffers")
-                        "b" 'helm-mini
-                        "k" 'kill-this-buffer
-                        "q" 'delete-window)
+    (general-create-definer leader-def
+      :prefix "SPC"
+      :keymaps '(normal motion override))
+
+    (leader-def :infix "b"
+      "" '(:ignore t :which-key "buffers")
+      "b" 'helm-mini
+      "k" 'kill-this-buffer
+      "q" 'delete-window)
 
     ;; Bookmarks
-    (general-define-key :prefix "SPC bo"
-                        "" '(:ignore t :which-key "b[o]okmarks")
-                        "c" '(:which-key "config-file"
-                             :def (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
-                        "m" '(:which-key "mu4e"
-                             :command 'mu4e)
-                        "o" '(:which-key "org-file"
-                             :def (lambda () (interactive) (find-file "~/org/projects.org"))))
+    (leader-def :infix "bo"
+      "" '(:ignore t :which-key "b[o]okmarks")
+      "c" '(:which-key "config-file"
+                       :def (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
+      "m" '(:which-key "mu4e"
+                       :command 'mu4e)
+      "o" '(:which-key "org-file"
+                       :def (lambda () (interactive) (find-file "~/org/projects.org"))))
 
-    (general-define-key :prefix "SPC w"
-                        "" '(:ignore t :which-key "windows")
-                        "d" 'ace-delete-window
-                        "j" 'ace-window)
+    (leader-def :infix "w"
+      "" '(:ignore t :which-key "windows")
+      "d" 'ace-delete-window
+      "j" 'ace-window)
 
-    (general-define-key :prefix "SPC"
-                        "|" 'split-window-right-and-focus
-                        "-" 'split-window-below-and-focus)
+    (leader-def
+      "|" 'split-window-right-and-focus
+      "-" 'split-window-below-and-focus)
 
-    (general-define-key :prefix "SPC"
-                        "a" 'org-agenda
-                        "c" 'org-capture)
+    (leader-def
+      "a" 'org-agenda
+      "c" 'org-capture)
 
-    (general-define-key :prefix "SPC"
-                        "g" 'magit-status)
+    (leader-def
+      "g" 'magit-status)
 
-    (general-define-key :prefix "SPC"
-                        "x" 'helm-M-x)
+    (leader-def
+      "x" 'helm-M-x)
 
     ;; Help
-    (general-define-key :prefix "SPC"
-                        "h" (general-simulate-keys "C-h"))
+    (leader-def
+      "h" (general-simulate-keys "C-h"))
 
-    (general-define-key :prefix "SPC f"
-                        "" '(:ignore t :which-key "files")
-                        "f" 'helm-find-files
-                        "d" 'delete-this-file
-                        "c" 'xah-copy-file-path
-                        "s" 'save-buffer)
+    (leader-def :infix "f"
+      "" '(:ignore t :which-key "files")
+      "f" 'helm-find-files
+      "d" 'delete-this-file
+      "c" 'xah-copy-file-path
+      "s" 'save-buffer)
 
     ;; JavaScript
     (general-define-key :keymaps '(typescript-mode-map javascript-mode-map)
@@ -681,16 +687,16 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "gf" 'godef-jump)
 
     ;; Clojure shortcuts
-    (general-define-key :prefix "SPC ,"
-                        :keymap 'clojure-mode-map
-                        "" '(:ignore t :which-key "Mode-specific")
-                        "c" 'cider
-                        "i" 'cider-inspect
-                        "e" 'cider-eval-defun-at-point
-                        "r" 'cider-switch-to-repl-buffer 
-                        "s" 'cider-selector)
+    (leader-def :infix ","
+      :keymaps 'clojure-mode-map
+      "" '(:ignore t :which-key "Mode-specific")
+      "c" 'cider
+      "i" 'cider-inspect
+      "e" 'cider-eval-defun-at-point
+      "r" 'cider-switch-to-repl-buffer 
+      "s" 'cider-selector)
 
-    (general-define-key :keymap 'cider-stacktrace-mode-map
+    (general-define-key :keymaps 'cider-stacktrace-mode-map
                         "q" 'cider-popup-buffer-quit-function)
 
     (general-define-key :states '(emacs normal motion)
@@ -704,11 +710,11 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "TAB" 'outline-cycle
                         "<backtab>" 'outshine-cycle-buffer)
 
-    (general-define-key :prefix "SPC"
-                        :states '(normal)
-                        :keymaps 'outline-minor-mode-map
-                        "n" 'outshine-narrow-to-subtree
-                        "N" 'widen)
+    (leader-def
+      :states '(normal)
+      :keymaps 'outline-minor-mode-map
+      "n" 'outshine-narrow-to-subtree
+      "N" 'widen)
 
     (general-define-key :states '(normal)
                         :keymaps 'outline-minor-mode-map
@@ -717,12 +723,12 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "M-K" 'outline-backward-same-level
                         "M-J" 'outline-forward-same-level)
 
-    (general-define-key :prefix "SPC p"
-                        "" '(:ignore t :which-key "projects")
-                        "p" 'projectile-switch-project
-                        "f" 'projectile-find-file
-                        "a" 'helm-do-ag-project-root
-                        "t" 'projectile-test-project))
+    (leader-def :infix "p"
+      "" '(:ignore t :which-key "projects")
+      "p" 'projectile-switch-project
+      "f" 'projectile-find-file
+      "a" 'helm-do-ag-project-root
+      "t" 'projectile-test-project))
 #+END_SRC
 
 #+RESULTS:
@@ -1679,7 +1685,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
       (setq org-src-fontify-natively t)
       (setq org-log-done 'time)
     
-      (setq org-src-window-setup ‘current-window)
+      (setq org-src-window-setup 'current-window)
 
       (setq org-startup-truncated 'nil)
       (setq org-catch-invisible-edits 'smart)
