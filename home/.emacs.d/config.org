@@ -483,7 +483,7 @@ Make scrolling behavior more like vim:
   (use-package helm-ag
     :ensure t
     :config
-    (setq helm-ag-base-command "rg --no-heading --smart-case"))
+    (setq helm-ag-base-command "rg --no-heading --smart-case --hidden"))
 
   (use-package helm-projectile
     :ensure t
