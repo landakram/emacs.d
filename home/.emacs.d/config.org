@@ -570,27 +570,6 @@ Make scrolling behavior more like vim:
 
     (setq evil-move-cursor-back nil)
 
-    (define-key evil-normal-state-map (kbd "gf")
-      (lambda () 
-        (interactive)
-        (if current-prefix-arg
-          (dumb-jump-go-other-window)
-          (dumb-jump-go))))
-
-    (define-key evil-normal-state-map (kbd "gb") 'dumb-jump-back)
-
-    (define-key evil-normal-state-map "f" 'avy-goto-word-or-subword-1)
-    (define-key evil-normal-state-map (kbd "C-k") (lambda ()
-                                                    (interactive)
-                                                    (evil-scroll-up nil)))
-    (define-key evil-normal-state-map (kbd "C-j") (lambda ()
-                                                    (interactive)
-                                                    (evil-scroll-down nil)))
-
-
-    ;; Use swiper for search
-    ;; (define-key evil-normal-state-map "/" 'swiper)
-
     (evil-mode 1)
 
     (use-package evil-surround
@@ -728,7 +707,32 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
       "p" 'projectile-switch-project
       "f" 'projectile-find-file
       "a" 'helm-do-ag-project-root
-      "t" 'projectile-test-project))
+      "t" 'projectile-test-project)
+
+    (general-define-key
+     :states '(normal)
+     :keymaps 'override
+     "C-k" (lambda ()
+             (interactive)
+             (evil-scroll-up nil))
+     "C-j" (lambda ()
+             (interactive)
+             (evil-scroll-down nil)))
+
+    (general-define-key
+     :states '(normal)
+     :keymaps 'override
+     "f" 'avy-goto-word-or-subword-1)
+
+    (general-define-key
+     :states '(normal)
+     :keymaps 'override
+     "gf" (lambda () 
+            (interactive)
+            (if current-prefix-arg
+                (dumb-jump-go-other-window)
+              (dumb-jump-go)))
+     "gb" 'dumb-jump-back))
 #+END_SRC
 
 #+RESULTS:
