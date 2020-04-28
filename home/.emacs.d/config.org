@@ -436,7 +436,7 @@ It's commented out right now because it looks terrible.
 
 ** Window / popup management
 
-Always focus the cursor in help windows.
+Always focus the curor in help windows.
 
 #+BEGIN_SRC emacs-lisp
   (setq help-window-select t)
@@ -473,6 +473,7 @@ Make scrolling behavior more like vim:
     (global-set-key (kbd "C-x b") 'helm-mini)
     (global-set-key (kbd "C-h a") 'helm-apropos)
     (setq helm-buffer-max-length nil)
+    (add-to-list 'completion-styles 'helm)
     (helm-autoresize-mode t)
     (customize-set-variable helm-completion-style 'helm)
     (add-to-list 'completion-styles 'helm)
@@ -668,6 +669,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "" '(:ignore t :which-key "files")
                         "f" 'helm-find-files
                         "d" 'delete-this-file
+                        "c" 'xah-copy-file-path
                         "s" 'save-buffer)
 
     ;; JavaScript
@@ -677,6 +679,19 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     ;; Use go-specific jumping for go-mode since it works wells
     (general-define-key :keymaps 'go-mode-map
                         "gf" 'godef-jump)
+
+    ;; Clojure shortcuts
+    (general-define-key :prefix "SPC ,"
+                        :keymap 'clojure-mode-map
+                        "" '(:ignore t :which-key "Mode-specific")
+                        "c" 'cider
+                        "i" 'cider-inspect
+                        "e" 'cider-eval-defun-at-point
+                        "r" 'cider-switch-to-repl-buffer 
+                        "s" 'cider-selector)
+
+    (general-define-key :keymap 'cider-stacktrace-mode-map
+                        "q" 'cider-popup-buffer-quit-function)
 
     (general-define-key :states '(emacs normal motion)
                         "C-x k" 'kill-this-buffer)
@@ -954,7 +969,6 @@ Version 2017-01-27"
         (perfect-margin-mode)
         (visual-line-mode)
         (flyspell-mode))))
-
 #+END_SRC
 
 #+RESULTS:
@@ -987,11 +1001,10 @@ Autodetect indentation:
 ** Autocomplete
 
 #+BEGIN_SRC emacs-lisp 
-
   (use-package company
     :ensure t
     :config
-    (setq company-idle-delay 0)
+    (setq company-idle-delay 0) 
     (setq company-minimum-prefix-length 1)
     (global-company-mode)
     (define-key company-active-map (kbd "M-n") nil)
@@ -1006,7 +1019,6 @@ Autodetect indentation:
 ** Git
 *** Magit
 #+BEGIN_SRC emacs-lisp 
-
   (use-package magit
     :ensure t
     :config
@@ -1014,7 +1026,6 @@ Autodetect indentation:
     ;; (setq magit-refresh-status-buffer nil)
     ;; (setq magit-refresh-verbose t)
     )
-
 #+END_SRC
 
 #+RESULTS:
@@ -1118,7 +1129,6 @@ Autodetect indentation:
 ** Snippets
 
 #+BEGIN_SRC emacs-lisp 
-
 (use-package yasnippet
   :ensure t
   :config
@@ -1135,14 +1145,11 @@ Autodetect indentation:
               (define-key yas/keymap [tab] 'yas/next-field)))
 
   (yas-global-mode 1))
-
-
 #+END_SRC
 
 ** Lisp
 
 #+BEGIN_SRC emacs-lisp 
-
   (defun start-figwheel ()
     "Start figwheel. This function is meant to be called interactively after `cider-jack-in`."
     (interactive)
@@ -1200,7 +1207,6 @@ Autodetect indentation:
   (defun my/clojure-mode-hook ()
     (clj-refactor-mode 1)
     (yas-minor-mode 1))
-
 #+END_SRC
 
 #+RESULTS:
@@ -1348,9 +1354,7 @@ I typically use 2 spaces to indent.
 
   (use-package docker
     :ensure t
-    :diminish docker-mode
-    :config
-    (docker-global-mode))
+    :diminish docker-mode)
 
 #+END_SRC
 
@@ -1414,14 +1418,14 @@ Let's use web-mode, which supports font locking for templating.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package phpunit
-    :load-path "~/.emacs.d/site-lisp/phpunit"
-    :config
-      (general-define-key
-       :states '(normal)
-       :keymaps 'php-mode-map
-       :prefix "C-c"
-       "C-t" 'phpunit-current-test))
+  ;; (use-package phpunit
+  ;;   :load-path "~/.emacs.d/site-lisp/phpunit"
+  ;;   :config
+  ;;     (general-define-key
+  ;;      :states '(normal)
+  ;;      :keymaps 'php-mode-map
+  ;;      :prefix "C-c"
+  ;;      "C-t" 'phpunit-current-test))
 #+END_SRC
 ** LaTeX
 
@@ -2197,13 +2201,15 @@ This is long so that fetching feeds does not timeout.
 : t
 * Budgeting
 
+Not actively using this right now.
+
 #+BEGIN_SRC emacs-lisp
   (use-package ledger-mode
     :ensure t)
 #+END_SRC
 
 #+RESULTS:
-* External services (prodigy)
+* External services (Prodigy)
 
 #+BEGIN_SRC emacs-lisp
   (use-package prodigy
