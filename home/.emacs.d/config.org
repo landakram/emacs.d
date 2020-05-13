@@ -657,9 +657,19 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
       "c" 'xah-copy-file-path
       "s" 'save-buffer)
 
+    (defun lsp-find-definition-with-fallback ()
+      (interactive)
+      (let ((definition (lsp-find-definition)))
+        (when (or (string-prefix-p "Not found for:" definition))
+          (dumb-jump-go))))
+
     ;; JavaScript
     (general-define-key :keymaps '(typescript-mode-map javascript-mode-map)
-                        "gf" 'lsp-find-definition)
+                        "gf" 'lsp-find-definition-with-fallback)
+
+    ;; Ruby
+    (general-define-key :keymaps '(ruby-mode-map)
+                        "gf" 'lsp-find-definition-with-fallback)
 
     ;; Use go-specific jumping for go-mode since it works wells
     (general-define-key :keymaps 'go-mode-map
@@ -726,7 +736,6 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key
      :states '(normal)
-     :keymaps 'override
      "gf" (lambda () 
             (interactive)
             (if current-prefix-arg
@@ -876,7 +885,7 @@ Reduce the amount that the mouse scrolls.
     :ensure t
     :config
     (setq dumb-jump-selector 'helm)
-    (setq dumb-jump-force-searcher 'ag))
+    (setq dumb-jump-force-searcher 'rg))
 #+END_SRC
 ** Tramp
 
@@ -1565,13 +1574,16 @@ Let's use web-mode, which supports font locking for templating.
     :ensure t
     :commands (lsp lsp-deferred)
     :hook ((go-mode . lsp-deferred)
-           (typescript-mode . lsp-deferred))
+           (typescript-mode . lsp-deferred)
+           (ruby-mode . lsp-deferred))
     :config
     (require 'lsp-clients)
     (require 'lsp-go)
     (require 'lsp-solargraph)
-    (customize-set-variable 'lsp-solargraph-use-bundler t)
+    (customize-set-variable 'lsp-solargraph-use-bundler nil)
+    (customize-set-variable 'lsp-solargraph-multi-root nil)
 
+    (setq lsp-log-io t)
     (setq lsp-clients-typescript-server-args '("--stdio")))
 
   (defun lsp-go-install-save-hooks ()
