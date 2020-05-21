@@ -489,35 +489,10 @@ Make scrolling behavior more like vim:
     :ensure t
     :config
     (helm-projectile-on))
-
-  ;; Work around an issue with hitting TAB on helm-ag where it sometimes fails due to
-  ;; not finding a process
-  (defun helm-ag--do-ag-candidate-process ()
-    (let* ((non-essential nil)
-           (default-directory (or helm-ag--default-directory
-                                  helm-ag--last-default-directory
-                                  default-directory))
-           (cmd-args (helm-ag--construct-do-ag-command helm-pattern)))
-      (if cmd-args
-          (let ((proc (apply #'start-file-process "helm-do-ag" nil cmd-args)))
-            (setq helm-ag--last-query helm-pattern
-                  helm-ag--last-command cmd-args
-                  helm-ag--ignore-case (helm-ag--ignore-case-p cmd-args helm-pattern)
-                  helm-ag--last-default-directory default-directory)
-            (prog1 proc
-              (set-process-sentinel
-               proc
-               (lambda (process event)
-                 (helm-process-deferred-sentinel-hook
-                  process event (helm-default-directory))
-                 (when (string= event "finished\n")
-                   (helm-ag--do-ag-propertize helm-input))))))
-        ;; Workaround: simply provide an empty echo process
-        (start-file-process "echo" nil "echo"))))
 #+END_SRC
 
 #+RESULTS:
-: helm-ag--do-ag-candidate-process
+: t
 
 * Keybindings
 ** General keybindings
