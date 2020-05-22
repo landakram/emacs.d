@@ -35,7 +35,8 @@
  '(pos-tip-foreground-color "#272822")
  '(safe-local-variable-values
    (quote
-    ((cider-default-cljs-repl . "figwheel-main")
+    ((geiser-scheme-implementation quote chicken)
+     (cider-default-cljs-repl . "figwheel-main")
      (cider-preferred-build-tool . "lein")
      (eval and
            (set

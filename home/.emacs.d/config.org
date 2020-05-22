@@ -1565,7 +1565,8 @@ Let's use web-mode, which supports font locking for templating.
     :ensure t
     :commands (lsp lsp-deferred)
     :hook ((go-mode . lsp-deferred)
-           (typescript-mode . lsp-deferred))
+           (typescript-mode . lsp-deferred)
+           (rust-mode . lsp-deferred))
     :config
     (require 'lsp-clients)
     (require 'lsp-go)
@@ -1595,6 +1596,24 @@ Let's use web-mode, which supports font locking for templating.
   (setq read-process-output-max (* 1024 1024))
   (setq lsp-prefer-capf t)
 
+#+end_src
+
+#+RESULTS:
+: t
+
+** Rust
+
+#+begin_src emacs-lisp
+  (use-package rust-mode
+    :ensure t
+    :after general
+    :config
+    (add-hook 'rust-mode-hook
+              (lambda () (setq indent-tabs-mode nil)))
+    (setq rust-format-on-save t)
+    (general-define-key :keymaps '(rust-mode-map)
+                        "gf" 'lsp-find-definition))
+  
 #+end_src
 
 #+RESULTS:
