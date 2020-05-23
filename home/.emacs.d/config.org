@@ -633,7 +633,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     ;; Help
     (leader-def
-      "h" (general-simulate-keys "C-h"))
+      "h" (general-simulate-key "C-h"))
 
     (leader-def :infix "f"
       "" '(:ignore t :which-key "files")
@@ -2059,8 +2059,6 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 
 #+RESULTS:
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
-
-
 * IRC
 ** Circe
 #+BEGIN_SRC emacs-lisp 
