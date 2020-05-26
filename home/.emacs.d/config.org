@@ -1857,14 +1857,12 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 
 #+BEGIN_SRC emacs-lisp
   (setq org-tag-alist '((:startgroup . nil)
-                        ("OFFICE" . ?o)
-                        ("HOME" . ?h)
+                        ("WORK" . ?w)
+                        ("PERSONAL" . ?p)
                         ("ERRANDS" . ?e)
                         (:endgroup . nil)
-                        ("COMPUTER" . ?c)
-                        ("WATCH" . ?w)
-                        ("READ" . ?r)
-                        ("PHONE" . ?p)))
+                        ("WATCH" . ?s)
+                        ("READ" . ?r)))
 
   (setq org-capture-templates
         '(("n" "Note" entry (file+headline "~/org/inbox.org" "Notes")
