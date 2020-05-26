@@ -29,6 +29,16 @@ Let's set ~custom-file~, which emacs writes to automatically.
 (load custom-file)
 
 #+END_SRC
+
+** Set the font
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'default-frame-alist
+             '(font . "Fira Mono-11"))
+#+END_SRC
+
+#+RESULTS:
+
 * Packages
 
 ** Set up ~package.el~
@@ -623,7 +633,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     ;; Help
     (leader-def
-      "h" (general-simulate-keys "C-h"))
+      "h" (general-simulate-key "C-h"))
 
     (leader-def :infix "f"
       "" '(:ignore t :which-key "files")
@@ -1153,14 +1163,17 @@ Autodetect indentation:
       (cljs-repl) \n"))
 
   (use-package evil-cleverparens
-    :ensure t)
+    :ensure t
+    :config
+    (require 'evil-cleverparens-text-objects))
+
 
   (use-package cider
     :ensure t
     :config
     ;; Start figwheel when I run `M-x cider-jack-in-clojurescript`
     (setq cider-cljs-lein-repl
-        "(do (require 'figwheel-sidecar.repl-api)
+          "(do (require 'figwheel-sidecar.repl-api)
              (figwheel-sidecar.repl-api/start-figwheel!)
              (figwheel-sidecar.repl-api/cljs-repl))"))
 
@@ -1174,7 +1187,14 @@ Autodetect indentation:
     :ensure t)
 
   (use-package geiser
-    :ensure t)
+    :ensure t
+    :init
+    (setq geiser-active-implementations '(chicken guile)))
+
+  (use-package slime
+    :ensure t
+    :config
+    (setq inferior-lisp-program "sbcl"))
 
   (use-package paredit
     :ensure t
@@ -1201,10 +1221,30 @@ Autodetect indentation:
   (defun my/clojure-mode-hook ()
     (clj-refactor-mode 1)
     (yas-minor-mode 1))
+
+  (use-package extempore-mode
+    :ensure t)
 #+END_SRC
 
 #+RESULTS:
-: my/clojure-mode-hook
+
+*** Chicken Scheme
+
+#+BEGIN_SRC emacs-lisp
+  ;; Indenting module body code at column 0
+  (defun scheme-module-indent (state indent-point normal-indent) 0)
+  (put 'module 'scheme-indent-function 'scheme-module-indent)
+
+  (put 'and-let* 'scheme-indent-function 1)
+  (put 'parameterize 'scheme-indent-function 1)
+  (put 'handle-exceptions 'scheme-indent-function 1)
+  (put 'when 'scheme-indent-function 1)
+  (put 'unless 'scheme-indent-function 1)
+  (put 'match 'scheme-indent-function 1)
+#+END_SRC
+
+#+RESULTS:
+: 1
 
 ** Python
 *** Virtualenv
@@ -1550,6 +1590,7 @@ Let's use web-mode, which supports font locking for templating.
     :commands (lsp lsp-deferred)
     :hook ((go-mode . lsp-deferred)
            (typescript-mode . lsp-deferred)
+           (rust-mode . lsp-deferred)
            (ruby-mode . lsp-deferred))
     :config
     (require 'lsp-clients)
@@ -1586,6 +1627,37 @@ Let's use web-mode, which supports font locking for templating.
 
 #+RESULTS:
 : t
+
+** Rust
+
+#+begin_src emacs-lisp
+  (use-package rust-mode
+    :ensure t
+    :after general
+    :config
+    (add-hook 'rust-mode-hook
+              (lambda () (setq indent-tabs-mode nil)))
+    (setq rust-format-on-save t)
+    (general-define-key :keymaps '(rust-mode-map)
+                        "gf" 'lsp-find-definition))
+  
+#+end_src
+
+#+RESULTS:
+: t
+** Vim
+
+*gasp*
+
+#+BEGIN_SRC emacs-lisp
+  (use-package vimrc-mode
+    :ensure t
+    :init
+    (add-to-list 'auto-mode-alist '("\\.tridactyl\\(rc\\)?\\'" . vimrc-mode))
+    (add-to-list 'auto-mode-alist '("\\.vim\\(rc\\)?\\'" . vimrc-mode)))
+#+END_SRC
+
+#+RESULTS:
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
@@ -1985,7 +2057,25 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 
 #+RESULTS:
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
+** org-roam
 
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :after general
+    :config
+    (add-hook 'after-init-hook 'org-roam-mode)
+    (setq org-roam-directory "~/org/roam")
+    (setq org-roam-completion-system 'helm)
+
+    (leader-def :infix "o"
+      "f" 'org-roam-find-file
+      "l" 'org-roam-insert
+      "r" 'org-roam))
+#+end_src
+
+#+RESULTS:
+: t
 * IRC
 ** Circe
 #+BEGIN_SRC emacs-lisp 
@@ -2009,7 +2099,9 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
                         "#clojure-beginners"
                         "#iphonedev"
                         "#swift-lang"
-                        "#racket")
+                        "#racket"
+                        "#chicken"
+                        "#ruby")
              :nickserv-password my/nickserv-password
              :reduce-lurker-spam t)))
     (enable-circe-color-nicks))
