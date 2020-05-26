@@ -2007,6 +2007,26 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 #+RESULTS:
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
 
+** org-roam
+
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :after general
+    :config
+    (add-hook 'after-init-hook 'org-roam-mode)
+    (setq org-roam-directory "~/org/roam")
+    (setq org-roam-completion-system 'helm)
+
+    (leader-def :infix "o"
+      "f" 'org-roam-find-file
+      "l" 'org-roam-insert
+      "r" 'org-roam))
+#+end_src
+
+#+RESULTS:
+: t
+
 * IRC
 ** Circe
 #+BEGIN_SRC emacs-lisp 
