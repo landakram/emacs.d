@@ -1946,6 +1946,9 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 #+RESULTS:
 : org-jira-insert-link
 ** Capture
+:PROPERTIES:
+:ID:       C62177A9-A7FE-42BD-9D4B-4BA31F4A9DD0
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (setq org-tag-alist '((:startgroup . nil)
@@ -1965,6 +1968,10 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
            "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
           ("c" "Calendar" entry (file+headline "~/org/calendar.org" "Calendar")
            "* %?\n")
+          ("t" "Test" entry (file+headline "~/org/test.org" (format-time-string "%Y-%m-%d") "%?")
+           "* %?\n")
+          ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
+           "* %?\n" :unnarrowed t)
           ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
            "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")))
 #+END_SRC
