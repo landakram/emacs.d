@@ -1154,28 +1154,14 @@ Autodetect indentation:
 ** Lisp
 
 #+BEGIN_SRC emacs-lisp 
-  (defun start-figwheel ()
-    "Start figwheel. This function is meant to be called interactively after `cider-jack-in`."
-    (interactive)
-    (cider-interactive-eval
-     "(use 'figwheel-sidecar.repl-api) \n
-      (start-figwheel!) \n
-      (cljs-repl) \n"))
-
   (use-package evil-cleverparens
     :ensure t
     :config
     (require 'evil-cleverparens-text-objects))
 
-
   (use-package cider
     :ensure t
-    :config
-    ;; Start figwheel when I run `M-x cider-jack-in-clojurescript`
-    (setq cider-cljs-lein-repl
-          "(do (require 'figwheel-sidecar.repl-api)
-             (figwheel-sidecar.repl-api/start-figwheel!)
-             (figwheel-sidecar.repl-api/cljs-repl))"))
+    :config)
 
   (use-package cljsbuild-mode
     :ensure t)
