@@ -1742,41 +1742,75 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 *** Putting it together
 #+BEGIN_SRC emacs-lisp 
 
-    (defun my/configure-org ()
-      (require 'org-tempo)
-      (setq org-image-actual-width 300)
-      (setq org-src-fontify-natively t)
-      (setq org-log-done 'time)
-    
-      (setq org-src-window-setup 'current-window)
+  (defun my/configure-org ()
+    (require 'org-tempo)
+    (setq org-image-actual-width 300)
+    (setq org-src-fontify-natively t)
+    (setq org-log-done 'time)
 
-      (setq org-startup-truncated 'nil)
-      (setq org-catch-invisible-edits 'smart)
+    (setq org-src-window-setup 'current-window)
 
-      ;; Do not dim blocked tasks
-      (setq org-agenda-dim-blocked-tasks nil)
+    (setq org-startup-truncated 'nil)
+    (setq org-catch-invisible-edits 'smart)
 
-      ;; Start up in org-indent-mode
-      (setq org-startup-indented t)
-      ;; Diminish org-indent-mode in the mode-line
-      (eval-after-load 'org-indent '(diminish 'org-indent-mode))
-      (setq org-hide-emphasis-markers t))
+    ;; Do not dim blocked tasks
+    (setq org-agenda-dim-blocked-tasks nil)
+
+    ;; Start up in org-indent-mode
+    (setq org-startup-indented t)
+    ;; Diminish org-indent-mode in the mode-line
+    (eval-after-load 'org-indent '(diminish 'org-indent-mode))
+    (setq org-hide-emphasis-markers t))
 
 
-    (defun my/org-mode ()
-      (my/org-mode-keyboard-shortcuts)
-     ;; (my/org-variable-pitch)
-      )
+  (defun my/org-mode ()
+    (my/org-mode-keyboard-shortcuts)
+   ;; (my/org-variable-pitch)
+    )
 
-    (defun my/org-agenda-mode ()
-      (my/org-agenda-keyboard-shortcuts))
+  (defun my/org-agenda-mode ()
+    (my/org-agenda-keyboard-shortcuts))
 
-    (setq-default fill-column 85)
+  (setq-default fill-column 85)
 
+  (defun helm-org-rifle--store-link (candidate)
+    "Store link to CANDIDATE"
+    (-let (((buffer . pos) candidate))
+      (save-excursion
+        (with-current-buffer buffer
+          (goto-char pos)
+          (call-interactively 'org-store-link)))))
+
+  (defun helm-org-rifle--insert-link (candidate)
+    "Insert link to CANDIDATE in current location"
+    (interactive)
+    (helm-org-rifle--store-link candidate)
+    (call-interactively 'org-insert-link))
+
+  (defun org-rifle-insert-link ()
+    (interactive)
+    (add-to-list 'helm-org-rifle-actions '("Insert link" . helm-org-rifle--insert-link))
+    (helm-org-rifle-org-directory)
+    (pop helm-org-rifle-actions))
+
+  (use-package helm-org-rifle
+    :ensure t
+    :after (org general)
+    :config
+    (require 'org-id)
+    (setq org-id-link-to-org-use-id t)
+
+    (leader-def :infix "o"
+      "l" 'org-rifle-insert-link)
+
+    (general-define-key
+     :keymaps 'org-mode-map
+     :prefix "C-c"
+     "C-." 'org-rifle-insert-link))
 #+END_SRC
 
 #+RESULTS:
-: 85
+: t
 
 ** Keyboard shortcuts
 *** Editing
@@ -2059,23 +2093,6 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 
 #+RESULTS:
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
-** org-roam
-
-#+begin_src emacs-lisp
-  (use-package org-roam
-    :ensure t
-    :after general
-    :config
-    (add-hook 'after-init-hook 'org-roam-mode)
-    (setq org-roam-directory "~/org/roam")
-    (setq org-roam-completion-system 'helm)
-
-    (leader-def :infix "o"
-      "f" 'org-roam-find-file
-      "l" 'org-roam-insert
-      "r" 'org-roam))
-#+end_src
-
 #+RESULTS:
 : t
 * IRC
