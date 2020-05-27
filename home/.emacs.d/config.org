@@ -1791,6 +1791,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
     (general-define-key
      :keymaps 'org-mode-map
+     :states '(normal insert)
      :prefix "C-c"
      "C-." 'org-rifle-insert-link))
 #+END_SRC
@@ -1965,8 +1966,6 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
           ("p" "Project idea" entry (file+headline "~/org/inbox.org" "Project Ideas")
            "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
           ("c" "Calendar" entry (file+headline "~/org/calendar.org" "Calendar")
-           "* %?\n")
-          ("t" "Test" entry (file+headline "~/org/test.org" (format-time-string "%Y-%m-%d") "%?")
            "* %?\n")
           ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
            "* %?\n" :unnarrowed t)
