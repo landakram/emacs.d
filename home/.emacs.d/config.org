@@ -956,27 +956,43 @@ Version 2017-01-27"
 * Writing
 
 ** Perfect Margin
+:PROPERTIES:
+:ID:       097C5D82-3DEF-471A-9AF6-DF7F5258D266
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package perfect-margin
     :ensure t
+    :diminish perfect-margin-mode
     :config
     (setq perfect-margin-visible-width 100))
 
-  (defun write-mode ()
-    (interactive)
-    (if (bound-and-true-p perfect-margin-mode)
-        (progn (perfect-margin-mode -1)
-               (visual-line-mode -1)
-               (flyspell-mode -1))
+  (define-minor-mode write-mode
+    "Write right"
+    :lighter " write"
+
+    ;; Still doesn't operate per-buffer like I want
+    ;; because perect-margin-mode is a global minor mode
+    (if (bound-and-true-p write-mode)
+        (progn
+          (diminish 'visual-line-mode)
+          (diminish 'perfect-margin-mode)
+          (diminish 'flyspell-mode)
+
+          (perfect-margin-mode)
+          (visual-line-mode)
+          (flyspell-mode))
       (progn
-        (perfect-margin-mode)
-        (visual-line-mode)
-        (flyspell-mode))))
+          (diminish-undo 'visual-line-mode)
+          (diminish-undo 'perfect-margin-mode)
+          (diminish-undo 'flyspell-mode)
+
+          (perfect-margin-mode -1)
+          (visual-line-mode -1)
+          (flyspell-mode -1))))
 #+END_SRC
 
 #+RESULTS:
-: write-mode
 
 * Coding
 ** Testing
