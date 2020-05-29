@@ -1767,7 +1767,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
   (defun my/org-mode ()
     (my/org-mode-keyboard-shortcuts)
-   ;; (my/org-variable-pitch)
+    ;; (my/org-variable-pitch)
     )
 
   (defun my/org-agenda-mode ()
@@ -1775,41 +1775,16 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
   (setq-default fill-column 85)
 
-  (defun helm-org-rifle--store-link (candidate)
-    "Store link to CANDIDATE"
-    (-let (((buffer . pos) candidate))
-      (save-excursion
-        (with-current-buffer buffer
-          (goto-char pos)
-          (call-interactively 'org-store-link)))))
-
-  (defun helm-org-rifle--insert-link (candidate)
-    "Insert link to CANDIDATE in current location"
-    (interactive)
-    (helm-org-rifle--store-link candidate)
-    (call-interactively 'org-insert-link))
-
-  (defun org-rifle-insert-link ()
-    (interactive)
-    (add-to-list 'helm-org-rifle-actions '("Insert link" . helm-org-rifle--insert-link))
-    (helm-org-rifle-org-directory)
-    (pop helm-org-rifle-actions))
-
   (use-package helm-org-rifle
     :ensure t
     :after (org general)
+    :config)
+
+  (use-package org-z
+    :after (helm-org-rifle)
+    :load-path "site-lisp/org-z"
     :config
-    (require 'org-id)
-    (setq org-id-link-to-org-use-id t)
-
-    (leader-def :infix "o"
-      "l" 'org-rifle-insert-link)
-
-    (general-define-key
-     :keymaps 'org-mode-map
-     :states '(normal insert)
-     :prefix "C-c"
-     "C-." 'org-rifle-insert-link))
+    (org-z-mode 1))
 #+END_SRC
 
 #+RESULTS:
