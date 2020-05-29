@@ -1943,6 +1943,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 :END:
 
 #+BEGIN_SRC emacs-lisp
+  (require 'org-capture)
   (setq org-tag-alist '((:startgroup . nil)
                         ("WORK" . ?w)
                         ("PERSONAL" . ?p)

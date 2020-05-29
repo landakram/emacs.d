@@ -17,6 +17,7 @@
 
 (require 'org)
 (require 'org-id)
+(require 'org-capture)
 (require 'helm-org-rifle)
 
 (defgroup org-z nil
