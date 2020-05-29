@@ -23,9 +23,21 @@
   "org-z customizable variables."
   :group 'org)
 
-(defcustom new-headings-file (concat org-directory "/" "new.org")
+(defcustom org-z-new-headings-file (concat org-directory "/" "new.org")
   "File in which to write new headings when inserting a link to a heading that does not already exist."
   :type 'file
+  :group 'org-z)
+
+(defun org-z-capture--templates (heading)
+  "The capture templates used by org-z to create a heading when inserting a link to a heading that doesn't exist."
+  (let ((body (concat "* " heading "%?\n:LOGBOOK:\n- Added %U\n:END:\n")))
+    `(("d" "default" entry (file org-z-new-headings-file)
+       ,body
+       :immediate-finish t))))
+
+(defcustom org-z-capture-templates #'org-z-capture--templates
+  "The capture templates used by org-z to create a heading when inserting a link to a heading that doesn't exist."
+  :type 'function
   :group 'org-z)
 
 (defun org-z-helm-org-rifle--store-link (candidate)
@@ -57,16 +69,9 @@
   (call-interactively 'org-insert-link)
   (remove-hook 'org-capture-after-finalize-hook #'org-z-capture--after-finalize-hook))
 
-(defun org-z-capture-templates (heading)
-  "The capture templates used by org-z when inserting links to headings that don't exist."
-  (let ((body (concat "* " heading "%?\n:LOGBOOK:\n- Added %U\n:END:\n")))
-    `(("d" "default" entry (file new-headings-file)
-       ,body
-       :immediate-finish t))))
-
 (defun org-z-insert-missing (heading)
   "When inserting a link to a headline that doesn't exist, use a custom capture template to add the new headline."
-  (let ((org-capture-templates (org-z-capture-templates heading))
+  (let ((org-capture-templates (funcall org-z-capture-templates heading))
         goto key)
     (when (= (length org-capture-templates) 1)
       (setq keys (caar org-capture-templates)))
