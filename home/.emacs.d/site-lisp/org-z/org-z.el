@@ -1,4 +1,4 @@
-;;; org-z.el -- Utilities for linking in org-mode
+;;; org-z.el -- Utilities for linking in org-mode -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; Copyright (C) 2020 Mark Hudnall
 
@@ -15,6 +15,7 @@
 
 ;;; Code:
 
+(require 'org)
 (require 'org-id)
 (require 'helm-org-rifle)
 
@@ -41,18 +42,40 @@
   (org-z-helm-org-rifle--store-link candidate)
   (call-interactively 'org-insert-link))
 
-(defun org-z--insert-link-to-new-heading (candidate)
-  (let ((buf (find-file-noselect new-headings-file)))
+(defun org-z-capture--before-finalize-hook ()
+  "During org-z-capture, store a link to the just-inserted headline."
+  (let ((buf (org-capture-get :buffer))
+        (point (org-capture-get :insertion-point)))
     (with-current-buffer buf
       (save-excursion
-        (goto-char (point-max))
-        (condition-case nil
-            (org-insert-heading-after-current)
-          (error (org-insert-heading)))
-        (org-edit-headline candidate)
-        (save-buffer)
+        (goto-char point)
         (call-interactively 'org-store-link)))
-    (call-interactively 'org-insert-link)))
+    (remove-hook 'org-capture-before-finalize-hook #'org-z-capture--before-finalize-hook)))
+
+(defun org-z-capture--after-finalize-hook ()
+  "After org-z-capture, insert a link."
+  (call-interactively 'org-insert-link)
+  (remove-hook 'org-capture-after-finalize-hook #'org-z-capture--after-finalize-hook))
+
+(defun org-z-capture-templates (heading)
+  "The capture templates used by org-z when inserting links to headings that don't exist."
+  (let ((body (concat "* " heading "%?\n:LOGBOOK:\n- Added %U\n:END:\n")))
+    `(("d" "default" entry (file new-headings-file)
+       ,body
+       :immediate-finish t))))
+
+(defun org-z-insert-missing (heading)
+  "When inserting a link to a headline that doesn't exist, use a custom capture template to add the new headline."
+  (let ((org-capture-templates (org-z-capture-templates heading))
+        goto key)
+    (when (= (length org-capture-templates) 1)
+      (setq keys (caar org-capture-templates)))
+    (org-capture goto keys)))
+
+(defun org-z--insert-link-to-new-heading (candidate)
+  (add-hook 'org-capture-before-finalize-hook #'org-z-capture--before-finalize-hook)
+  (add-hook 'org-capture-after-finalize-hook #'org-z-capture--after-finalize-hook)
+  (org-z-insert-missing candidate))
 
 (defvar org-z-insert-link--fallback
   (helm-build-dummy-source "Create link to new heading"
@@ -101,7 +124,7 @@
          (org-rifle-sources (org-z--org-rifle-files-source (org-z--list-org-files (list org-directory)))))
     (add-to-list 'helm-org-rifle-actions '("Insert link" . org-z-helm-org-rifle--insert-link))
     (helm :sources (append org-rifle-sources (list org-z-insert-link--fallback))
-          :buffer "*helm sync source*")
+          :buffer "*org-z-insert-link*")
     (pop helm-org-rifle-actions)))
 
 ;;;###autoload
