@@ -961,38 +961,41 @@ Version 2017-01-27"
 :END:
 
 #+BEGIN_SRC emacs-lisp
-  (use-package perfect-margin
+  (use-package olivetti
     :ensure t
-    :diminish perfect-margin-mode
+    :diminish olivetti
     :config
-    (setq perfect-margin-visible-width 100))
+    (setq-default olivetti-body-width 100))
 
   (define-minor-mode write-mode
     "Write right"
     :lighter " write"
-
-    ;; Still doesn't operate per-buffer like I want
-    ;; because perect-margin-mode is a global minor mode
     (if (bound-and-true-p write-mode)
         (progn
-          (diminish 'visual-line-mode)
-          (diminish 'perfect-margin-mode)
+          (diminish 'olivetti-mode)
           (diminish 'flyspell-mode)
 
-          (perfect-margin-mode)
-          (visual-line-mode)
+          (olivetti-mode)
           (flyspell-mode))
       (progn
-          (diminish-undo 'visual-line-mode)
-          (diminish-undo 'perfect-margin-mode)
+          (diminish-undo 'olivetti-mode)
           (diminish-undo 'flyspell-mode)
 
-          (perfect-margin-mode -1)
-          (visual-line-mode -1)
+          (olivetti-mode -1)
           (flyspell-mode -1))))
+
+  (defun org-capture-write-mode ()
+    "Enable write-mode for journal captures."
+    (let ((key (org-capture-get :key)))
+      (cond
+       ((equal key "j")
+        (write-mode 1)))))
+
+  (add-hook 'org-capture-mode-hook 'org-capture-write-mode)
 #+END_SRC
 
 #+RESULTS:
+| org-capture-write-mode |
 
 * Coding
 ** Testing
@@ -1892,9 +1895,12 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 : my/configure-org-todos
 
 ** Agenda
+:PROPERTIES:
+:ID:       F795FCB9-5F9F-459A-92A1-E46585933E9E
+:END:
 
 #+BEGIN_SRC emacs-lisp 
-
+(setq org-agenda-span 2)
 #+END_SRC
 ** Exporters
 #+BEGIN_SRC emacs-lisp 
