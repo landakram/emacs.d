@@ -6,7 +6,7 @@
 ;; URL: https://github.com/landakram/org-z
 ;; Keywords: org-mode
 ;; Package-Version: 0.0.1
-;; Package-Requires: ((emacs "26.1") (org "9.3") (helm-org-rifle "1.7.1"))
+;; Package-Requires: ((emacs "26.1") (org "9.3") (helm-org-rifle "1.7.1") (helm-rg "0.1"))
 ;; Keywords: (outlines)
 
 ;;; Commentary:
@@ -19,6 +19,7 @@
 (require 'org-id)
 (require 'org-capture)
 (require 'helm-org-rifle)
+(require 'helm-rg)
 
 (defgroup org-z nil
   "org-z customizable variables."
@@ -133,12 +134,41 @@
           :buffer "*org-z-insert-link*")
     (pop helm-org-rifle-actions)))
 
+
+(defun org-z-knowledge--search (targets &optional rg-opts)
+  (let ((helm-rg-default-extra-args rg-opts)
+        (helm-rg-default-directory (expand-file-name "~/")))
+    (helm-rg
+     nil
+     nil
+     targets)))
+
+(defcustom org-z-knowledge-dirs (list org-directory "/Users/mark/Dropbox (Personal)/Apps/KiwiApp/wiki/")
+  "Directories in which to perform full-text knowledge search."
+  :type 'list
+  :group 'org-z)
+
+(defcustom org-z-knowledge-filetypes (list "org" "md")
+  "File-types in which to perform full-text knowledge search."
+  :type 'list
+  :group 'org-z)
+
+(defun org-z-knowledge-search ()
+  (interactive)
+  (let ((rg-opts (flatten-list (mapcar
+                                (lambda (ft)
+                                  `("-t" ,ft))
+                                org-z-knowledge-filetypes))))
+    (org-z-knowledge--search org-z-knowledge-dirs rg-opts)))
+
+
 ;;;###autoload
 (define-minor-mode org-z-mode
   "Minor mode for org-z."
   :lighter " org-z"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-c C-.") 'org-z-insert-link)
+            (define-key map (kbd "C-c C-s") 'org-z-knowledge-search)
             map)
   :group 'org-z
   :require 'org-z
