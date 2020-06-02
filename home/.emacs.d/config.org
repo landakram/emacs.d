@@ -2100,6 +2100,29 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
 #+RESULTS:
 : t
+** org-sidebar and org-ql
+
+#+begin_src emacs-lisp
+  (use-package helm-org
+    :ensure t)
+
+  (use-package org-ql
+    :ensure t
+    :after (helm-org)
+    :config
+    (require 'helm-org-ql))
+
+  (use-package org-sidebar
+    :ensure t
+    :after (general)
+    :config
+    (leader-def :infix "o"
+      "b" 'org-sidebar-backlinks))
+#+end_src
+
+#+RESULTS:
+
+
 * IRC
 ** Circe
 #+BEGIN_SRC emacs-lisp 
