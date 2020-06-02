@@ -485,8 +485,6 @@ Make scrolling behavior more like vim:
     (setq helm-buffer-max-length nil)
     (add-to-list 'completion-styles 'helm)
     (helm-autoresize-mode t)
-    (customize-set-variable helm-completion-style 'helm)
-    (add-to-list 'completion-styles 'helm)
 
     (require 'helm-imenu))
 
@@ -1036,7 +1034,20 @@ Autodetect indentation:
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
     (define-key company-active-map (kbd "C-n") #'company-select-next)
-    (define-key company-active-map (kbd "C-p") #'company-select-previous)) 
+    (define-key company-active-map (kbd "C-p") #'company-select-previous)
+
+    ;; Certain helm-mode functions rely on 'helm being in completion-styles to
+    ;; be able to use helm-style searching with e.g. helm-M-x.
+    ;;
+    ;; But that also causes completion-at-point using capf to be really slow,
+    ;; since it does some non-prefix matching over really big lists.
+    ;; To get around that, pin completion styles to remove 'helm when doing
+    ;; company-capf
+    (defun pin-completion-styles (orig-fn &rest args)
+      (let ((completion-styles (remove 'helm completion-styles)))
+        (apply orig-fn args)))
+
+    (advice-add 'company-capf :around #'pin-completion-styles))
 #+END_SRC
 
 #+RESULTS:
@@ -1607,7 +1618,7 @@ Let's use web-mode, which supports font locking for templating.
     (customize-set-variable 'lsp-solargraph-use-bundler nil)
     (customize-set-variable 'lsp-solargraph-multi-root nil)
 
-    (setq lsp-log-io t)
+    (setq lsp-log-io nil)
     (setq lsp-clients-typescript-server-args '("--stdio")))
 
   (defun lsp-go-install-save-hooks ()
