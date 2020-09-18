@@ -170,7 +170,6 @@
   :lighter " org-z"
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-c C-.") 'org-z-insert-link)
-            (define-key map (kbd "C-c C-s") 'org-z-knowledge-search)
             map)
   :group 'org-z
   :require 'org-z
