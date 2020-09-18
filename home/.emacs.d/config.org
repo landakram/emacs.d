@@ -1972,6 +1972,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
                         ("PERSONAL" . ?p)
                         ("ERRANDS" . ?e)
                         (:endgroup . nil)
+                        ("crypt" . ?c)
                         ("WATCH" . ?s)
                         ("READ" . ?r)))
 
@@ -2110,7 +2111,8 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
     :ensure t
     :after (helm-org)
     :config
-    (require 'helm-org-ql))
+    (require 'helm-org-ql)
+    (require 'org-ql))
 
   (use-package org-sidebar
     :ensure t
@@ -2121,7 +2123,20 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 #+end_src
 
 #+RESULTS:
+: t
 
+** Encryption
+
+#+begin_src emacs-lisp
+  (require 'org-crypt)
+  (require 'epa-file)
+  (epa-file-enable)
+  (org-crypt-use-before-save-magic)
+  (setq org-tags-exclude-from-inheritance (quote ("crypt")))
+  (setq org-crypt-key nil)
+#+end_src
+
+#+RESULTS:
 
 * IRC
 ** Circe
@@ -2159,6 +2174,9 @@ Take notes on PDFs in org-mode side-by-side with the PDF.
 
 * RSS Feeds
 ** elfeed
+:PROPERTIES:
+:ID:       04EA9AAB-8699-45FE-9A81-2D6EFB8C90C5
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (use-package elfeed

@@ -130,8 +130,10 @@
          (helm-cleanup-hook (org-z--org-rifle-cleanup-hook))
          (org-rifle-sources (org-z--org-rifle-files-source (org-z--list-org-files (list org-directory)))))
     (add-to-list 'helm-org-rifle-actions '("Insert link" . org-z-helm-org-rifle--insert-link))
-    (helm :sources (append org-rifle-sources (list org-z-insert-link--fallback))
-          :buffer "*org-z-insert-link*")
+    (helm
+     :input (thing-at-point 'symbol 'no-properties)
+     :sources (append org-rifle-sources (list org-z-insert-link--fallback))
+     :buffer "*org-z-insert-link*")
     (pop helm-org-rifle-actions)))
 
 
