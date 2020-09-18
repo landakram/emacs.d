@@ -976,12 +976,14 @@ Version 2017-01-27"
           (diminish 'olivetti-mode)
           (diminish 'flyspell-mode)
 
+          (company-mode -1)
           (olivetti-mode)
           (flyspell-mode))
       (progn
           (diminish-undo 'olivetti-mode)
           (diminish-undo 'flyspell-mode)
 
+          (company-mode)
           (olivetti-mode -1)
           (flyspell-mode -1))))
 
