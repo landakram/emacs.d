@@ -561,6 +561,9 @@ Make scrolling behavior more like vim:
     (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
     (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
 
+    (global-undo-tree-mode)
+    (evil-set-undo-system 'undo-tree)
+
     ;; Make * search over whole symbols instead of words. This means 
     ;; it will match "this-variable" rather than just "this".
     (setq-default evil-symbol-word-search 1)
