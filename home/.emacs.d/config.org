@@ -49,12 +49,31 @@ Let's set ~custom-file~, which emacs writes to automatically.
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
         ("org" . "http://orgmode.org/elpa/")
-        ("melpa" . "http://melpa.org/packages/")
-        ("marmalade" . "http://marmalade-repo.org/packages/")))
+        ("melpa" . "http://melpa.org/packages/")))
 
 (package-initialize)
 
 #+END_SRC
+
+** Set up ~straight.el~
+
+#+begin_src emacs-lisp
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+#+end_src
+
+#+RESULTS:
+: t
 
 ** Install ~use-package~
 
@@ -62,12 +81,10 @@ Let's set ~custom-file~, which emacs writes to automatically.
 
 #+BEGIN_SRC emacs-lisp
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+  (straight-use-package 'use-package)
 
-(eval-when-compile
-  (require 'use-package))
+  (eval-when-compile
+    (require 'use-package))
 
 #+END_SRC
 
@@ -1293,17 +1310,17 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 *** Refactoring
 
 #+BEGIN_SRC emacs-lisp
-  (use-package elpy
-    :load-path "site-lisp/elpy"
-    :config
+    (use-package elpy
+      :ensure t
+      :config
 
-    ;; Set pytest as the default test runner
-    (elpy-set-test-runner 'elpy-test-pytest-runner)
+      ;; Set pytest as the default test runner
+      (elpy-set-test-runner 'elpy-test-pytest-runner)
 
-    ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
-    (setq python-shell-completion-native-enable nil)
+      ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
+      (setq python-shell-completion-native-enable nil)
 
-    (elpy-enable))
+      (elpy-enable))
 #+END_SRC
 
 #+RESULTS:
@@ -1800,8 +1817,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     :config)
 
   (use-package org-z
-    :after (helm-org-rifle general)
-    :load-path "site-lisp/org-z"
+    :straight (org-z :type git :host github :repo "landakram/org-z")
     :config
     (org-z-mode 1)
 
