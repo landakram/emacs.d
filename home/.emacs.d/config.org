@@ -134,8 +134,25 @@ Brought to you by Paradox:
 ** Start up maximized
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (setq frame-resize-pixelwise t)
 #+END_SRC
+
+#+RESULTS:
+: t
+
+** Save session variables
+Save some variables between sessions.
+#+begin_src emacs-lisp
+  (use-package session
+    :ensure t
+    :config
+    (add-hook 'after-init-hook 'session-initialize))
+#+end_src
+
+#+RESULTS:
+: t
+
 * General Configuration
 
 Let's configure the editor to our liking.
@@ -298,21 +315,13 @@ The bizarre symlink-based file locking isn't really necessary for me since I nev
 This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
 
 #+BEGIN_SRC emacs-lisp 
-
-    (use-package exec-path-from-shell
-      :ensure t
-      :config
-      (exec-path-from-shell-initialize)
-      (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-      (exec-path-from-shell-copy-env "SSH_AUTH_SOCK"))
-
-    ;; (defun set-exec-path-from-shell-PATH ()
-    ;;   (let ((path-from-shell (shell-command-to-string "env TERM=vt100 /bin/zsh -i -c 'echo $PATH'")))
-    ;;     (setenv "PATH" path-from-shell)
-    ;;     (setq exec-path (split-string path-from-shell path-separator))))
-
-    ;; (when window-system (set-exec-path-from-shell-PATH))
-
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (exec-path-from-shell-initialize)
+    (exec-path-from-shell-copy-env "NIX_PATH")
+    (exec-path-from-shell-copy-env "SSH_AGENT_PID")
+    (exec-path-from-shell-copy-env "SSH_AUTH_SOCK"))
 #+END_SRC
 
 #+RESULTS:
@@ -585,6 +594,7 @@ Make scrolling behavior more like vim:
       (global-evil-surround-mode 1))
 
     (use-package evil-magit
+      :straight (evil-magit :type git :host github :repo "emacs-evil/evil-magit")
       :ensure t)
 
     (use-package evil-matchit
@@ -680,6 +690,10 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (general-define-key :keymaps 'go-mode-map
                         "gf" 'godef-jump)
 
+    ;; Clojure
+    (general-define-key :keymaps 'cider-mode-map
+                        "gf" 'cider-find-dwim)
+
     ;; Clojure shortcuts
     (leader-def :infix ","
       :keymaps 'clojure-mode-map
@@ -702,7 +716,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "k" 'org-agenda-previous-line)
 
     (general-define-key :states '(normal) :keymaps 'outline-minor-mode-map
-                        "TAB" 'outline-cycle
+                        "TAB" 'outshine-cycle
                         "<backtab>" 'outshine-cycle-buffer)
 
     (leader-def
@@ -727,7 +741,6 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key
      :states '(normal)
-     :keymaps 'override
      "C-k" (lambda ()
              (interactive)
              (evil-scroll-up nil))
@@ -737,7 +750,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key
      :states '(normal)
-     :keymaps 'override
+     :keymaps '(evil-normal-state-map org-mode-map)
      "C-k" (lambda ()
              (interactive)
              (evil-scroll-up nil))
@@ -747,7 +760,12 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key
      :states '(normal)
-     :keymaps 'override
+     :keymaps 'pdf-view-mode-map
+     "C-k" 'pdf-view-next-page-command
+     "C-j" 'pdf-view-previous-page-command) 
+
+    (general-define-key
+     :states '(normal)
      "f" 'avy-goto-word-or-subword-1)
 
     (general-define-key
@@ -777,6 +795,7 @@ Projectile lets me switch between projects really easily. I set it up to default
     (projectile-global-mode)
     (setq projectile-completion-system 'helm)
     (setq projectile-switch-project-action 'projectile-commander)
+    (setq projectile-indexing-method 'hybrid)
 
     ;; Clear out all commander commands but the help item.
     (setq projectile-commander-methods (list (car projectile-commander-methods)))
@@ -984,8 +1003,62 @@ Version 2017-01-27"
 
 #+RESULTS:
 : xah-copy-file-path
-* Writing
+** PDF tools
 
+#+begin_src emacs-lisp
+  (use-package pdf-tools
+    :ensure t
+    :after evil
+    :config
+    (custom-set-variables
+     '(pdf-tools-handle-upgrades nil)) ;; Use brew upgrade pdf-tools instead
+    (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
+    (pdf-tools-install)
+
+    (setq-default image-mode-winprops-alist nil)
+
+    (leader-def :infix ","
+      :keymaps 'pdf-view-mode-map
+      "h" 'pdf-annot-add-highlight-markup-annotation
+      "m" 'pdf-annot-add-annotation)
+
+    (add-hook 'pdf-annot-edit-contents-minor-mode-hook (lambda ()
+                                                         (org-mode)
+                                                         ))
+    )
+
+  (use-package pdf-view-restore
+    :ensure t
+    :after pdf-tools
+    :config
+    (add-hook 'pdf-view-mode-hook 'pdf-view-restore-mode))
+
+  (use-package org-noter
+    :ensure t)
+
+  (use-package org-pdftools
+    :ensure t
+    :hook (org-mode . org-pdftools-setup-link))
+
+  (use-package org-noter-pdftools
+    :ensure t
+    :after org-noter
+    :config
+    (with-eval-after-load 'pdf-annot
+      (add-hook 'pdf-annot-activate-created-annotations #'org-noter-pdftools-jump-to-note)))
+#+end_src
+
+#+RESULTS:
+: t
+
+** direnv
+#+begin_src emacs-lisp
+  (use-package direnv
+    :ensure t
+    :config
+    (direnv-mode))
+#+end_src
+* Writing
 ** Perfect Margin
 :PROPERTIES:
 :ID:       097C5D82-3DEF-471A-9AF6-DF7F5258D266
@@ -1418,10 +1491,26 @@ I typically use 2 spaces to indent.
 ** Haskell
 #+BEGIN_SRC emacs-lisp 
 
-(use-package haskell-mode
-  :ensure t)
+  (use-package haskell-mode
+    :ensure t)
 
+  (use-package lsp-haskell
+    :ensure t
+    :config
+    (add-hook 'haskell-mode-hook #'lsp)
+    (add-hook 'haskell-literate-mode-abbrev-table #'lsp)
+    (setq lsp-haskell-server-wrapper-function
+          (lambda (argv)
+            (append
+             (append (list "nix-shell" "-I" "." "--command" )
+                     (list (mapconcat 'identity argv " "))
+                     )
+             (list (nix-current-sandbox))))))
 #+END_SRC
+
+#+RESULTS:
+: t
+
 ** Docker
 *** Dockerfile mode
 #+BEGIN_SRC emacs-lisp :tangle yes
@@ -1644,7 +1733,6 @@ Let's use web-mode, which supports font locking for templating.
            (rust-mode . lsp-deferred)
            (ruby-mode . lsp-deferred))
     :config
-    (require 'lsp-clients)
     (require 'lsp-go)
     (require 'lsp-solargraph)
     (customize-set-variable 'lsp-solargraph-use-bundler nil)
@@ -1709,6 +1797,55 @@ Let's use web-mode, which supports font locking for templating.
 #+END_SRC
 
 #+RESULTS:
+
+** Nix
+:PROPERTIES:
+:ID:       669D7530-EA99-4183-A0E6-560FC3A95985
+:END:
+
+#+begin_src emacs-lisp
+  (use-package nix-mode
+    :straight (nix-mode :type git :host github :repo "NixOS/nix-mode")
+    :mode "\\.nix\\'")
+
+  (use-package nix-sandbox
+    :ensure t
+    :config
+    (setq haskell-process-wrapper-function
+          (lambda (args) (apply 'nix-shell-command (nix-current-sandbox) args))))
+#+end_src
+
+#+RESULTS:
+: t
+
+** Solidity
+
+#+begin_src emacs-lisp
+  (use-package solidity-mode
+    :ensure t
+    :config
+    (setq solidity-comment-style 'slash))
+
+  (use-package solidity-flycheck
+    :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
+    :ensure t
+    :init
+    (setq solidity-flycheck-solc-checker-active t)
+    :config
+    (require 'solidity-flycheck))
+
+  (use-package company-solidity
+    :ensure t
+    :config
+    (add-hook 'solidity-mode-hook
+              (lambda ()
+                (set (make-local-variable 'company-backends)
+                     (append '((company-solidity company-capf company-dabbrev-code))
+                             company-backends)))))
+#+end_src
+
+#+RESULTS:
+: t
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
@@ -1797,6 +1934,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     (require 'org-tempo)
     (setq org-image-actual-width 300)
     (setq org-src-fontify-natively t)
+    (setq org-fontify-done-headline nil)
     (setq org-log-done 'time)
 
     (setq org-src-window-setup 'current-window)
@@ -1811,16 +1949,34 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     (setq org-startup-indented t)
     ;; Diminish org-indent-mode in the mode-line
     (eval-after-load 'org-indent '(diminish 'org-indent-mode))
-    (setq org-hide-emphasis-markers t))
+    (setq org-hide-emphasis-markers t)
 
+    (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
+
+    (progn
+      (set-face-attribute 'org-level-1 nil :height 1.5 :weight 'bold)
+      (set-face-attribute 'org-level-2 nil :height 1.25 :weight 'bold)
+      (set-face-attribute 'org-level-3 nil :height 1.1 :weight 'bold)
+      (set-face-attribute 'org-level-4 nil :height 1.1 :weight 'bold)
+      (set-face-attribute 'org-level-5 nil :weight 'bold)
+      (set-face-attribute 'org-level-6 nil :weight 'bold)
+      (set-face-attribute 'org-level-7 nil :weight 'bold)
+      (set-face-attribute 'org-level-8 nil :weight 'bold)
+
+      (set-face-attribute 'org-special-keyword nil :foreground "gray25")
+      (set-face-attribute 'org-date nil :foreground "gray25")
+
+      (set-face-attribute 'org-drawer nil :foreground "grey25"))
+
+    (font-lock-add-keywords 'org-mode
+                            '(("^ +\\([-*]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
 
   (defun my/org-mode ()
     (my/org-mode-keyboard-shortcuts)
+    (visual-line-mode 1)
     ;; (my/org-variable-pitch)
     )
-
-  (defun my/org-agenda-mode ()
-    (my/org-agenda-keyboard-shortcuts))
 
   (setq-default fill-column 85)
 
@@ -1832,10 +1988,15 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
   (use-package org-z
     :straight (org-z :type git :host github :repo "landakram/org-z")
     :config
+    (setq org-z-knowledge-dirs (-concat org-z-directories
+                                        '("/Users/mark/Dropbox (Personal)/Apps/KiwiApp/wiki/")))
+
+    (setq org-z-refile-missing-heading nil)
     (org-z-mode 1)
 
     (leader-def :infix "o"
       "s" 'org-z-knowledge-search))
+
 #+END_SRC
 
 #+RESULTS:
@@ -1854,7 +2015,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
       "*" 'org-ctrl-c-star
       "a" 'org-agenda
       "ih" 'org-insert-heading-after-current-and-enter-insert
+      "iH" 'org-insert-heading-and-enter-insert
       "is" 'org-insert-subheading-after-current-and-enter-insert
+      "iS" 'org-insert-subheading-and-enter-insert
       "it" 'org-insert-todo-after-current-and-enter-insert
       "n" 'org-narrow-to-subtree
       "N" 'widen
@@ -1875,41 +2038,49 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 *** Agenda
 
 #+BEGIN_SRC emacs-lisp 
-
-(defun my/org-agenda-keyboard-shortcuts ()
-  ;;(define-key org-agenda-mode-map "j" 'evil-next-line)
-  ;;(define-key org-agenda-mode-map "k" 'evil-previous-line))
-)
-
+  (general-define-key
+   :states '(emacs)
+   :keymaps 'org-agenda-mode-map
+   :prefix ""
+   "c" 'org-agenda-capture)
 #+END_SRC
 
 #+RESULTS:
-: my/org-agenda-keyboard-shortcuts
 
 ** Editing
 *** Useful functions
 
 #+BEGIN_SRC emacs-lisp 
 
-(defun org-insert-subheading-after-current ()
-  (interactive)
-  (org-insert-heading-after-current)
-  (org-demote))
+  (defun org-insert-subheading-after-current ()
+    (interactive)
+    (org-insert-heading-after-current)
+    (org-demote))
 
-(defun org-insert-subheading-after-current-and-enter-insert ()
-  (interactive)
-  (org-insert-subheading-after-current)
-  (evil-append 0))
+  (defun org-insert-subheading-after-current-and-enter-insert ()
+    (interactive)
+    (org-insert-subheading-after-current)
+    (evil-append 0))
 
-(defun org-insert-heading-after-current-and-enter-insert ()
-  (interactive)
-  (org-insert-heading-after-current)
-  (evil-append 0))
+  (defun org-insert-subheading-and-enter-insert ()
+    (interactive)
+    (org-insert-subheading nil)
+    (evil-append 0))
 
-(defun org-insert-todo-after-current-and-enter-insert ()
-  (interactive)
-  (org-insert-todo-heading-respect-content)
-  (evil-append 0))
+  (defun org-insert-heading-after-current-and-enter-insert ()
+    (interactive)
+    (org-insert-heading-after-current)
+    (evil-append 0))
+
+  (defun org-insert-heading-and-enter-insert ()
+    (interactive)
+    (org-insert-heading)
+    (evil-append 0))
+
+  (defun org-insert-todo-after-current-and-enter-insert ()
+    (interactive)
+    (org-insert-todo-heading-respect-content)
+    (evil-append 0))
 
 #+END_SRC
 
@@ -1922,7 +2093,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
   (defun my/configure-org-todos ()
     (setq org-todo-keywords
-          (quote ((sequence "TODO(t)" "STARTED(s)" "MAYBE(m)" "|" "DONE(d)")
+          (quote ((sequence "TODO(t)" "STARTED(s)" "MAYBE(m)" "REPEATING(r)" "|" "DONE(d)")
                   (sequence "WAITING(w@/!)" "HOLD(h@/!)" "DELEGATED(e)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 
     (setq org-todo-keyword-faces
@@ -2002,6 +2173,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
                         ("WORK" . ?w)
                         ("PERSONAL" . ?p)
                         ("ERRANDS" . ?e)
+                        ("HABIT" . ?h)
                         (:endgroup . nil)
                         ("crypt" . ?c)
                         ("WATCH" . ?s)
@@ -2012,7 +2184,7 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
            "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
           ("p" "Project idea" entry (file+headline "~/org/inbox.org" "Project Ideas")
            "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
-          ("c" "Calendar" entry (file+headline "~/org/calendar.org" "Calendar")
+          ("c" "Calendar" entry (file+olp+datetree "~/org/calendar.org" "Calendar")
            "* %?\n")
           ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
            "* %?\n" :unnarrowed t)
@@ -2035,20 +2207,24 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 ** Installation
 #+BEGIN_SRC emacs-lisp 
 
-  (use-package org
-    :ensure org-plus-contrib
-    :config
+    (use-package org
+      :ensure org-plus-contrib
+      :config
 
-    (my/configure-org-directories)
-    (my/configure-org-exporters)
-    (my/configure-org-todos)
-    (my/configure-org)
-    (my/configure-org-protocol)
-    (my/org-babel-config)
-    (setq org-inline-image-overlays t)
+      (my/configure-org-directories)
+      (my/configure-org-exporters)
+      (my/configure-org-todos)
+      (my/configure-org)
+      (my/configure-org-protocol)
+      (my/org-babel-config)
+      (setq org-inline-image-overlays t)
 
-    (add-hook 'org-mode-hook #'my/org-mode)
-    (add-hook 'org-agenda-mode-hook #'my/org-agenda-mode))
+      (add-hook 'org-mode-hook #'my/org-mode))
+
+    (use-package org-bullets
+      :ensure t
+      :config
+      (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 #+END_SRC
 
@@ -2159,17 +2335,6 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 
 #+RESULTS:
 : org-archive-subtree
-
-** Interleave mode
-
-Take notes on PDFs in org-mode side-by-side with the PDF.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package interleave
-    :ensure t)
-#+END_SRC
-
-#+RESULTS:
 
 ** PlantUML
 
