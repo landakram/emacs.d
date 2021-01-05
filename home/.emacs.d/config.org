@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #+TITLE: Mark's Emacs Config
 #+OPTIONS: toc:2 num:nil ^:nil
+#+PROPERTY: header-args :tangle "./init.el"
 
 * Introduction
 
@@ -31,6 +32,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 
 #+END_SRC
 
+#+RESULTS:
+: t
+
 ** Set the font
 
 #+BEGIN_SRC emacs-lisp
@@ -39,6 +43,26 @@ Let's set ~custom-file~, which emacs writes to automatically.
 #+END_SRC
 
 #+RESULTS:
+
+** Start up maximized
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (setq frame-resize-pixelwise t)
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Use org for the scratch buffer
+
+#+BEGIN_SRC emacs-lisp
+  (setq initial-major-mode 'org-mode)
+  (setq initial-scratch-message "# This buffer is for notes you don't want to save.")
+#+END_SRC
+
+#+RESULTS:
+: # This buffer is for notes you don't want to save.
 
 * Packages
 
@@ -118,6 +142,7 @@ Now, we diminish some modes (I can't figure out where they are loaded):
 
 #+BEGIN_SRC emacs-lisp
   (use-package try
+    :defer t
     :ensure t)
 #+END_SRC
 
@@ -128,222 +153,15 @@ Brought to you by Paradox:
 
 #+BEGIN_SRC emacs-lisp
   (use-package paradox
+    :defer t
     :ensure t)
 #+END_SRC
 
 #+RESULTS:
-** Start up maximized
-
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
-  (setq frame-resize-pixelwise t)
-#+END_SRC
-
-#+RESULTS:
-: t
-
 * General Configuration
 
 Let's configure the editor to our liking.
 
-** Symlinks
-
-Follow symlinks without prompting me.
-
-#+BEGIN_SRC emacs-lisp
-
-  (setq vc-follow-symlinks t)
-
-#+END_SRC
-
-** Ignore files
-
-Life's too short to see this many files in dired / projectile / etc.
-
-#+BEGIN_SRC emacs-lisp
-
-  (use-package ignoramus
-    :ensure t
-    :config
-    (ignoramus-setup))
-
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** Use org for the scratch buffer
-
-#+BEGIN_SRC emacs-lisp
-  (setq initial-major-mode 'org-mode)
-  (setq initial-scratch-message "\
-  # This buffer is for notes you don't want to save.")
-#+END_SRC
-
-#+RESULTS:
-: # This buffer is for notes you don't want to save.
-
-** Change "yes or no" to "y or n"
-
-#+BEGIN_SRC emacs-lisp 
-
-(defalias 'yes-or-no-p 'y-or-n-p)
-
-#+END_SRC
-
-** Enable flycheck
-
-Flycheck is an on-the-fly syntax checker.
-
-#+BEGIN_SRC emacs-lisp 
-
-  (use-package flycheck
-    :ensure t
-    :diminish flycheck-mode
-    :config
-    (global-flycheck-mode)
-
-    (flycheck-add-mode 'javascript-eslint 'js2-mode)
-    (flycheck-add-mode 'javascript-eslint 'js-mode)
-
-    ;; Disable syntax checking on new-line for emacs lisp, since for some reason 
-    ;; it is really slow
-    (add-hook 'emacs-lisp-mode-hook
-              (lambda ()
-                (setq-local flycheck-check-syntax-automatically '(idle-check mode-enabled save))))
-
-
-    (setq-default flycheck-disabled-checkers
-                  (append flycheck-disabled-checkers
-                          '(javascript-jshint
-                            ruby-rubocop
-                            ruby-reek
-                            emacs-lisp-checkdoc))))
-
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** Disable bell ring
-
-#+BEGIN_SRC emacs-lisp 
-
-(setq ring-bell-function 'ignore)
-
-#+END_SRC
-
-** Better defaults
-
-#+BEGIN_SRC emacs-lisp 
-
-  (use-package better-defaults
-    :ensure t)
-
-#+END_SRC
-
-#+RESULTS:
-|   |
-
-** Better search
-
-I use ~ag~ religiously on the command line. Let's use it in emacs too.
-
-#+BEGIN_SRC emacs-lisp 
-
-(use-package ag
-  :ensure t)
-
-#+END_SRC
-
-** Visual fill column
-
-Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-column~, ~visual-fill-column~ does not *actually* wrap text in the file. It just displays it as wrapped.
-
-#+BEGIN_SRC emacs-lisp 
-
-  ;; (use-package visual-fill-column
-  ;;   :ensure t
-  ;;   :diminish visual-line-mode
-  ;;   :config
-  ;;   (add-hook 'text-mode-hook 'visual-fill-column-mode)
-  ;;   (global-visual-line-mode))
-
-#+END_SRC
-
-#+RESULTS:
-: t
-** which-key
-
-Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me of shortcuts when I start typing them.
-
-#+BEGIN_SRC emacs-lisp 
-
-(use-package which-key
-  :ensure t
-  :diminish which-key-mode
-  :config
-  (setq which-key-idle-delay 0.5)
-  (which-key-mode))
-
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** Disable file locking
-
-The bizarre symlink-based file locking isn't really necessary for me since I never have more than one instance of emacs open. It causes problems with tools that watch directories for files, so let's disable it.
-
-#+BEGIN_SRC emacs-lisp
-(setq create-lockfiles nil)
-#+END_SRC
-
-** Fix the PATH variable
-
-This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
-
-#+BEGIN_SRC emacs-lisp 
-  (use-package exec-path-from-shell
-    :ensure t
-    :config
-    (exec-path-from-shell-initialize)
-    (exec-path-from-shell-copy-env "NIX_PATH")
-    (exec-path-from-shell-copy-env "SSH_AGENT_PID")
-    (exec-path-from-shell-copy-env "SSH_AUTH_SOCK"))
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** Make gpg-agent work
-
-This function will load ~/.gpg-agent-info and source its contents into ~GPG_AGENT_INFO~.
-
-I need this to pull mail for m4ue.
-
-#+BEGIN_SRC emacs-lisp
-  (defun my/gpg-agent ()
-    "Load your gpg-agent.env file in to the environment
-
-  This is extra useful if you use gpg-agent with --enable-ssh-support"
-    (interactive)
-    (let ((home (getenv "HOME"))
-          (old-buffer (current-buffer)))
-      (with-temp-buffer
-        (insert-file-contents (concat home "/.gpg-agent-info"))
-        (goto-char (point-min))
-        (setq case-replace nil)
-        (replace-regexp "\\(.*\\)=\\(.*\\)" "(setenv \"\\1\" \"\\2\")")
-        (eval-buffer)))
-    (message (getenv "GPG_AGENT_INFO")))
-
-  (run-with-idle-timer 60 t 'my/gpg-agent)
-  (my/gpg-agent)
-#+END_SRC
-
-#+RESULTS:
-: /tmp/gpg-slIax0/S.gpg-agent:787:1
 ** Theme
 *** Change the Mode Line
 
@@ -424,6 +242,194 @@ It's commented out right now because it looks terrible.
 
 #+RESULTS:
 
+** Symlinks
+
+Follow symlinks without prompting me.
+
+#+BEGIN_SRC emacs-lisp
+
+  (setq vc-follow-symlinks t)
+
+#+END_SRC
+
+** Ignore files
+
+Life's too short to see this many files in dired / projectile / etc.
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package ignoramus
+    :ensure t
+    :config
+    (ignoramus-setup))
+
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Change "yes or no" to "y or n"
+
+#+BEGIN_SRC emacs-lisp 
+
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+#+END_SRC
+
+** Enable flycheck
+
+Flycheck is an on-the-fly syntax checker.
+
+#+BEGIN_SRC emacs-lisp 
+
+  (use-package flycheck
+    :ensure t
+    :hook (after-init . global-flycheck-mode)
+    :diminish flycheck-mode
+    :config
+    (flycheck-add-mode 'javascript-eslint 'js2-mode)
+    (flycheck-add-mode 'javascript-eslint 'js-mode)
+
+    ;; Disable syntax checking on new-line for emacs lisp, since for some reason 
+    ;; it is really slow
+    (add-hook 'emacs-lisp-mode-hook
+              (lambda ()
+                (setq-local flycheck-check-syntax-automatically '(idle-check mode-enabled save))))
+
+
+    (setq-default flycheck-disabled-checkers
+                  (append flycheck-disabled-checkers
+                          '(javascript-jshint
+                            ruby-rubocop
+                            ruby-reek
+                            emacs-lisp-checkdoc))))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Disable bell ring
+
+#+BEGIN_SRC emacs-lisp 
+
+(setq ring-bell-function 'ignore)
+
+#+END_SRC
+
+** Better defaults
+
+#+BEGIN_SRC emacs-lisp 
+
+  (use-package better-defaults
+    :ensure t)
+
+#+END_SRC
+
+#+RESULTS:
+|   |
+
+** Better search
+
+I use ~ag~ religiously on the command line. Let's use it in emacs too.
+
+#+BEGIN_SRC emacs-lisp 
+
+  (use-package ag
+    :ensure t
+    :defer t)
+
+#+END_SRC
+
+** Visual fill column
+
+Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-column~, ~visual-fill-column~ does not *actually* wrap text in the file. It just displays it as wrapped.
+
+#+BEGIN_SRC emacs-lisp 
+
+  ;; (use-package visual-fill-column
+  ;;   :ensure t
+  ;;   :diminish visual-line-mode
+  ;;   :config
+  ;;   (add-hook 'text-mode-hook 'visual-fill-column-mode)
+  ;;   (global-visual-line-mode))
+
+#+END_SRC
+
+#+RESULTS:
+: t
+** which-key
+
+Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me of shortcuts when I start typing them.
+
+#+BEGIN_SRC emacs-lisp 
+  (use-package which-key
+    :ensure t
+    :diminish which-key-mode
+    :config
+    (which-key-mode)
+    (setq which-key-idle-delay 0.5))
+
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Disable file locking
+
+The bizarre symlink-based file locking isn't really necessary for me since I never have more than one instance of emacs open. It causes problems with tools that watch directories for files, so let's disable it.
+
+#+BEGIN_SRC emacs-lisp
+(setq create-lockfiles nil)
+#+END_SRC
+
+** Fix the PATH variable
+
+This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
+
+#+BEGIN_SRC emacs-lisp 
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (setq exec-path-from-shell-arguments '("-l"))
+    (setq exec-path-from-shell-variables '("PATH"
+                                           "MANPATH"
+                                           "NIX_PATH"
+                                           "SSH_AGENT_PID"
+                                           "SSH_AUTH_SOCK"))
+    (exec-path-from-shell-initialize))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Make gpg-agent work
+
+This function will load ~/.gpg-agent-info and source its contents into ~GPG_AGENT_INFO~.
+
+I need this to pull mail for m4ue.
+
+#+BEGIN_SRC emacs-lisp
+  (defun my/gpg-agent ()
+    "Load your gpg-agent.env file in to the environment
+
+  This is extra useful if you use gpg-agent with --enable-ssh-support"
+    (interactive)
+    (let ((home (getenv "HOME"))
+          (old-buffer (current-buffer)))
+      (with-temp-buffer
+        (insert-file-contents (concat home "/.gpg-agent-info"))
+        (goto-char (point-min))
+        (setq case-replace nil)
+        (replace-regexp "\\(.*\\)=\\(.*\\)" "(setenv \"\\1\" \"\\2\")")
+        (eval-buffer)))
+    (message (getenv "GPG_AGENT_INFO")))
+
+  (run-with-idle-timer 60 t 'my/gpg-agent)
+  (my/gpg-agent)
+#+END_SRC
+
+#+RESULTS:
+: /tmp/gpg-slIax0/S.gpg-agent:787:1
 ** ~delete-this-file~
 
 #+BEGIN_SRC emacs-lisp
@@ -456,8 +462,7 @@ Save some variables between sessions.
 #+begin_src emacs-lisp
   (use-package session
     :ensure t
-    :config
-    (add-hook 'after-init-hook 'session-initialize))
+    :hook (after-init . session-initialize))
 #+end_src
 
 #+RESULTS:
@@ -480,71 +485,71 @@ better-defaults enables ido-mode, but we're using selectrum.
 
 #+BEGIN_SRC emacs-lisp 
 
-  (defun split-window-right-and-focus ()
-    (interactive)
-    (split-window-right)
-    (other-window 1))
+    (defun split-window-right-and-focus ()
+      (interactive)
+      (split-window-right)
+      (other-window 1))
 
-  (defun split-window-below-and-focus ()
-    (interactive)
-    (split-window-below)
-    (other-window 1))
+    (defun split-window-below-and-focus ()
+      (interactive)
+      (split-window-below)
+      (other-window 1))
 
-  (use-package undo-tree
-    :diminish undo-tree-mode
-    :ensure t
-    :config
-    (global-undo-tree-mode))
-
-  (use-package evil
-    :ensure t
-    :diminish evil-mode
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    :config
-    ;; Make movement keys work over visual lines
-    (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-    (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-    (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-    (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-
-    (evil-set-undo-system 'undo-tree)
-
-    ;; Make * search over whole symbols instead of words. This means 
-    ;; it will match "this-variable" rather than just "this".
-    (setq-default evil-symbol-word-search 1)
-    (setq-default evil-want-fine-undo t)
-
-    ;; Make insert mode just like regular emacs
-    (setq evil-insert-state-map (make-sparse-keymap))
-    (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
-
-
-    (setq evil-move-cursor-back nil)
-
-    (evil-mode 1)
-
-    (use-package evil-surround
-      :ensure t
-      :diminish evil-surround-mode
-      :config
-      (global-evil-surround-mode 1))
-
-    (use-package evil-magit
-      :straight (evil-magit :type git :host github :repo "emacs-evil/evil-magit")
-      :ensure t)
-
-    (use-package evil-matchit
+    (use-package undo-tree
+      :diminish undo-tree-mode
       :ensure t
       :config
-      (global-evil-matchit-mode 1)))
+      (global-undo-tree-mode))
 
-    (use-package evil-collection
-      :after evil
+    (use-package evil
       :ensure t
+      :defer .1
+      :diminish evil-mode
+      :init
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
       :config
-      (evil-collection-init))
+      ;; Make movement keys work over visual lines
+      (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+      (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+      (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+      (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+
+      (evil-set-undo-system 'undo-tree)
+
+      ;; Make * search over whole symbols instead of words. This means 
+      ;; it will match "this-variable" rather than just "this".
+      (setq-default evil-symbol-word-search 1)
+      (setq-default evil-want-fine-undo t)
+
+      ;; Make insert mode just like regular emacs
+      (setq evil-insert-state-map (make-sparse-keymap))
+      (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
+
+
+      (setq evil-move-cursor-back nil)
+
+      (evil-mode 1)
+
+      (use-package evil-surround
+        :ensure t
+        :diminish evil-surround-mode
+        :config
+        (global-evil-surround-mode 1))
+
+      (use-package evil-magit
+        :straight (evil-magit :type git :host github :repo "emacs-evil/evil-magit"))
+
+      (use-package evil-matchit
+        :ensure t
+        :config
+        (global-evil-matchit-mode 1)))
+
+      (use-package evil-collection
+        :after evil
+        :ensure t
+        :config
+        (evil-collection-init))
 #+END_SRC
 
 #+RESULTS:
@@ -589,8 +594,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
       "-" 'split-window-below-and-focus)
 
     (leader-def
-      "a" 'org-agenda
-      "c" 'org-capture)
+      "a" 'org-agenda)
 
     (leader-def
       "g" 'magit-status)
@@ -648,14 +652,9 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
                         "j" 'org-agenda-next-line
                         "k" 'org-agenda-previous-line)
 
-    (general-define-key :states '(normal) :keymaps 'outline-minor-mode-map
-                        "TAB" 'outshine-cycle
-                        "<backtab>" 'outshine-cycle-buffer)
-
     (leader-def
       :states '(normal)
       :keymaps 'outline-minor-mode-map
-      "n" 'outshine-narrow-to-subtree
       "N" 'widen)
 
     (general-define-key :states '(normal)
@@ -840,6 +839,7 @@ Reduce the amount that the mouse scrolls.
 #+BEGIN_SRC emacs-lisp
   (use-package dumb-jump
     :ensure t
+    :commands (dumb-jump-go dumb-jump-go-back dumb-jump-go-other-window)
     :config
     (setq dumb-jump-selector 'completing-read)
     (setq dumb-jump-force-searcher 'rg))
@@ -890,6 +890,14 @@ Reduce the amount that the mouse scrolls.
   (defvar outline-minor-mode-prefix "\M-#")
 
   (use-package outshine
+    :general
+    (:states '(normal) :keymaps 'outline-minor-mode-map
+             "TAB" 'outshine-cycle
+             "<backtab>" 'outshine-cycle-buffer)
+    (leader-def
+      :states '(normal)
+      :keymaps 'outline-minor-mode-map
+      "n" 'outshine-narrow-to-subtree)
     :ensure t)
 
 #+END_SRC
@@ -928,14 +936,16 @@ Version 2017-01-27"
 ** PDF tools
 
 #+begin_src emacs-lisp
+  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
+
   (use-package pdf-tools
     :ensure t
     :after evil
+    :mode ("\\.pdf\\'" . pdf-view-mode)
     :config
     (custom-set-variables
      '(pdf-tools-handle-upgrades nil)) ;; Use brew upgrade pdf-tools instead
-    (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
-    (pdf-tools-install)
+    (pdf-tools-install :no-query)
 
     (setq-default image-mode-winprops-alist nil)
 
@@ -952,10 +962,10 @@ Version 2017-01-27"
   (use-package pdf-view-restore
     :ensure t
     :after pdf-tools
-    :config
-    (add-hook 'pdf-view-mode-hook 'pdf-view-restore-mode))
+    :hook (pdf-view-mode . pdf-view-restore-mode))
 
   (use-package org-noter
+    :defer t
     :ensure t)
 
   (use-package org-pdftools
@@ -964,8 +974,9 @@ Version 2017-01-27"
 
   (use-package org-noter-pdftools
     :ensure t
-    :after org-noter
-    :config
+    :after (org-noter)
+    :commands org-noter-pdftools-jump-to-note
+    :init
     (with-eval-after-load 'pdf-annot
       (add-hook 'pdf-annot-activate-created-annotations #'org-noter-pdftools-jump-to-note)))
 #+end_src
@@ -1084,7 +1095,6 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
 #+begin_src emacs-lisp
   (use-package selectrum
     :straight (selectrum :type git :host github :repo "raxod502/selectrum")
-    :ensure t
     :config
 
     (plist-get base16-shell-colors-256 :base09)
@@ -1105,7 +1115,6 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
       "x" 'execute-extended-command))
 
   (use-package consult
-    :ensure t
     :straight (consult :type git :host github :repo "minad/consult" :branch "main")
     :after projectile
     :bind (("C-x M-:" . consult-complex-command)
@@ -1157,7 +1166,6 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
                 (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
 
   (use-package consult-selectrum
-    :ensure t
     :straight (consult-selectrum :type git :host github :repo "minad/consult" :branch "main")
     :after selectrum
     :demand t)
@@ -1170,14 +1178,12 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
 
   (use-package selectrum-prescient
     :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
-    :ensure t
     :config
     (selectrum-prescient-mode +1)
     (prescient-persist-mode +1))
 
   (use-package embark
     :straight (embark :type git :host github :repo "oantolin/embark")
-    :demand t
     :bind
     (:map selectrum-minibuffer-map
           ("C-j" . embark-act))
@@ -1187,11 +1193,8 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
 
   (use-package marginalia
     :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
-    :after embark
     :bind (:map minibuffer-local-map
-                ("C-M-a" . marginalia-cycle)
-           :map embark-general-map
-                ("A" . marginalia-cycle))
+                ("C-M-a" . marginalia-cycle))
     :init
     (marginalia-mode)
 
@@ -1213,6 +1216,7 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
 #+BEGIN_SRC emacs-lisp
   (use-package olivetti
     :ensure t
+    :defer t
     :diminish olivetti
     :config
     (setq-default olivetti-body-width 100))
@@ -1278,6 +1282,7 @@ Autodetect indentation:
 #+BEGIN_SRC emacs-lisp 
   (use-package company
     :ensure t
+    :defer 0.1
     :config
     (setq company-idle-delay 0) 
     (setq company-minimum-prefix-length 1)
@@ -1309,6 +1314,7 @@ Autodetect indentation:
 #+BEGIN_SRC emacs-lisp 
   (use-package magit
     :ensure t
+    :defer t
     :config
     ;; Uncomment this to improve performance
     ;; (setq magit-refresh-status-buffer nil)
@@ -1417,60 +1423,28 @@ Autodetect indentation:
 ** Snippets
 
 #+BEGIN_SRC emacs-lisp 
-(use-package yasnippet
-  :ensure t
-  :config
+  (use-package yasnippet
+    :ensure t
+    :defer 0.1
+    :config
 
-  ;; Make Yasnippet work in Org
-  (defun yas/org-very-safe-expand ()
-    (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
+    ;; Make Yasnippet work in Org
+    (defun yas/org-very-safe-expand ()
+      (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
 
-  (add-hook 'org-mode-hook
-            (lambda ()
-              (make-variable-buffer-local 'yas/trigger-key)
-              (setq yas/trigger-key [tab])
-              (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
-              (define-key yas/keymap [tab] 'yas/next-field)))
+    (add-hook 'org-mode-hook
+              (lambda ()
+                (make-variable-buffer-local 'yas/trigger-key)
+                (setq yas/trigger-key [tab])
+                (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
+                (define-key yas/keymap [tab] 'yas/next-field)))
 
-  (yas-global-mode 1))
+    (yas-global-mode 1))
 #+END_SRC
 
 ** Lisp
 
 #+BEGIN_SRC emacs-lisp 
-  (use-package evil-cleverparens
-    :ensure t
-    :config
-    (require 'evil-cleverparens-text-objects))
-
-  (use-package cider
-    :ensure t
-    :config)
-
-  (use-package cljsbuild-mode
-    :ensure t)
-
-  (use-package clojure-mode
-    :ensure t)
-
-  (use-package sicp
-    :ensure t)
-
-  (use-package geiser
-    :ensure t
-    :init
-    (setq geiser-active-implementations '(chicken guile)))
-
-  (use-package slime
-    :ensure t
-    :config
-    (setq inferior-lisp-program "sbcl"))
-
-  (use-package paredit
-    :ensure t
-    :config
-    (enable-paredit-mode))
-
   (defvar my/lisp-mode-hooks
     '(emacs-lisp-mode-hook
       lisp-mode-hook
@@ -1478,19 +1452,50 @@ Autodetect indentation:
       scheme-mode-hook
       clojure-mode-hook))
 
-  (dolist (mode my/lisp-mode-hooks)
-    (add-hook mode #'enable-paredit-mode)
-    (add-hook mode #'evil-cleverparens-mode))
+  (use-package evil-cleverparens
+    :ensure t
+    :commands (evil-cleverparens-mode)
+    :init
+    (dolist (mode my/lisp-mode-hooks)
+      (add-hook mode #'evil-cleverparens-mode)))
+
+  (use-package cider
+    :ensure t
+    :defer t
+    :config)
+
+  (use-package cljsbuild-mode
+    :ensure t)
+
+  (use-package clojure-mode
+    :mode (("\\.clj\\'" . clojure-mode)
+           ("\\.cljs\\'" . clojure-mode)
+           ("\\.edn\\'" . clojure-mode))
+    :ensure t)
+
+  (use-package sicp
+
+    :ensure t)
+
+  (use-package geiser
+    :ensure t
+    :init
+    (setq geiser-active-implementations '(chicken guile)))
+
+  (use-package paredit
+    :ensure t
+    :commands (enable-paredit-mode)
+    :init
+    (dolist (mode my/lisp-mode-hooks)
+      (add-hook mode #'enable-paredit-mode)))
 
   (use-package clj-refactor
     :ensure t
+    :hook (clojure-mode . clj-refactor-mode)
     :config
-    (add-hook 'clojure-mode-hook #'my/clojure-mode-hook)
     (cljr-add-keybindings-with-prefix "C-c RET"))
 
-  (defun my/clojure-mode-hook ()
-    (clj-refactor-mode 1)
-    (yas-minor-mode 1))
+  (add-hook 'clojure-mode-hook #'yas-minor-mode)
 
   (use-package extempore-mode
     :ensure t)
@@ -1542,17 +1547,15 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 *** Refactoring
 
 #+BEGIN_SRC emacs-lisp
-    (use-package elpy
-      :ensure t
-      :config
+  (use-package elpy
+    :ensure t
+    :hook (python-mode . elpy-enable)
+    :config
+    ;; Set pytest as the default test runner
+    (elpy-set-test-runner 'elpy-test-pytest-runner)
 
-      ;; Set pytest as the default test runner
-      (elpy-set-test-runner 'elpy-test-pytest-runner)
-
-      ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
-      (setq python-shell-completion-native-enable nil)
-
-      (elpy-enable))
+    ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
+    (setq python-shell-completion-native-enable nil))
 #+END_SRC
 
 #+RESULTS:
@@ -1571,31 +1574,32 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 
 ** JSON
 #+BEGIN_SRC emacs-lisp 
-
   (use-package json-mode
-    :ensure t)
-
+    :ensure t
+    :mode ("\\.json\\'" . json-mode))
 #+END_SRC
 ** Markdown
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
+    :mode (("\\.md\\'" . markdown-mode)
+           ("\\.markdown\\'" . markdown-mode))
     :ensure t)
 #+END_SRC
-
-#+RESULTS:
 
 ** Swift
 #+BEGIN_SRC emacs-lisp 
 
-(use-package swift-mode
-  :ensure t)
+  (use-package swift-mode
+    :ensure t
+    :mode ("\\.swift\\'" . swift-mode))
 
 #+END_SRC
 ** CoffeeScript
 #+BEGIN_SRC emacs-lisp 
 
-(use-package coffee-mode
-  :ensure t)
+  (use-package coffee-mode
+    :ensure t
+    :mode ("\\.coffee\\'" . coffee-mode))
 
 #+END_SRC
 ** JavaScript
@@ -1605,17 +1609,10 @@ js-comint lets me run a repl inside emacs where I can evaluate JavaScript.
 #+BEGIN_SRC emacs-lisp 
 
   (use-package js-comint
+    :defer t
     :ensure t)
 
 #+END_SRC
-*** Ember
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ember-mode
-    :ensure t)
-#+END_SRC
-
-#+RESULTS:
 *** Indentation
 
 I typically use 2 spaces to indent.
@@ -1627,9 +1624,8 @@ I typically use 2 spaces to indent.
 
 #+BEGIN_SRC emacs-lisp
   (use-package typescript-mode
-    :ensure t
-    :config
-    (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescript-mode)))
+    :mode ("\\.tsx?\\'" . typescript-mode)
+    :ensure t)
 #+END_SRC
 
 #+RESULTS:
@@ -1638,12 +1634,13 @@ I typically use 2 spaces to indent.
 #+BEGIN_SRC emacs-lisp 
 
   (use-package haskell-mode
+    :mode ("\\.hs\\'" . haskell-mode)
     :ensure t)
 
   (use-package lsp-haskell
     :ensure t
-    :config
-    (add-hook 'haskell-mode-hook #'lsp)
+    :hook ((haskell-mode . lsp))
+    :init
     (add-hook 'haskell-literate-mode-abbrev-table #'lsp)
     (setq lsp-haskell-server-wrapper-function
           (lambda (argv)
@@ -1659,6 +1656,9 @@ I typically use 2 spaces to indent.
 
 ** Docker
 *** Dockerfile mode
+:PROPERTIES:
+:ID:       9C1FAC61-D34D-4F8C-9A58-C277E8CCDFBF
+:END:
 #+BEGIN_SRC emacs-lisp :tangle yes
 
   (use-package dockerfile-mode
@@ -1674,6 +1674,7 @@ I typically use 2 spaces to indent.
 
   (use-package docker
     :ensure t
+    :defer t
     :diminish docker-mode)
 
 #+END_SRC
@@ -1734,7 +1735,8 @@ Let's use web-mode, which supports font locking for templating.
 
 #+BEGIN_SRC emacs-lisp
   (use-package php-mode
-    :ensure t)
+    :ensure t
+    :mode ("\\.php\\'" . php-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1761,6 +1763,7 @@ Let's use web-mode, which supports font locking for templating.
 
 #+BEGIN_SRC emacs-lisp
   (use-package restclient
+    :defer t
     :ensure t)
 #+END_SRC
 ** Go
@@ -1768,10 +1771,13 @@ Let's use web-mode, which supports font locking for templating.
 #+BEGIN_SRC emacs-lisp
   (use-package go-mode
     :ensure t
+    :mode (("go\\.mod\\'" . go-dot-mod-mode)
+           ("\\.go\\'" . go-mode))
     :config
     (add-hook 'go-mode-hook #'lsp-go-install-save-hooks))
 
   (use-package gotest
+    :defer t
     :ensure t)
 #+END_SRC
 
@@ -1782,15 +1788,13 @@ Let's use web-mode, which supports font locking for templating.
 #+BEGIN_SRC emacs-lisp
   (use-package inf-ruby
     :ensure t
-    :config
-    (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode))
+    :hook (ruby-mode . inf-ruby-minor-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package robe
     :ensure t
-    :config
-    (add-hook 'ruby-mode-hook 'robe-mode))
+    :hook (ruby-mode . robe-mode))
 #+END_SRC
 
 #+RESULTS:
@@ -1838,6 +1842,7 @@ Let's use web-mode, which supports font locking for templating.
 #+BEGIN_SRC emacs-lisp
   (use-package slime
     :ensure t
+    :defer t
     :config
     (setq inferior-lisp-program "/usr/local/bin/sbcl")
     (setq slime-contribs '(slime-fancy)))
@@ -1959,20 +1964,22 @@ Let's use web-mode, which supports font locking for templating.
 #+begin_src emacs-lisp
   (use-package solidity-mode
     :ensure t
+    :mode ("\\.sol\\'" . solidity-mode)
     :config
     (setq solidity-comment-style 'slash))
 
   (use-package solidity-flycheck
     :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
-    :ensure t
+    :defer t
     :init
     (setq solidity-flycheck-solc-checker-active t)
-    :config
-    (require 'solidity-flycheck))
+    (add-hook 'solidity-mode-hook (lambda ()
+                                    (require 'solidity-flycheck))))
 
   (use-package company-solidity
     :ensure t
-    :config
+    :defer t
+    :init
     (add-hook 'solidity-mode-hook
               (lambda ()
                 (set (make-local-variable 'company-backends)
@@ -2109,65 +2116,29 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
                                (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•")))))))
 
   (defun my/org-mode ()
-    (my/org-mode-keyboard-shortcuts)
-    (visual-line-mode 1)
-    ;; (my/org-variable-pitch)
-    )
+    (visual-line-mode 1))
 
   (setq-default fill-column 85)
 
   (use-package org-z
+    :defer t
+    :straight (org-z :type git :host github :repo "landakram/org-z"))
+
+  (use-package org-z-selectrum
+    :general
+    ("C-c C-." 'org-z-insert-link)
     :straight (org-z :type git :host github :repo "landakram/org-z")
     :config
     (setq org-z-knowledge-dirs (-concat org-z-directories
                                         '("/Users/mark/Dropbox (Personal)/Apps/KiwiApp/wiki/")))
 
     (setq org-z-refile-missing-heading nil)
-    (org-z-mode 1)
-
-    (leader-def :infix "o"
-      "s" 'org-z-knowledge-search))
-
-  (use-package org-z-selectrum
-    :straight (org-z :type git :host github :repo "landakram/org-z"))
+    (org-z-mode 1))
 #+END_SRC
 
 #+RESULTS:
-: t
 
 ** Keyboard shortcuts
-*** Editing
-
-#+BEGIN_SRC emacs-lisp 
-
-  (defun my/org-mode-keyboard-shortcuts ()
-    (general-define-key
-     :states '(normal)
-     :keymaps 'org-mode-map
-     :prefix "SPC"
-      "*" 'org-ctrl-c-star
-      "a" 'org-agenda
-      "ih" 'org-insert-heading-after-current-and-enter-insert
-      "iH" 'org-insert-heading-and-enter-insert
-      "is" 'org-insert-subheading-after-current-and-enter-insert
-      "iS" 'org-insert-subheading-and-enter-insert
-      "it" 'org-insert-todo-after-current-and-enter-insert
-      "n" 'org-narrow-to-subtree
-      "N" 'widen
-      "ml" 'org-do-demote
-      "mL" 'org-demote-subtree
-      "mh" 'org-do-promote
-      "mH" 'org-promote-subtree
-      "mk" 'org-metaup
-      "mj" 'org-metadown
-      "s" 'org-schedule
-      "t" 'org-todo))
-
-#+END_SRC
-
-#+RESULTS:
-: my/org-mode-keyboard-shortcuts
-
 *** Agenda
 
 #+BEGIN_SRC emacs-lisp 
@@ -2301,28 +2272,32 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 :END:
 
 #+BEGIN_SRC emacs-lisp
-  (require 'org-capture)
-  (setq org-tag-alist '((:startgroup . nil)
-                        ("WORK" . ?w)
-                        ("PERSONAL" . ?p)
-                        ("ERRANDS" . ?e)
-                        ("HABIT" . ?h)
-                        (:endgroup . nil)
-                        ("crypt" . ?c)
-                        ("WATCH" . ?s)
-                        ("READ" . ?r)))
+  (use-package org-capture
+    :general
+    (leader-def
+      "c" 'org-capture) 
+    :config
+    (setq org-tag-alist '((:startgroup . nil)
+                          ("WORK" . ?w)
+                          ("PERSONAL" . ?p)
+                          ("ERRANDS" . ?e)
+                          ("HABIT" . ?h)
+                          (:endgroup . nil)
+                          ("crypt" . ?c)
+                          ("WATCH" . ?s)
+                          ("READ" . ?r)))
 
-  (setq org-capture-templates
-        '(("n" "Note" entry (file+headline "~/org/inbox.org" "Notes")
-           "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
-          ("p" "Project idea" entry (file+headline "~/org/inbox.org" "Project Ideas")
-           "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
-          ("c" "Calendar" entry (file+olp+datetree "~/org/calendar.org" "Calendar")
-           "* %?\n")
-          ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
-           "* %?\n" :unnarrowed t)
-          ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
-           "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")))
+    (setq org-capture-templates
+          '(("n" "Note" entry (file+headline "~/org/inbox.org" "Notes")
+             "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
+            ("p" "Project idea" entry (file+headline "~/org/inbox.org" "Project Ideas")
+             "* %?\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")
+            ("c" "Calendar" entry (file+olp+datetree "~/org/calendar.org" "Calendar")
+             "* %?\n")
+            ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
+             "* %?\n" :unnarrowed t)
+            ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
+             "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n"))))
 #+END_SRC
 
 #+RESULTS:
@@ -2340,24 +2315,44 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 ** Installation
 #+BEGIN_SRC emacs-lisp 
 
-    (use-package org
-      :ensure org-plus-contrib
-      :config
+  (use-package org
+    :ensure org-plus-contrib
+    :general
+    (:states '(normal)
+     :keymaps 'org-mode-map
+     :prefix "SPC"
+     "*" 'org-ctrl-c-star
+     "a" 'org-agenda
+     "ih" 'org-insert-heading-after-current-and-enter-insert
+     "iH" 'org-insert-heading-and-enter-insert
+     "is" 'org-insert-subheading-after-current-and-enter-insert
+     "iS" 'org-insert-subheading-and-enter-insert
+     "it" 'org-insert-todo-after-current-and-enter-insert
+     "n" 'org-narrow-to-subtree
+     "N" 'widen
+     "ml" 'org-do-demote
+     "mL" 'org-demote-subtree
+     "mh" 'org-do-promote
+     "mH" 'org-promote-subtree
+     "mk" 'org-metaup
+     "mj" 'org-metadown
+     "s" 'org-schedule
+     "t" 'org-todo)
+    :config
 
-      (my/configure-org-directories)
-      (my/configure-org-exporters)
-      (my/configure-org-todos)
-      (my/configure-org)
-      (my/configure-org-protocol)
-      (my/org-babel-config)
-      (setq org-inline-image-overlays t)
+    (my/configure-org-directories)
+    (my/configure-org-exporters)
+    (my/configure-org-todos)
+    (my/configure-org)
+    (my/configure-org-protocol)
+    (my/org-babel-config)
+    (setq org-inline-image-overlays t)
 
-      (add-hook 'org-mode-hook #'my/org-mode))
+    (add-hook 'org-mode-hook #'my/org-mode))
 
-    (use-package org-bullets
-      :ensure t
-      :config
-      (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+  (use-package org-bullets
+    :ensure t
+    :hook (org-mode . org-bullets-mode))
 
 #+END_SRC
 
@@ -2369,100 +2364,104 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 
 #+BEGIN_SRC emacs-lisp
-  (require 'org-archive)
-  (defun org-archive-subtree-hierarchical--line-content-as-string ()
-    "Returns the content of the current line as a string"
-    (save-excursion
-      (beginning-of-line)
-      (buffer-substring-no-properties
-       (line-beginning-position) (line-end-position))))
+  (use-package org-archive
+    :bind (:map org-mode-map
+                ("C-c $" . org-archive-subtree))
+    :config
+    (defun org-archive-subtree-hierarchical--line-content-as-string ()
+      "Returns the content of the current line as a string"
+      (save-excursion
+        (beginning-of-line)
+        (buffer-substring-no-properties
+         (line-beginning-position) (line-end-position))))
 
-  (defun org-archive-subtree-hierarchical--org-child-list ()
-    "This function returns all children of a heading as a list. "
-    (interactive)
-    (save-excursion
-      ;; this only works with org-version > 8.0, since in previous
-      ;; org-mode versions the function (org-outline-level) returns
-      ;; gargabe when the point is not on a heading.
-      (if (= (org-outline-level) 0)
-          (outline-next-visible-heading 1)
-        (org-goto-first-child))
-      (let ((child-list (list (org-archive-subtree-hierarchical--line-content-as-string))))
-        (while (org-goto-sibling)
-          (setq child-list (cons (org-archive-subtree-hierarchical--line-content-as-string) child-list)))
-        child-list)))
+    (defun org-archive-subtree-hierarchical--org-child-list ()
+      "This function returns all children of a heading as a list. "
+      (interactive)
+      (save-excursion
+        ;; this only works with org-version > 8.0, since in previous
+        ;; org-mode versions the function (org-outline-level) returns
+        ;; gargabe when the point is not on a heading.
+        (if (= (org-outline-level) 0)
+            (outline-next-visible-heading 1)
+          (org-goto-first-child))
+        (let ((child-list (list (org-archive-subtree-hierarchical--line-content-as-string))))
+          (while (org-goto-sibling)
+            (setq child-list (cons (org-archive-subtree-hierarchical--line-content-as-string) child-list)))
+          child-list)))
 
-  (defun org-archive-subtree-hierarchical--org-struct-subtree ()
-    "This function returns the tree structure in which a subtree
+    (defun org-archive-subtree-hierarchical--org-struct-subtree ()
+      "This function returns the tree structure in which a subtree
   belongs as a list."
-    (interactive)
-    (let ((archive-tree nil))
-      (save-excursion
-        (while (org-up-heading-safe)
-          (let ((heading
-                 (buffer-substring-no-properties
-                  (line-beginning-position) (line-end-position))))
-            (if (eq archive-tree nil)
-                (setq archive-tree (list heading))
-              (setq archive-tree (cons heading archive-tree))))))
-      archive-tree))
+      (interactive)
+      (let ((archive-tree nil))
+        (save-excursion
+          (while (org-up-heading-safe)
+            (let ((heading
+                   (buffer-substring-no-properties
+                    (line-beginning-position) (line-end-position))))
+              (if (eq archive-tree nil)
+                  (setq archive-tree (list heading))
+                (setq archive-tree (cons heading archive-tree))))))
+        archive-tree))
 
-  (defun org-archive-subtree-hierarchical ()
-    "This function archives a subtree hierarchical"
-    (interactive)
-    (let ((org-tree (org-archive-subtree-hierarchical--org-struct-subtree))
-          (this-buffer (current-buffer))
-          (file (abbreviate-file-name
-                 (or (buffer-file-name (buffer-base-buffer))
-                     (error "No file associated to buffer")))))
-      (save-excursion
-        (setq location org-archive-location
-              afile (car (org-archive--compute-location
-                                     (or (org-entry-get nil "ARCHIVE" 'inherit) location)))
-              ;; heading (org-extract-archive-heading location)
-              infile-p (equal file (abbreviate-file-name (or afile ""))))
-        (unless afile
-          (error "Invalid `org-archive-location'"))
-        (if (> (length afile) 0)
-            (setq newfile-p (not (file-exists-p afile))
-                  visiting (find-buffer-visiting afile)
-                  buffer (or visiting (find-file-noselect afile)))
-          (setq buffer (current-buffer)))
-        (unless buffer
-          (error "Cannot access file \"%s\"" afile))
-        (org-cut-subtree)
-        (set-buffer buffer)
-        (org-mode)
-        (goto-char (point-min))
-        (while (not (equal org-tree nil))
-          (let ((child-list (org-archive-subtree-hierarchical--org-child-list)))
-            (if (member (car org-tree) child-list)
+    (defun org-archive-subtree-hierarchical ()
+      "This function archives a subtree hierarchical"
+      (interactive)
+      (let ((org-tree (org-archive-subtree-hierarchical--org-struct-subtree))
+            (this-buffer (current-buffer))
+            (file (abbreviate-file-name
+                   (or (buffer-file-name (buffer-base-buffer))
+                       (error "No file associated to buffer")))))
+        (save-excursion
+          (setq location org-archive-location
+                afile (car (org-archive--compute-location
+                            (or (org-entry-get nil "ARCHIVE" 'inherit) location)))
+                ;; heading (org-extract-archive-heading location)
+                infile-p (equal file (abbreviate-file-name (or afile ""))))
+          (unless afile
+            (error "Invalid `org-archive-location'"))
+          (if (> (length afile) 0)
+              (setq newfile-p (not (file-exists-p afile))
+                    visiting (find-buffer-visiting afile)
+                    buffer (or visiting (find-file-noselect afile)))
+            (setq buffer (current-buffer)))
+          (unless buffer
+            (error "Cannot access file \"%s\"" afile))
+          (org-cut-subtree)
+          (set-buffer buffer)
+          (org-mode)
+          (goto-char (point-min))
+          (while (not (equal org-tree nil))
+            (let ((child-list (org-archive-subtree-hierarchical--org-child-list)))
+              (if (member (car org-tree) child-list)
+                  (progn
+                    (search-forward (car org-tree) nil t)
+                    (setq org-tree (cdr org-tree)))
                 (progn
-                  (search-forward (car org-tree) nil t)
-                  (setq org-tree (cdr org-tree)))
-              (progn
-                (goto-char (point-max))
-                (newline)
-                (org-insert-struct org-tree)
-                (setq org-tree nil)))))
+                  (goto-char (point-max))
+                  (newline)
+                  (org-insert-struct org-tree)
+                  (setq org-tree nil)))))
+          (newline)
+          (org-yank)
+          (when (not (eq this-buffer buffer))
+            (save-buffer))
+          (message "Subtree archived %s"
+                   (concat "in file: " (abbreviate-file-name afile))))))
+
+    (defun org-insert-struct (struct)
+      "TODO"
+      (interactive)
+      (when struct
+        (insert (car struct))
         (newline)
-        (org-yank)
-        (when (not (eq this-buffer buffer))
-          (save-buffer))
-        (message "Subtree archived %s"
-                 (concat "in file: " (abbreviate-file-name afile))))))
+        (org-insert-struct (cdr struct))))
 
-  (defun org-insert-struct (struct)
-    "TODO"
-    (interactive)
-    (when struct
-      (insert (car struct))
-      (newline)
-      (org-insert-struct (cdr struct))))
-
-  (defun org-archive-subtree ()
-    (interactive)
-    (org-archive-subtree-hierarchical)
+    (defun org-archive-subtree ()
+      (interactive)
+      (org-archive-subtree-hierarchical)
+      )
     )
 #+END_SRC
 
@@ -2477,8 +2476,9 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
     :config
     (setq plantuml-jar-path (expand-file-name "~/src/plantuml.jar"))
     (setq org-plantuml-jar-path plantuml-jar-path)
-    (add-to-list
-     'org-src-lang-modes '("plantuml" . plantuml)))
+    (add-hook 'org-mode-hook (lambda () 
+                               (add-to-list
+                                'org-src-lang-modes '("plantuml" . plantuml)))))
 
   (add-hook 'org-babel-after-execute-hook
             (lambda ()
@@ -2495,18 +2495,17 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 #+begin_src emacs-lisp
   (use-package org-ql
     :ensure t
-    :config
-    (require 'org-ql))
+    :defer t)
 
   (use-package org-sidebar
     :ensure t
+    :general
+    (leader-def :infix "o"
+      "b" 'org-sidebar-backlinks)
     :after (general)
     :config
     ;; Work around https://github.com/alphapapa/org-sidebar/issues/32
-    (require 'org-ql-search)
-
-    (leader-def :infix "o"
-      "b" 'org-sidebar-backlinks))
+    (require 'org-ql-search))
 #+end_src
 
 #+RESULTS:
@@ -2537,6 +2536,7 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 
   (use-package circe
     :ensure t
+    :defer t
     :config
 
     (setq circe-network-options
@@ -2574,6 +2574,7 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 
   (use-package elfeed
     :ensure t
+    :defer t
     :config
 
     (setq elfeed-feeds
@@ -2620,6 +2621,7 @@ This is long so that fetching feeds does not timeout.
 
     (use-package mu4e
       :load-path "/usr/local/opt/mu/share/emacs/site-lisp/mu/mu4e"
+      :defer t
       :after general
       :config
       ;; default
@@ -2769,6 +2771,7 @@ Not actively using this right now.
 
 #+BEGIN_SRC emacs-lisp
   (use-package ledger-mode
+    :mode ("\\.ledger\\'" . ledger-mode)
     :ensure t)
 #+END_SRC
 
@@ -2877,3 +2880,19 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 #+END_SRC
 
 #+RESULTS:
+* Profiling emacs
+** Start-up time
+#+begin_src emacs-lisp
+    (use-package esup
+      :straight t
+      :config
+      (setq esup-user-init-file (file-truename "~/.emacs.d/config.el")))
+#+end_src
+
+* Conclusion
+
+The following will tangle this file on save. By tangling on save, I don't need to dynamically tangle on startup, which makes startup a lot faster.
+
+;; Local Variables: 
+;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t) 
+;; End:

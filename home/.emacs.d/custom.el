@@ -28,10 +28,17 @@
  '(paradox-github-token t)
  '(pdf-info-epdfinfo-program
    "/Users/mark/.emacs.d/elpa/pdf-tools-20160203.1057/build/server/epdfinfo")
+ '(pdf-tools-handle-upgrades nil)
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(safe-local-variable-values
-   '((geiser-scheme-implementation quote chicken)
+   '((eval add-hook 'after-save-hook
+           (lambda nil
+             (if
+                 (y-or-n-p "Tangle?")
+                 (org-babel-tangle)))
+           nil t)
+     (geiser-scheme-implementation quote chicken)
      (cider-default-cljs-repl . "figwheel-main")
      (cider-preferred-build-tool . "lein")
      (eval and
