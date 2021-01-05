@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #+TITLE: Mark's Emacs Config
 #+OPTIONS: toc:2 num:nil ^:nil
 
@@ -137,18 +138,6 @@ Brought to you by Paradox:
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (setq frame-resize-pixelwise t)
 #+END_SRC
-
-#+RESULTS:
-: t
-
-** Save session variables
-Save some variables between sessions.
-#+begin_src emacs-lisp
-  (use-package session
-    :ensure t
-    :config
-    (add-hook 'after-init-hook 'session-initialize))
-#+end_src
 
 #+RESULTS:
 : t
@@ -462,84 +451,29 @@ It's commented out right now because it looks terrible.
     (when (file-readable-p host-specific-config)
       (load-file host-specific-config)))
 #+END_SRC
-* UI
-** Dark title bar
-
-#+BEGIN_SRC emacs-lisp
-  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  (add-to-list 'default-frame-alist '(ns-appearance . dark))
-#+END_SRC
-
-** Window / popup management
-
-Always focus the curor in help windows.
-
-#+BEGIN_SRC emacs-lisp
-  (setq help-window-select t)
-#+END_SRC
+** Save session variables
+Save some variables between sessions.
+#+begin_src emacs-lisp
+  (use-package session
+    :ensure t
+    :config
+    (add-hook 'after-init-hook 'session-initialize))
+#+end_src
 
 #+RESULTS:
 : t
-** Scrolling
-
-Make scrolling behavior more like vim:
-
-#+BEGIN_SRC emacs-lisp
-  (use-package smooth-scrolling
-    :ensure t
-    :config
-    (smooth-scrolling-mode 1)
-    (setq smooth-scroll-margin 5))
-#+END_SRC
-
-#+RESULTS:
-: t
-
-** Helm
-
-#+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :ensure t
-    :diminish helm-mode
-    :config
-    (require 'helm-config)
-    (helm-mode 1)
-    (global-set-key (kbd "M-x") 'helm-M-x)
-    (global-set-key (kbd "M-y") 'helm-show-kill-ring)
-    (global-set-key (kbd "C-x b") 'helm-mini)
-    (global-set-key (kbd "C-h a") 'helm-apropos)
-    (setq helm-buffer-max-length nil)
-    (add-to-list 'completion-styles 'helm)
-    (helm-autoresize-mode t)
-
-    (require 'helm-imenu))
-
-  (use-package helm-ag
-    :ensure t
-    :config
-    (setq helm-ag-base-command "rg --no-heading --smart-case --hidden"))
-
-  (use-package helm-rg
-    :ensure t)
-
-  (use-package helm-projectile
-    :ensure t
-    :config
-    (helm-projectile-on))
-#+END_SRC
-
-#+RESULTS:
-: t
-
+** Disable ido-mode
+better-defaults enables ido-mode, but we're using selectrum.
+#+begin_src emacs-lisp
+  (ido-mode -1)
+#+end_src
 * Keybindings
 ** General keybindings
 *** Increase and decrease text size
 
 #+BEGIN_SRC emacs-lisp 
-
 (define-key global-map (kbd "C-+") 'text-scale-increase)
 (define-key global-map (kbd "C--") 'text-scale-decrease)
-
 #+END_SRC
 
 ** Evil Mode
@@ -556,10 +490,15 @@ Make scrolling behavior more like vim:
     (split-window-below)
     (other-window 1))
 
+  (use-package undo-tree
+    :diminish undo-tree-mode
+    :ensure t
+    :config
+    (global-undo-tree-mode))
+
   (use-package evil
     :ensure t
     :diminish evil-mode
-    :diminish undo-tree-mode
     :init
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
@@ -570,7 +509,6 @@ Make scrolling behavior more like vim:
     (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
     (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
 
-    (global-undo-tree-mode)
     (evil-set-undo-system 'undo-tree)
 
     ;; Make * search over whole symbols instead of words. This means 
@@ -629,7 +567,6 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (leader-def :infix "b"
       "" '(:ignore t :which-key "buffers")
-      "b" 'helm-mini
       "k" 'kill-this-buffer
       "q" 'delete-window)
 
@@ -658,16 +595,12 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (leader-def
       "g" 'magit-status)
 
-    (leader-def
-      "x" 'helm-M-x)
-
     ;; Help
     (leader-def
       "h" (general-simulate-key "C-h"))
 
     (leader-def :infix "f"
       "" '(:ignore t :which-key "files")
-      "f" 'helm-find-files
       "d" 'delete-this-file
       "c" 'xah-copy-file-path
       "s" 'save-buffer)
@@ -736,7 +669,6 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
       "" '(:ignore t :which-key "projects")
       "p" 'projectile-switch-project
       "f" 'projectile-find-file
-      "a" 'helm-do-ag-project-root
       "t" 'projectile-test-project)
 
     (general-define-key
@@ -793,7 +725,7 @@ Projectile lets me switch between projects really easily. I set it up to default
     :config
     (setq projectile-enable-caching t)
     (projectile-global-mode)
-    (setq projectile-completion-system 'helm)
+    (setq projectile-completion-system 'default)
     (setq projectile-switch-project-action 'projectile-commander)
     (setq projectile-indexing-method 'hybrid)
 
@@ -817,10 +749,6 @@ Projectile lets me switch between projects really easily. I set it up to default
     (def-projectile-commander-method ?d
       "Open project root in dired"
       (projectile-dired)))
-
-    (def-projectile-commander-method ?a
-      "Full text search in the project."
-      (helm-do-ag-project-root))
 
     (def-projectile-commander-method ?e
       "Open an [e]shell in the project root."
@@ -907,19 +835,13 @@ Reduce the amount that the mouse scrolls.
 #+END_SRC
 
 #+RESULTS:
-** imenu
-
-#+BEGIN_SRC emacs-lisp
-  (general-define-key :states '(normal)
-                      "F" 'helm-semantic-or-imenu)
-#+END_SRC
 ** Tags / dumb-jump
 
 #+BEGIN_SRC emacs-lisp
   (use-package dumb-jump
     :ensure t
     :config
-    (setq dumb-jump-selector 'helm)
+    (setq dumb-jump-selector 'completing-read)
     (setq dumb-jump-force-searcher 'rg))
 #+END_SRC
 ** Tramp
@@ -1058,6 +980,230 @@ Version 2017-01-27"
     :config
     (direnv-mode))
 #+end_src
+* UI
+** Dark title bar
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  (add-to-list 'default-frame-alist '(ns-appearance . dark))
+#+END_SRC
+
+** Window / popup management
+
+Always focus the curor in help windows.
+
+#+BEGIN_SRC emacs-lisp
+  (setq help-window-select t)
+#+END_SRC
+
+#+RESULTS:
+: t
+** Scrolling
+
+Make scrolling behavior more like vim:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package smooth-scrolling
+    :ensure t
+    :config
+    (smooth-scrolling-mode 1)
+    (setq smooth-scroll-margin 5))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Helm
+Helm is out again for now. ~helm-M-x~ was getting unbearably slow. After switching to [[id:0D765ADF-6C61-4F8F-9885-4AE57A7526BD][Selectrum]], everything is super smooth.
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package helm
+  ;;   :ensure t
+  ;;   :defer t
+  ;;   :after (general projectile)
+  ;;   :diminish helm-mode
+  ;;   :config
+  ;;   (require 'helm-config)
+  ;;   (helm-mode 1)
+  ;;   (global-set-key (kbd "M-x") 'helm-M-x)
+  ;;   (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+  ;;   (global-set-key (kbd "C-x b") 'helm-mini)
+  ;;   (global-set-key (kbd "C-h a") 'helm-apropos)
+  ;;   (setq helm-buffer-max-length nil)
+  ;;   (add-to-list 'completion-styles 'helm)
+  ;;   (helm-autoresize-mode t)
+
+  ;;   (require 'helm-imenu)
+
+  ;;   (leader-def :infix "b"
+  ;;     "b" 'helm-mini)
+
+  ;;   (leader-def
+  ;;     "x" 'helm-M-x)
+
+  ;;   (leader-def :infix "f"
+  ;;     "f" 'helm-find-files)
+
+  ;;   (leader-def :infix "p"
+  ;;     "a" 'helm-do-ag-project-root)
+
+  ;;   (def-projectile-commander-method ?a
+  ;;     "Full text search in the project."
+  ;;     (helm-do-ag-project-root))
+
+  ;;   (general-define-key :states '(normal)
+  ;;                       "F" 'helm-semantic-or-imenu)
+
+  ;;   (add-hook 'eshell-mode-hook
+  ;;             (lambda()
+  ;;               (define-key eshell-mode-map (kbd "M-r") 'helm-eshell-history)
+  ;;               (define-key eshell-mode-map [remap eshell-pcomplete] 'helm-esh-pcomplete)
+  ;;               (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history))))
+
+  ;; (use-package helm-ag
+  ;;   :ensure t
+  ;;   :config
+  ;;   (setq helm-ag-base-command "rg --no-heading --smart-case --hidden"))
+
+  ;; (use-package helm-rg
+  ;;   :ensure t)
+
+  ;; (use-package helm-projectile
+  ;;   :ensure t
+  ;;   :config
+  ;;   (helm-projectile-on))
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** Selectrum
+:PROPERTIES:
+:ID:       0D765ADF-6C61-4F8F-9885-4AE57A7526BD
+:END:
+Selectrum is basically how I want completing-read to work. Simple, composable, fast.
+#+begin_src emacs-lisp
+  (use-package selectrum
+    :straight (selectrum :type git :host github :repo "raxod502/selectrum")
+    :ensure t
+    :config
+
+    (plist-get base16-shell-colors-256 :base09)
+    (set-face-attribute 'selectrum-current-candidate nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base09)
+                        :background (plist-get base16-tomorrow-night-colors :base01))
+    (set-face-attribute 'selectrum-primary-highlight nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0E))
+    (set-face-attribute 'selectrum-secondary-highlight nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0D))
+
+    (selectrum-mode +1)
+
+    (leader-def :infix "f"
+      "f" 'find-file)
+
+    (leader-def 
+      "x" 'execute-extended-command))
+
+  (use-package consult
+    :ensure t
+    :straight (consult :type git :host github :repo "minad/consult" :branch "main")
+    :after projectile
+    :bind (("C-x M-:" . consult-complex-command)
+           ("C-c h" . consult-history)
+           ("C-c m" . consult-mode-command)
+           ("C-x b" . consult-buffer)
+           ("C-x 4 b" . consult-buffer-other-window)
+           ("C-x 5 b" . consult-buffer-other-frame)
+           ("C-x r x" . consult-register)
+           ("C-x r b" . consult-bookmark)
+           ("M-g g" . consult-goto-line)
+           ("M-g M-g" . consult-goto-line)
+           ("M-g o" . consult-outline)
+           ("M-g l" . consult-line)
+           ("M-g m" . consult-mark)
+           ("M-g k" . consult-global-mark)
+           ("M-g r" . consult-git-grep)
+           ("M-g f" . consult-find)
+           ("M-g i" . consult-project-imenu)
+           ("M-g e" . consult-error)
+           ("M-s m" . consult-multi-occur)
+           ("M-y" . consult-yank-pop)
+           ("<help> a" . consult-apropos))
+    :init
+    ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
+    (fset 'multi-occur #'consult-multi-occur)
+
+    :config
+    (autoload 'projectile-project-root "projectile")
+    (setq consult-project-root-function #'projectile-project-root)
+
+    (setq consult-narrow-key "<")
+
+    (leader-def :infix "b"
+      "b" 'consult-buffer)
+
+    (general-define-key :states '(normal)
+                        "F" 'consult-outline)
+
+    (leader-def :infix "p"
+      "a" 'consult-ripgrep)
+
+    (def-projectile-commander-method ?a
+      "Full text search in the project."
+      (consult-ripgrep))
+
+    (add-hook 'eshell-mode-hook
+              (lambda()
+                (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
+
+  (use-package consult-selectrum
+    :ensure t
+    :straight (consult-selectrum :type git :host github :repo "minad/consult" :branch "main")
+    :after selectrum
+    :demand t)
+
+  ;; Optionally add the `consult-flycheck' command.
+  (use-package consult-flycheck
+    :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
+    :bind (:map flycheck-command-map
+                ("!" . consult-flycheck)))
+
+  (use-package selectrum-prescient
+    :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
+    :ensure t
+    :config
+    (selectrum-prescient-mode +1)
+    (prescient-persist-mode +1))
+
+  (use-package embark
+    :straight (embark :type git :host github :repo "oantolin/embark")
+    :demand t
+    :bind
+    (:map selectrum-minibuffer-map
+          ("C-j" . embark-act))
+
+    :config
+    (setq embark-prompter 'embark-completing-read-prompter))
+
+  (use-package marginalia
+    :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
+    :after embark
+    :bind (:map minibuffer-local-map
+                ("C-M-a" . marginalia-cycle)
+           :map embark-general-map
+                ("A" . marginalia-cycle))
+    :init
+    (marginalia-mode)
+
+    ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
+    (advice-add #'marginalia-cycle :after
+                (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
+
+#+end_src
+
+#+RESULTS:
+: marginalia-cycle
+
 * Writing
 ** Perfect Margin
 :PROPERTIES:
@@ -1206,26 +1352,26 @@ Autodetect indentation:
       (concat "https://" host "/" (strip-dot-git path))))
 
   (defun get-remote-url (remote)
-    (helm-open-github--command-one-line "git" `("remote" "get-url" ,remote)))
+    (open-github--command-one-line "git" `("remote" "get-url" ,remote)))
 
   (defun infer-browse-url-from-remote (remote)
     (let ((origin-url (get-remote-url remote)))
       (infer-https-url origin-url)))
 
-  (defun helm-open-github--command-one-line (cmd args)
+  (defun open-github--command-one-line (cmd args)
     (with-temp-buffer
       (when (zerop (apply 'call-process cmd nil t nil args))
         (goto-char (point-min))
         (buffer-substring-no-properties
          (line-beginning-position) (line-end-position)))))
 
-  (defun helm-open-github--branch ()
-    (let ((branch (helm-open-github--command-one-line "git" '("symbolic-ref" "HEAD"))))
+  (defun open-github--branch ()
+    (let ((branch (open-github--command-one-line "git" '("symbolic-ref" "HEAD"))))
       (if (not branch)
           (error "Failed: 'git symbolic-ref HEAD'")
         (replace-regexp-in-string "\\`refs/heads/" "" branch))))
 
-  (defun helm-open-github--highlight-marker (start end)
+  (defun open-github--highlight-marker (start end)
     (cond ((and start end (region-active-p))
            (format "#L%s..L%s" start end))
           (start
@@ -1235,14 +1381,14 @@ Autodetect indentation:
   (require 'subr-x)
 
   (defun github-file-url (&optional default-branch)
-    (let* ((branch (if default-branch default-branch (helm-open-github--branch)))
+    (let* ((branch (if default-branch default-branch (open-github--branch)))
            (current-file (buffer-file-name))
            (root (vc-git-root current-file))
            (repo-path (file-relative-name current-file root))
            (base-url (infer-browse-url-from-remote "origin"))
            (start-line (line-number-at-pos (if (region-active-p) (region-beginning) (point))))
            (end-line (- (line-number-at-pos (region-end)) 1))
-           (marker (helm-open-github--highlight-marker start-line end-line)))
+           (marker (open-github--highlight-marker start-line end-line)))
       (format "%s/blob/%s/%s%s" base-url branch repo-path marker)))
 
   (defun github-url-save ()
@@ -1617,16 +1763,6 @@ Let's use web-mode, which supports font locking for templating.
   (use-package restclient
     :ensure t)
 #+END_SRC
-** eshell
-
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'eshell-mode-hook
-            (lambda()
-              (define-key eshell-mode-map (kbd "M-r") 'helm-eshell-history)
-              (define-key eshell-mode-map [remap eshell-pcomplete] 'helm-esh-pcomplete)
-              (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history)))
-#+END_SRC
-
 ** Go
 
 #+BEGIN_SRC emacs-lisp
@@ -1980,11 +2116,6 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
   (setq-default fill-column 85)
 
-  (use-package helm-org-rifle
-    :ensure t
-    :after (org general)
-    :config)
-
   (use-package org-z
     :straight (org-z :type git :host github :repo "landakram/org-z")
     :config
@@ -1997,6 +2128,8 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     (leader-def :infix "o"
       "s" 'org-z-knowledge-search))
 
+  (use-package org-z-selectrum
+    :straight (org-z :type git :host github :repo "landakram/org-z"))
 #+END_SRC
 
 #+RESULTS:
@@ -2360,14 +2493,9 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 ** org-sidebar and org-ql
 
 #+begin_src emacs-lisp
-  (use-package helm-org
-    :ensure t)
-
   (use-package org-ql
     :ensure t
-    :after (helm-org)
     :config
-    (require 'helm-org-ql)
     (require 'org-ql))
 
   (use-package org-sidebar
