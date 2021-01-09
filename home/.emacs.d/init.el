@@ -878,6 +878,8 @@ Version 2017-01-27"
 
 (column-number-mode)
 
+(set-fringe-mode 10)
+
 (use-package olivetti
   :ensure t
   :defer t

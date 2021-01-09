@@ -1468,6 +1468,15 @@ Enable column numbers in the modeline:
 #+RESULTS:
 : t
 
+Small padding:
+
+#+begin_src emacs-lisp
+  (set-fringe-mode 10)
+#+end_src
+
+#+RESULTS:
+: ((ns-appearance . dark) (ns-transparent-titlebar . t) (horizontal-scroll-bars) (fullscreen . maximized) (vertical-scroll-bars) (left-fringe . 10) (right-fringe . 10))
+
 * Writing
 ** Perfect Margin
 :PROPERTIES:
