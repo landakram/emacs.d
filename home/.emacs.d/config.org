@@ -168,29 +168,23 @@ Let's configure the editor to our liking.
 This mode line is pretty.
 
 #+BEGIN_SRC emacs-lisp 
-
-  (use-package smart-mode-line
-    :ensure t
+  (use-package mood-line
+    :straight t
     :config
-    (setq sml/theme 'respectful)
-    (sml/setup))
-
+    (set-face-attribute 'mood-line-buffer-name
+                        nil
+                        :weight 'bold)
+    (mood-line-mode))
 #+END_SRC
 
 #+RESULTS:
 : t
 
 #+RESULTS:
-*** Display time in modeline
-
-#+BEGIN_SRC emacs-lisp
-(display-time-mode 1)
-#+END_SRC
-
-#+RESULTS:
-: t
-
 *** Change the theme
+:PROPERTIES:
+:ID:       E9447020-C3D8-4C22-93EB-E426FFC1C59E
+:END:
 
 #+BEGIN_SRC emacs-lisp 
     (use-package base16-theme
