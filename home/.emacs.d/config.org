@@ -41,18 +41,6 @@ Let's set ~custom-file~, which emacs writes to automatically.
 #+RESULTS:
 : t
 
-** Set the font
-:PROPERTIES:
-:ID:       3B6D865A-675A-445B-8294-86DEDF0045D6
-:END:
-
-#+BEGIN_SRC emacs-lisp
-  ;; (add-to-list 'default-frame-alist
-  ;;              '(font . "Fira Mono-11"))
-#+END_SRC
-
-#+RESULTS:
-
 ** Start up maximized
 :PROPERTIES:
 :ID:       3BDC37A6-1544-4921-A776-CF057A0C1A7E
@@ -1201,6 +1189,38 @@ Version 2017-01-27"
 : t
 
 * UI
+** Set the font
+:PROPERTIES:
+:ID:       3B6D865A-675A-445B-8294-86DEDF0045D6
+:END:
+
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'default-frame-alist
+               '(font . "Fira Code Medium"))
+
+  (use-package ligature
+    :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
+    :config
+    (ligature-set-ligatures 't '("www"))
+
+    ;; Enable ligatures in programming modes
+    (ligature-set-ligatures 'prog-mode '("www" "**" "***" "**/" "*>" "*/" "\\\\" "\\\\\\" "{-" "::"
+                                         ":::" ":=" "!!" "!=" "!==" "-}" "----" "-->" "->" "->>"
+                                         "-<" "-<<" "-~" "#{" "#[" "##" "###" "####" "#(" "#?" "#_"
+                                         "#_(" ".-" ".=" ".." "..<" "..." "?=" "??" ";;" "/*" "/**"
+                                         "/=" "/==" "/>" "//" "///" "&&" "||" "||=" "|=" "|>" "^=" "$>"
+                                         "++" "+++" "+>" "=:=" "==" "===" "==>" "=>" "=>>" "<="
+                                         "=<<" "=/=" ">-" ">=" ">=>" ">>" ">>-" ">>=" ">>>" "<*"
+                                         "<*>" "<|" "<|>" "<$" "<$>" "<!--" "<-" "<--" "<->" "<+"
+                                         "<+>" "<=" "<==" "<=>" "<=<" "<>" "<<" "<<-" "<<=" "<<<"
+                                         "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
+
+    (global-ligature-mode 't))
+#+END_SRC
+
+#+RESULTS:
+: t
+
 ** Dark title bar
 :PROPERTIES:
 :ID:       A4F9B025-8D9A-4244-930E-D77E20B10EEE
@@ -3345,18 +3365,6 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 #+END_SRC
 
 #+RESULTS:
-* Profiling emacs
-** Start-up time
-:PROPERTIES:
-:ID:       7D01476F-458B-4DA9-A5A5-FF22B1F4DE33
-:END:
-#+begin_src emacs-lisp
-    (use-package esup
-      :straight t
-      :config
-      (setq esup-user-init-file (file-truename "~/.emacs.d/config.el")))
-#+end_src
-
 * Conclusion
 
 The following will tangle this file on save. By tangling on save, I don't need to dynamically tangle on startup, which makes startup a lot faster.
