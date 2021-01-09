@@ -54,13 +54,13 @@
   :defer t
   :ensure t)
 
-(use-package smart-mode-line
-  :ensure t
+(use-package mood-line
+  :straight t
   :config
-  (setq sml/theme 'respectful)
-  (sml/setup))
-
-(display-time-mode 1)
+  (set-face-attribute 'mood-line-buffer-name
+                      nil
+                      :weight 'bold)
+  (mood-line-mode))
 
 (use-package base16-theme
   :ensure t
@@ -148,7 +148,7 @@
   :diminish which-key-mode
   :config
   (which-key-mode)
-  (setq which-key-idle-delay 0.5))
+  (setq which-key-idle-delay 0.3))
 
 (setq create-lockfiles nil)
 
@@ -608,6 +608,73 @@ Version 2017-01-27"
   :config
   (direnv-mode))
 
+(use-package dired
+  :general
+  ("C-x j" 'dired-jump)
+  (leader-def
+    "d" 'dired-jump)
+  (:keymaps
+   'dired-mode-map
+   "h" 'dired-up-directory
+   "l" 'dired-find-file)
+  :config
+  (setq dired-listing-switches "-alh")
+  )
+
+(use-package diredfl
+  :straight t
+  :config
+  (diredfl-global-mode)
+
+  (set-face-attribute 'diredfl-dir-priv nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0D)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-read-priv nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0B)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-write-priv nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0A)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-exec-priv nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base08)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-no-priv nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base03)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-dir-name nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0C)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-symlink nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base05)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-dir-heading nil
+                      :weight 'bold
+                      :foreground (plist-get base16-tomorrow-night-colors :base0B)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-file-name nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base05)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-file-suffix nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0B)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-number nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0A)
+                      :background (plist-get base16-tomorrow-night-colors :base00))
+
+  (set-face-attribute 'diredfl-date-time nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0D)
+                      :background (plist-get base16-tomorrow-night-colors :base00)))
+
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 
@@ -734,7 +801,7 @@ Version 2017-01-27"
     "b" 'consult-buffer)
 
   (general-define-key :states '(normal)
-                      "F" 'consult-outline)
+                      "F" 'consult-imenu)
 
   (leader-def :infix "p"
     "a" 'consult-ripgrep)
@@ -771,7 +838,32 @@ Version 2017-01-27"
         ("C-j" . embark-act))
 
   :config
-  (setq embark-prompter 'embark-completing-read-prompter))
+  (defun current-candidate+category ()
+    (when selectrum-active-p
+      (cons (selectrum--get-meta 'category)
+            (selectrum-get-current-candidate))))
+
+  (add-hook 'embark-target-finders #'current-candidate+category)
+
+  (defun current-candidates+category ()
+    (when selectrum-active-p
+      (cons (selectrum--get-meta 'category)
+            (selectrum-get-current-candidates
+             ;; Pass relative file names for dired.
+             minibuffer-completing-file-name))))
+
+  (add-hook 'embark-candidate-collectors #'current-candidates+category)
+
+  ;; No unnecessary computation delay after injection.
+  (add-hook 'embark-setup-hook 'selectrum-set-selected-candidate)
+
+  ;; Pop up which-key when running embark-act
+  (setq embark-action-indicator
+        (lambda (map)
+          (which-key--show-keymap "Embark" map nil nil 'no-paging)
+          #'which-key--hide-popup-ignore-command)
+        embark-become-indicator embark-action-indicator)
+  (setq embark-prompter 'embark-keymap-prompter))
 
 (use-package marginalia
   :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
@@ -783,6 +875,8 @@ Version 2017-01-27"
   ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
   (advice-add #'marginalia-cycle :after
               (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
+
+(column-number-mode)
 
 (use-package olivetti
   :ensure t
@@ -833,6 +927,7 @@ Version 2017-01-27"
   :config
   (setq company-idle-delay 0) 
   (setq company-minimum-prefix-length 1)
+  (setq company-global-modes '(not org-mode eshell-mode))
   (global-company-mode)
   (define-key company-active-map (kbd "M-n") nil)
   (define-key company-active-map (kbd "M-p") nil)
@@ -1103,6 +1198,9 @@ Version 2017-01-27"
                    )
            (list (nix-current-sandbox))))))
 
+(use-package dockerfile-mode
+  :ensure t)
+
 (use-package docker
   :ensure t
   :defer t
@@ -1113,7 +1211,22 @@ Version 2017-01-27"
 (setenv "DOCKER_CERT_PATH" "/Users/mark/.docker/machine/machines/default")
 (setenv "DOCKER_MACHINE_NAME" "default")
 
-(setq shell-file-name "/bin/zsh")
+(use-package eshell
+  :config
+  (setq eshell-prompt-function
+        (lambda ()
+          (set-face-attribute 'eshell-prompt
+                              nil
+                              :foreground (plist-get base16-tomorrow-night-colors :base0D)
+                              :background (plist-get base16-tomorrow-night-colors :base00))
+
+          (set-face-attribute 'eshell-ls-directory
+                              nil
+                              :foreground (plist-get base16-tomorrow-night-colors :base0C)
+                              :background (plist-get base16-tomorrow-night-colors :base00))
+
+          (concat (abbreviate-file-name (eshell/pwd))
+                  (if (= (user-uid) 0) " # " " $ ")))))
 
 (use-package yaml-mode
   :ensure t)
@@ -1180,15 +1293,17 @@ Version 2017-01-27"
   (add-hook 'ruby-mode-hook 'seeing-is-believing))
 
 (use-package rbenv
-  :ensure t
-  :init
-  (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.2/")
-  (defun my/ruby-init ()
-    (rbenv-use-corresponding))
-  (add-hook 'ruby-mode-hook 'my/ruby-init)
-  :config
-  (global-rbenv-mode)
-  (rbenv-use-global))
+    :ensure t
+    :init
+    (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.2/")
+    (defun my/ruby-init ()
+      (rbenv-use-corresponding))
+    (add-hook 'ruby-mode-hook 'my/ruby-init)
+    :config
+    (setq rbenv-show-active-ruby-in-modeline nil)
+    (global-rbenv-mode)
+    (rbenv-use-global)
+)
 
 (use-package rspec-mode
   :init
@@ -1381,19 +1496,12 @@ Version 2017-01-27"
 (setq-default fill-column 85)
 
 (use-package org-z
-  :defer t
-  :straight (org-z :type git :host github :repo "landakram/org-z"))
-
-(use-package org-z-selectrum
-  :general
-  ("C-c C-." 'org-z-insert-link)
   :straight (org-z :type git :host github :repo "landakram/org-z")
   :config
-  (setq org-z-knowledge-dirs (-concat org-z-directories
-                                      '("/Users/mark/Dropbox (Personal)/Apps/KiwiApp/wiki/")))
-
-  (setq org-z-refile-missing-heading nil)
   (org-z-mode 1))
+
+(use-package org-z-selectrum
+  :straight (org-z-selectrum :type git :host github :repo "landakram/org-z"))
 
 (general-define-key
  :states '(emacs)
@@ -1659,12 +1767,8 @@ belongs as a list."
             (when org-inline-image-overlays
               (org-redisplay-inline-images))))
 
-(use-package org-ql
-  :ensure t
-  :defer t)
-
 (use-package org-sidebar
-  :ensure t
+  :straight t
   :general
   (leader-def :infix "o"
     "b" 'org-sidebar-backlinks)

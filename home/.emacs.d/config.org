@@ -12,6 +12,9 @@ Welcome to my emacs config!
 First, let's take care of some startup stuff.
 
 ** Remove the startup message
+:PROPERTIES:
+:ID:       0C5C811B-6596-4886-BC5C-FAFD23AD0E80
+:END:
 
 I don't like the startup message, so let's get rid of it.
 
@@ -22,6 +25,9 @@ I don't like the startup message, so let's get rid of it.
 #+END_SRC
 
 ** Set the Custom file
+:PROPERTIES:
+:ID:       C10F46AF-0F67-4878-831C-B0E5474A8206
+:END:
 
 Let's set ~custom-file~, which emacs writes to automatically.
 
@@ -36,15 +42,21 @@ Let's set ~custom-file~, which emacs writes to automatically.
 : t
 
 ** Set the font
+:PROPERTIES:
+:ID:       3B6D865A-675A-445B-8294-86DEDF0045D6
+:END:
 
 #+BEGIN_SRC emacs-lisp
-(add-to-list 'default-frame-alist
-             '(font . "Fira Mono-11"))
+  ;; (add-to-list 'default-frame-alist
+  ;;              '(font . "Fira Mono-11"))
 #+END_SRC
 
 #+RESULTS:
 
 ** Start up maximized
+:PROPERTIES:
+:ID:       3BDC37A6-1544-4921-A776-CF057A0C1A7E
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -55,6 +67,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 : t
 
 ** Use org for the scratch buffer
+:PROPERTIES:
+:ID:       7B52A965-0E32-44B9-8E21-E8F999EDAFE9
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (setq initial-major-mode 'org-mode)
@@ -67,6 +82,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 * Packages
 
 ** Set up ~package.el~
+:PROPERTIES:
+:ID:       A9556360-8DCF-42E2-8B25-7A40614EF195
+:END:
 
 #+BEGIN_SRC emacs-lisp
 
@@ -81,6 +99,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 #+END_SRC
 
 ** Set up ~straight.el~
+:PROPERTIES:
+:ID:       13CBB27F-C0DF-4AFE-A3B1-698BA1371432
+:END:
 
 #+begin_src emacs-lisp
 (defvar bootstrap-version)
@@ -101,6 +122,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 : t
 
 ** Install ~use-package~
+:PROPERTIES:
+:ID:       8A946C5D-012F-4B8A-99AE-D14569E4C088
+:END:
 
 ~use-package~ is used for the rest of the config. It lets me define installable packages and configure them in the same block.
 
@@ -117,6 +141,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 : diminish
 
 ** Install ~diminish~
+:PROPERTIES:
+:ID:       6E6D6418-A509-4C0C-9791-E27BDD2686E3
+:END:
 
 We also install ~diminish~, because ~use-package~ depends on it. ~diminish~ lets you hide minor modes from the mode-line.
 
@@ -139,6 +166,9 @@ Now, we diminish some modes (I can't figure out where they are loaded):
 #+RESULTS:
 |   |
 ** Try packages without installing
+:PROPERTIES:
+:ID:       7007149A-27DD-4505-B531-394D2D07477E
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package try
@@ -148,6 +178,9 @@ Now, we diminish some modes (I can't figure out where they are loaded):
 
 #+RESULTS:
 ** Better interface for packages
+:PROPERTIES:
+:ID:       EE0F5A1B-4DDF-4665-955F-73858FE36262
+:END:
 
 Brought to you by Paradox:
 
@@ -164,6 +197,9 @@ Let's configure the editor to our liking.
 
 ** Theme
 *** Change the Mode Line
+:PROPERTIES:
+:ID:       9146260D-B31A-41E0-9DD2-50CE614E3AAA
+:END:
 
 This mode line is pretty.
 
@@ -212,6 +248,9 @@ This mode line is pretty.
 : t
 
 *** Per-buffer themes
+:PROPERTIES:
+:ID:       5363117C-0849-4C10-81F2-2F61E3EC24C9
+:END:
 
 I'd like to use a light theme for email and org mode.
 
@@ -237,6 +276,9 @@ It's commented out right now because it looks terrible.
 #+RESULTS:
 
 ** Symlinks
+:PROPERTIES:
+:ID:       DD565DE5-BAEA-41AB-8847-C4AA6B8C9107
+:END:
 
 Follow symlinks without prompting me.
 
@@ -247,6 +289,9 @@ Follow symlinks without prompting me.
 #+END_SRC
 
 ** Ignore files
+:PROPERTIES:
+:ID:       E411EE93-3B39-40BE-9072-6BEDB16CDC6F
+:END:
 
 Life's too short to see this many files in dired / projectile / etc.
 
@@ -263,6 +308,9 @@ Life's too short to see this many files in dired / projectile / etc.
 : t
 
 ** Change "yes or no" to "y or n"
+:PROPERTIES:
+:ID:       6C7AE19E-2BE7-4D21-83F3-39DA68D44ED6
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -271,6 +319,9 @@ Life's too short to see this many files in dired / projectile / etc.
 #+END_SRC
 
 ** Enable flycheck
+:PROPERTIES:
+:ID:       69A4BB21-C56A-4D69-A0FF-981F97CA5044
+:END:
 
 Flycheck is an on-the-fly syntax checker.
 
@@ -303,6 +354,9 @@ Flycheck is an on-the-fly syntax checker.
 : t
 
 ** Disable bell ring
+:PROPERTIES:
+:ID:       C9FE1798-AC71-4A60-B2B1-D2B3ADD0863A
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -311,6 +365,9 @@ Flycheck is an on-the-fly syntax checker.
 #+END_SRC
 
 ** Better defaults
+:PROPERTIES:
+:ID:       DAB1944E-F18E-42DA-AD73-D323E75EB94F
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -323,6 +380,9 @@ Flycheck is an on-the-fly syntax checker.
 |   |
 
 ** Better search
+:PROPERTIES:
+:ID:       51FB1557-E0E3-47BD-942C-7E1FC67A1F03
+:END:
 
 I use ~ag~ religiously on the command line. Let's use it in emacs too.
 
@@ -335,6 +395,9 @@ I use ~ag~ religiously on the command line. Let's use it in emacs too.
 #+END_SRC
 
 ** Visual fill column
+:PROPERTIES:
+:ID:       F3525474-AFE0-481F-82C3-A4EF3B371480
+:END:
 
 Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-column~, ~visual-fill-column~ does not *actually* wrap text in the file. It just displays it as wrapped.
 
@@ -352,6 +415,9 @@ Visually wraps lines according to the value of ~fill-column~. Unlike ~fill-colum
 #+RESULTS:
 : t
 ** which-key
+:PROPERTIES:
+:ID:       5395D768-6563-4C69-81AE-F5457687E281
+:END:
 
 Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me of shortcuts when I start typing them.
 
@@ -361,7 +427,7 @@ Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me 
     :diminish which-key-mode
     :config
     (which-key-mode)
-    (setq which-key-idle-delay 0.5))
+    (setq which-key-idle-delay 0.3))
 
 #+END_SRC
 
@@ -369,6 +435,9 @@ Remembering keyboard shortcuts is hard. which-key pops up a buffer reminding me 
 : t
 
 ** Disable file locking
+:PROPERTIES:
+:ID:       3574BB44-7D32-467B-80AD-0389D0B2EF41
+:END:
 
 The bizarre symlink-based file locking isn't really necessary for me since I never have more than one instance of emacs open. It causes problems with tools that watch directories for files, so let's disable it.
 
@@ -377,6 +446,9 @@ The bizarre symlink-based file locking isn't really necessary for me since I nev
 #+END_SRC
 
 ** Fix the PATH variable
+:PROPERTIES:
+:ID:       54A7DCD8-7433-4699-B73E-9E64D8695529
+:END:
 
 This sets up emacs to inherit commands from ~$PATH~. Without it, some commands that are available in the shell would not be available in emacs.
 
@@ -397,6 +469,9 @@ This sets up emacs to inherit commands from ~$PATH~. Without it, some commands t
 : t
 
 ** Make gpg-agent work
+:PROPERTIES:
+:ID:       A0633618-F6A0-48E6-85B5-8AE3897DA961
+:END:
 
 This function will load ~/.gpg-agent-info and source its contents into ~GPG_AGENT_INFO~.
 
@@ -425,6 +500,9 @@ I need this to pull mail for m4ue.
 #+RESULTS:
 : /tmp/gpg-slIax0/S.gpg-agent:787:1
 ** ~delete-this-file~
+:PROPERTIES:
+:ID:       CA9C41F5-EE0D-41B5-A043-A46B4CDF30CC
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (defun delete-this-file ()
@@ -445,6 +523,9 @@ I need this to pull mail for m4ue.
 : delete-this-file
 
 ** Load host specific configuration
+:PROPERTIES:
+:ID:       5F712AF1-6399-4DA9-8845-F8D6419E1F6D
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (let ((host-specific-config (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el")))) 
@@ -452,6 +533,9 @@ I need this to pull mail for m4ue.
       (load-file host-specific-config)))
 #+END_SRC
 ** Save session variables
+:PROPERTIES:
+:ID:       7BC58BA1-D455-4AAE-BBC9-AD52DC97B9CA
+:END:
 Save some variables between sessions.
 #+begin_src emacs-lisp
   (use-package session
@@ -462,6 +546,9 @@ Save some variables between sessions.
 #+RESULTS:
 : t
 ** Disable ido-mode
+:PROPERTIES:
+:ID:       C5BD1D6A-2108-418D-B4E5-F69B364272F1
+:END:
 better-defaults enables ido-mode, but we're using selectrum.
 #+begin_src emacs-lisp
   (ido-mode -1)
@@ -469,6 +556,9 @@ better-defaults enables ido-mode, but we're using selectrum.
 * Keybindings
 ** General keybindings
 *** Increase and decrease text size
+:PROPERTIES:
+:ID:       F52E0A6A-E615-4D9A-91C1-F5F3FA989F29
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 (define-key global-map (kbd "C-+") 'text-scale-increase)
@@ -476,6 +566,9 @@ better-defaults enables ido-mode, but we're using selectrum.
 #+END_SRC
 
 ** Evil Mode
+:PROPERTIES:
+:ID:       340D6E26-10E8-4456-8F96-84AF2E20D075
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -550,6 +643,9 @@ better-defaults enables ido-mode, but we're using selectrum.
 : t
 
 ** General.el
+:PROPERTIES:
+:ID:       C3650B38-3717-4546-8831-F161203D2550
+:END:
 
 General.el is like evil-leader, but lets you define multiple leader keys / prefixes.
 
@@ -708,6 +804,9 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
 * Navigating
 ** Projectile
+:PROPERTIES:
+:ID:       BF2334AB-6DF8-4E15-8042-E82171E8E1AF
+:END:
 Projectile lets me switch between projects really easily. I set it up to default to ~projectile-commander~, which gives me options to choose what I want to do with a project once I open it.
 
 #+BEGIN_SRC emacs-lisp 
@@ -763,6 +862,9 @@ Projectile lets me switch between projects really easily. I set it up to default
 
 
 ** Avy
+:PROPERTIES:
+:ID:       244C8DC3-D1B4-4ECA-BBB4-5F8B2C8FBB1C
+:END:
 Avy lets me jump around buffers and windows with hints.
 
 #+BEGIN_SRC emacs-lisp
@@ -777,6 +879,9 @@ Avy lets me jump around buffers and windows with hints.
 #+RESULTS:
 : t
 ** Ace-Window
+:PROPERTIES:
+:ID:       6F181FA4-52E3-44EB-A11D-1772CD6B9BB2
+:END:
 Ace window is like avy but for windows.
 
 #+BEGIN_SRC emacs-lisp
@@ -802,12 +907,18 @@ ace-link is like ace-window but for links.
 : t
 
 ** Winner mode
+:PROPERTIES:
+:ID:       289DCD3F-0814-40E7-AC50-AB2B8CB4A227
+:END:
 It records window configuration and lets you undo: 
 
 #+BEGIN_SRC emacs-lisp
 (winner-mode 1)
 #+END_SRC
 ** Expand-region
+:PROPERTIES:
+:ID:       CDF6A76D-1BE3-47E5-AC13-F4C598FC619D
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package expand-region
@@ -819,6 +930,9 @@ It records window configuration and lets you undo:
 #+RESULTS:
 : t
 ** Mouse scrolling
+:PROPERTIES:
+:ID:       CDF5ADD8-90DA-4345-B8CB-44276917FBA1
+:END:
 
 Reduce the amount that the mouse scrolls.
 
@@ -829,6 +943,9 @@ Reduce the amount that the mouse scrolls.
 
 #+RESULTS:
 ** Tags / dumb-jump
+:PROPERTIES:
+:ID:       F9E2141B-89A6-4324-B0AE-677E320B5EDE
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package dumb-jump
@@ -839,6 +956,9 @@ Reduce the amount that the mouse scrolls.
     (setq dumb-jump-force-searcher 'rg))
 #+END_SRC
 ** Tramp
+:PROPERTIES:
+:ID:       E5110BD4-6E30-4484-B6B1-91C2B416C805
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (setq tramp-verbose 6)
@@ -856,11 +976,17 @@ Reduce the amount that the mouse scrolls.
     (dired-do-shell-command "tail -f * &" nil (dired-get-marked-files)))
 #+END_SRC
 *** Disable projectile for remote files
+:PROPERTIES:
+:ID:       2B4673D5-DF39-4494-8EEC-9204B509D969
+:END:
 #+BEGIN_SRC emacs-lisp
 (defadvice projectile-project-root (around ignore-remote first activate)
     (unless (file-remote-p default-directory) ad-do-it))
 #+END_SRC
 *** Use bash for remote shell commands
+:PROPERTIES:
+:ID:       9C9CCB4A-7245-49EF-ADEC-83DC83C31EA6
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (defun my/shell-set-hook ()
@@ -879,6 +1005,9 @@ Reduce the amount that the mouse scrolls.
 : my/shell-set-hook
 
 ** Outline mode
+:PROPERTIES:
+:ID:       1FF9B196-F342-4B23-BE1C-8D23AF50CFA3
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (defvar outline-minor-mode-prefix "\M-#")
@@ -900,6 +1029,9 @@ Reduce the amount that the mouse scrolls.
 : t
 
 ** Copy file link
+:PROPERTIES:
+:ID:       45346A4E-9A4F-48D1-B763-65240A8A083B
+:END:
 
 #+BEGIN_SRC emacs-lisp
 (defun xah-copy-file-path (&optional *dir-path-only-p)
@@ -928,6 +1060,9 @@ Version 2017-01-27"
 #+RESULTS:
 : xah-copy-file-path
 ** PDF tools
+:PROPERTIES:
+:ID:       A0204B00-48E4-4D60-9EE3-5FF28ED6AD5B
+:END:
 
 #+begin_src emacs-lisp
   (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
@@ -979,14 +1114,97 @@ Version 2017-01-27"
 : t
 
 ** direnv
+:PROPERTIES:
+:ID:       44464C04-19FC-42EB-B528-95949E112FCE
+:END:
 #+begin_src emacs-lisp
   (use-package direnv
     :ensure t
     :config
     (direnv-mode))
 #+end_src
+** dired
+:PROPERTIES:
+:ID:       7EFB2948-5886-4C26-BD9A-46BB72651BAB
+:END:
+
+#+begin_src emacs-lisp
+  (use-package dired
+    :general
+    ("C-x j" 'dired-jump)
+    (leader-def
+      "d" 'dired-jump)
+    (:keymaps
+     'dired-mode-map
+     "h" 'dired-up-directory
+     "l" 'dired-find-file)
+    :config
+    (setq dired-listing-switches "-alh")
+    )
+
+  (use-package diredfl
+    :straight t
+    :config
+    (diredfl-global-mode)
+
+    (set-face-attribute 'diredfl-dir-priv nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0D)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-read-priv nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0B)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-write-priv nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0A)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-exec-priv nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base08)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-no-priv nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base03)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-dir-name nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0C)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-symlink nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base05)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-dir-heading nil
+                        :weight 'bold
+                        :foreground (plist-get base16-tomorrow-night-colors :base0B)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-file-name nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base05)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-file-suffix nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0B)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-number nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0A)
+                        :background (plist-get base16-tomorrow-night-colors :base00))
+
+    (set-face-attribute 'diredfl-date-time nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0D)
+                        :background (plist-get base16-tomorrow-night-colors :base00)))
+#+end_src
+
+#+RESULTS:
+: t
+
 * UI
 ** Dark title bar
+:PROPERTIES:
+:ID:       A4F9B025-8D9A-4244-930E-D77E20B10EEE
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
@@ -994,6 +1212,9 @@ Version 2017-01-27"
 #+END_SRC
 
 ** Window / popup management
+:PROPERTIES:
+:ID:       26FA602F-89D6-41D3-B94D-F9C466AE774C
+:END:
 
 Always focus the curor in help windows.
 
@@ -1004,6 +1225,9 @@ Always focus the curor in help windows.
 #+RESULTS:
 : t
 ** Scrolling
+:PROPERTIES:
+:ID:       3B9B25D7-3B43-4FD0-A03B-98A60E62BBAD
+:END:
 
 Make scrolling behavior more like vim:
 
@@ -1019,6 +1243,9 @@ Make scrolling behavior more like vim:
 : t
 
 ** Helm
+:PROPERTIES:
+:ID:       1ECD317A-3886-4E9D-BCF3-E1EA2BFB8542
+:END:
 Helm is out again for now. ~helm-M-x~ was getting unbearably slow. After switching to [[id:0D765ADF-6C61-4F8F-9885-4AE57A7526BD][Selectrum]], everything is super smooth.
 #+BEGIN_SRC emacs-lisp
   ;; (use-package helm
@@ -1146,7 +1373,7 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
       "b" 'consult-buffer)
 
     (general-define-key :states '(normal)
-                        "F" 'consult-outline)
+                        "F" 'consult-imenu)
 
     (leader-def :infix "p"
       "a" 'consult-ripgrep)
@@ -1183,7 +1410,32 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
           ("C-j" . embark-act))
 
     :config
-    (setq embark-prompter 'embark-completing-read-prompter))
+    (defun current-candidate+category ()
+      (when selectrum-active-p
+        (cons (selectrum--get-meta 'category)
+              (selectrum-get-current-candidate))))
+
+    (add-hook 'embark-target-finders #'current-candidate+category)
+
+    (defun current-candidates+category ()
+      (when selectrum-active-p
+        (cons (selectrum--get-meta 'category)
+              (selectrum-get-current-candidates
+               ;; Pass relative file names for dired.
+               minibuffer-completing-file-name))))
+
+    (add-hook 'embark-candidate-collectors #'current-candidates+category)
+
+    ;; No unnecessary computation delay after injection.
+    (add-hook 'embark-setup-hook 'selectrum-set-selected-candidate)
+
+    ;; Pop up which-key when running embark-act
+    (setq embark-action-indicator
+          (lambda (map)
+            (which-key--show-keymap "Embark" map nil nil 'no-paging)
+            #'which-key--hide-popup-ignore-command)
+          embark-become-indicator embark-action-indicator)
+    (setq embark-prompter 'embark-keymap-prompter))
 
   (use-package marginalia
     :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
@@ -1200,6 +1452,21 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
 
 #+RESULTS:
 : marginalia-cycle
+
+** Tweaks
+:PROPERTIES:
+:ID:       9A1C9A6B-F1DA-4F28-90D4-C0FFE235674E
+:END:
+Enable column numbers in the modeline:
+
+#+BEGIN_SRC emacs-lisp
+
+  (column-number-mode)
+
+#+END_SRC
+
+#+RESULTS:
+: t
 
 * Writing
 ** Perfect Margin
@@ -1249,6 +1516,9 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
 
 * Coding
 ** Testing
+:PROPERTIES:
+:ID:       283EAF79-A1DC-4EFF-B6CD-AE91C3C5AC5D
+:END:
 
 Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buffer is saved.
 
@@ -1259,6 +1529,9 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 
 #+RESULTS:
 ** Indentation
+:PROPERTIES:
+:ID:       BD5E4B63-D866-479E-A0E4-FFC89E2B6AA0
+:END:
 Autodetect indentation: 
 
 #+BEGIN_SRC emacs-lisp
@@ -1272,6 +1545,9 @@ Autodetect indentation:
 : t
 
 ** Autocomplete
+:PROPERTIES:
+:ID:       4CB28859-7E45-47B7-A0A5-9B2E7A7D1B6F
+:END:
 
 #+BEGIN_SRC emacs-lisp 
   (use-package company
@@ -1280,6 +1556,7 @@ Autodetect indentation:
     :config
     (setq company-idle-delay 0) 
     (setq company-minimum-prefix-length 1)
+    (setq company-global-modes '(not org-mode eshell-mode))
     (global-company-mode)
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
@@ -1305,6 +1582,9 @@ Autodetect indentation:
 
 ** Git
 *** Magit
+:PROPERTIES:
+:ID:       5A7C93D2-2F53-47EA-BAE1-7F373979B30A
+:END:
 #+BEGIN_SRC emacs-lisp 
   (use-package magit
     :ensure t
@@ -1319,6 +1599,9 @@ Autodetect indentation:
 #+RESULTS:
 : t
 *** Open GitHub from file
+:PROPERTIES:
+:ID:       0D190EFD-ED2F-4219-B777-18AEF8DD3245
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (defun parse-host-path-syntax (host-path-string)
@@ -1415,6 +1698,9 @@ Autodetect indentation:
 : org-store-github-link
 
 ** Snippets
+:PROPERTIES:
+:ID:       ABBBC315-7938-42E6-BFAA-956938DF49C1
+:END:
 
 #+BEGIN_SRC emacs-lisp 
   (use-package yasnippet
@@ -1437,6 +1723,9 @@ Autodetect indentation:
 #+END_SRC
 
 ** Lisp
+:PROPERTIES:
+:ID:       0E3D533F-D253-4E9C-A721-CCE2BBC97A4A
+:END:
 
 #+BEGIN_SRC emacs-lisp 
   (defvar my/lisp-mode-hooks
@@ -1498,6 +1787,9 @@ Autodetect indentation:
 #+RESULTS:
 
 *** Chicken Scheme
+:PROPERTIES:
+:ID:       8FB8A7ED-1BC1-4E35-A3FE-74B806D978B1
+:END:
 
 #+BEGIN_SRC emacs-lisp
   ;; Indenting module body code at column 0
@@ -1517,6 +1809,9 @@ Autodetect indentation:
 
 ** Python
 *** Virtualenv
+:PROPERTIES:
+:ID:       DD126725-5346-49C2-B480-49A306D3BEBB
+:END:
 
 pyvenv is nice because it lets me choose between virtualenvs made through mkvirtualenvwrapper and virtulenvs that are in other places on the filesystem.
 
@@ -1539,6 +1834,9 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+RESULTS:
 : t
 *** Refactoring
+:PROPERTIES:
+:ID:       4BC8C17C-C6B0-4BBF-AFA4-994B0236F2EE
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package elpy
@@ -1555,6 +1853,9 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+RESULTS:
 : t
 *** Formatting
+:PROPERTIES:
+:ID:       1B99C5E6-293A-422F-81C3-8251F7F4B3AD
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package py-yapf
@@ -1567,12 +1868,18 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 : t
 
 ** JSON
+:PROPERTIES:
+:ID:       350A7222-2A8F-4037-8BD1-347CD0C90BAD
+:END:
 #+BEGIN_SRC emacs-lisp 
   (use-package json-mode
     :ensure t
     :mode ("\\.json\\'" . json-mode))
 #+END_SRC
 ** Markdown
+:PROPERTIES:
+:ID:       30E9F641-ACD0-4398-A3BB-9716A426ECC9
+:END:
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :mode (("\\.md\\'" . markdown-mode)
@@ -1581,6 +1888,9 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+END_SRC
 
 ** Swift
+:PROPERTIES:
+:ID:       EADEFE22-46E5-4861-A15A-CC42BCA05237
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (use-package swift-mode
@@ -1589,6 +1899,9 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 
 #+END_SRC
 ** CoffeeScript
+:PROPERTIES:
+:ID:       212AD2FD-FB6C-4A4C-B09A-D064AF0AE7DA
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (use-package coffee-mode
@@ -1598,6 +1911,9 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+END_SRC
 ** JavaScript
 *** REPL
+:PROPERTIES:
+:ID:       72787F88-9631-4EAD-9616-F4C3B7AB39A2
+:END:
 js-comint lets me run a repl inside emacs where I can evaluate JavaScript.
 
 #+BEGIN_SRC emacs-lisp 
@@ -1608,6 +1924,9 @@ js-comint lets me run a repl inside emacs where I can evaluate JavaScript.
 
 #+END_SRC
 *** Indentation
+:PROPERTIES:
+:ID:       C233C8A6-8164-444A-A086-122954AA02EC
+:END:
 
 I typically use 2 spaces to indent.
 
@@ -1615,6 +1934,9 @@ I typically use 2 spaces to indent.
   (setq js-indent-level 2)
 #+END_SRC
 *** Typescript
+:PROPERTIES:
+:ID:       72DBDD29-1F36-4267-B3FC-FB84130EE7D8
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package typescript-mode
@@ -1625,6 +1947,9 @@ I typically use 2 spaces to indent.
 #+RESULTS:
 
 ** Haskell
+:PROPERTIES:
+:ID:       4811EAA8-E6B9-49B1-BCFB-089D434DDCDF
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (use-package haskell-mode
@@ -1653,7 +1978,7 @@ I typically use 2 spaces to indent.
 :PROPERTIES:
 :ID:       9C1FAC61-D34D-4F8C-9A58-C277E8CCDFBF
 :END:
-#+BEGIN_SRC emacs-lisp :tangle yes
+#+BEGIN_SRC emacs-lisp
 
   (use-package dockerfile-mode
     :ensure t)
@@ -1662,6 +1987,9 @@ I typically use 2 spaces to indent.
 
 #+RESULTS:
 *** Docker mode
+:PROPERTIES:
+:ID:       36FBFB0B-4E31-4558-ADB4-FAA6E5D96093
+:END:
 [[https://github.com/Silex/docker.el][Docker mode]] lets me run various docker commands.
 
 #+BEGIN_SRC emacs-lisp 
@@ -1677,6 +2005,9 @@ I typically use 2 spaces to indent.
 : t
 
 *** Environment variables
+:PROPERTIES:
+:ID:       7EE17567-AA99-4CE8-A79E-3520770E8BF9
+:END:
 ~docker-machine env default~ produces these environment variables, which must be set to use Docker.
 
 #+BEGIN_SRC emacs-lisp
@@ -1689,24 +2020,51 @@ I typically use 2 spaces to indent.
 #+RESULTS:
 : default
 ** Shell
-Fish is my default shell in the terminal, but it doesn't work well in emacs, since many emacs integrations assume a sh-like shell. Let's use zsh instead.
-
+*** eshell
+:PROPERTIES:
+:ID:       A2574E62-8ACC-4781-99F3-568B12C53737
+:END:
 #+BEGIN_SRC emacs-lisp
-  (setq shell-file-name "/bin/zsh")
+  (use-package eshell
+    :config
+    (setq eshell-prompt-function
+          (lambda ()
+            (set-face-attribute 'eshell-prompt
+                                nil
+                                :foreground (plist-get base16-tomorrow-night-colors :base0D)
+                                :background (plist-get base16-tomorrow-night-colors :base00))
+
+            (set-face-attribute 'eshell-ls-directory
+                                nil
+                                :foreground (plist-get base16-tomorrow-night-colors :base0C)
+                                :background (plist-get base16-tomorrow-night-colors :base00))
+
+            (concat (abbreviate-file-name (eshell/pwd))
+                    (if (= (user-uid) 0) " # " " $ ")))))
 #+END_SRC
+
 ** YAML
+:PROPERTIES:
+:ID:       85004FDB-D2C8-4D10-8FF4-059F162C3B97
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
     :ensure t)
 #+END_SRC
 ** Lua
+:PROPERTIES:
+:ID:       B9FDDCAF-2B95-40C2-9F1B-0F0D3C380EA0
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package lua-mode
     :ensure t)
 #+END_SRC
 ** HTML
+:PROPERTIES:
+:ID:       04225799-D506-4181-A501-077BCF27C5E1
+:END:
 
 Let's use web-mode, which supports font locking for templating.
 
@@ -1726,6 +2084,9 @@ Let's use web-mode, which supports font locking for templating.
 
 #+RESULTS:
 ** PHP
+:PROPERTIES:
+:ID:       57DD3C16-3880-4B6A-A116-B34509666648
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package php-mode
@@ -1744,6 +2105,9 @@ Let's use web-mode, which supports font locking for templating.
   ;;      "C-t" 'phpunit-current-test))
 #+END_SRC
 ** LaTeX
+:PROPERTIES:
+:ID:       BE8826FB-91A0-41E9-B4EE-B6230F333817
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package auctex
@@ -1754,6 +2118,9 @@ Let's use web-mode, which supports font locking for templating.
 
 #+RESULTS:
 ** API exploration
+:PROPERTIES:
+:ID:       6AF8C327-1DF8-4F41-86DC-0DC0B40F5F47
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package restclient
@@ -1761,6 +2128,9 @@ Let's use web-mode, which supports font locking for templating.
     :ensure t)
 #+END_SRC
 ** Go
+:PROPERTIES:
+:ID:       902F963C-3D6A-4A23-A383-847EC6971E31
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package go-mode
@@ -1778,6 +2148,9 @@ Let's use web-mode, which supports font locking for templating.
 #+RESULTS:
 
 ** Ruby
+:PROPERTIES:
+:ID:       B5DE9017-8256-4B7E-9157-BE42487EC143
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package inf-ruby
@@ -1803,16 +2176,18 @@ Let's use web-mode, which supports font locking for templating.
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package rbenv
-    :ensure t
-    :init
-    (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.2/")
-    (defun my/ruby-init ()
-      (rbenv-use-corresponding))
-    (add-hook 'ruby-mode-hook 'my/ruby-init)
-    :config
-    (global-rbenv-mode)
-    (rbenv-use-global))
+    (use-package rbenv
+      :ensure t
+      :init
+      (setq-default rbenv-installation-dir "/usr/local/Cellar/rbenv/1.1.2/")
+      (defun my/ruby-init ()
+        (rbenv-use-corresponding))
+      (add-hook 'ruby-mode-hook 'my/ruby-init)
+      :config
+      (setq rbenv-show-active-ruby-in-modeline nil)
+      (global-rbenv-mode)
+      (rbenv-use-global)
+  )
 #+END_SRC
 
 #+RESULTS:
@@ -1832,6 +2207,9 @@ Let's use web-mode, which supports font locking for templating.
 #+RESULTS:
 : t
 ** Common Lisp
+:PROPERTIES:
+:ID:       7F5509D9-9207-4999-9800-7E1D315501CD
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package slime
@@ -1854,11 +2232,17 @@ Let's use web-mode, which supports font locking for templating.
 #+RESULTS:
 
 *** Sorbet
+:PROPERTIES:
+:ID:       8688A8E7-694F-4C95-9A44-3C26CD0DB018
+:END:
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
 #+END_SRC
 
 ** LSP
+:PROPERTIES:
+:ID:       C0674ED2-A9C5-41FB-9D18-2B8BF72D5E80
+:END:
 #+begin_src emacs-lisp
   (use-package lsp-mode
     :ensure t
@@ -1903,6 +2287,9 @@ Let's use web-mode, which supports font locking for templating.
 : t
 
 ** Rust
+:PROPERTIES:
+:ID:       623A55CD-8210-4860-9772-8BAEB90B37EB
+:END:
 
 #+begin_src emacs-lisp
   (use-package rust-mode
@@ -1920,6 +2307,9 @@ Let's use web-mode, which supports font locking for templating.
 #+RESULTS:
 : t
 ** Vim
+:PROPERTIES:
+:ID:       A3CE1618-A7F9-4E4E-AC71-AB3AD9CD5781
+:END:
 
 *gasp*
 
@@ -1954,6 +2344,9 @@ Let's use web-mode, which supports font locking for templating.
 : t
 
 ** Solidity
+:PROPERTIES:
+:ID:       0104B1F8-934D-4830-8927-735D24900774
+:END:
 
 #+begin_src emacs-lisp
   (use-package solidity-mode
@@ -1988,6 +2381,9 @@ Let's use web-mode, which supports font locking for templating.
 I use Org Mode to take notes for work and personal.
 
 ** My files
+:PROPERTIES:
+:ID:       B6E231A4-E1E0-4B31-A94A-B77556EA9A4F
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (defun my/configure-org-directories ()
@@ -2005,6 +2401,9 @@ I use Org Mode to take notes for work and personal.
 
 ** General configuration
 *** Open links in new frames
+:PROPERTIES:
+:ID:       E66AA57E-B87B-4061-A759-5DA057FD43F7
+:END:
 
 Here's a function that lets me open org links in a new frame. The default behavior is opening a link in a new buffer in the same frame, which doesn't always fit with my workflow -- sometimes I have org open in a separate frame, with the main editing frame on a different monitor.
 
@@ -2021,6 +2420,9 @@ Here's a function that lets me open org links in a new frame. The default behavi
 #+RESULTS:
 : org-open-other-frame
 *** Log drawer
+:PROPERTIES:
+:ID:       CAB168D1-1C3A-40B8-9E1A-423C6E299E35
+:END:
 I can type timestamped notes for a given tree with ~C-c C-z~. By default, they are appending to the top of the note. Let's stash then in the ~LOGBOOK~ drawer instead.
 
 #+BEGIN_SRC emacs-lisp
@@ -2033,6 +2435,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 : t
 
 *** Variable pitch mode
+:PROPERTIES:
+:ID:       00F44005-6DE0-4E49-B050-C50F541A6564
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -2050,6 +2455,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 : my/org-variable-pitch
 
 *** Org babel languages and configuration
+:PROPERTIES:
+:ID:       7D5EE46F-E0A4-41BA-8065-0F59CDFE6996
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (defun my/org-babel-config () 
@@ -2065,6 +2473,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 : my/org-babel-config
 
 *** Putting it together
+:PROPERTIES:
+:ID:       BF11708D-FD2F-4DD6-9FBF-6A3324D8A402
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (defun my/configure-org ()
@@ -2115,25 +2526,21 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
   (setq-default fill-column 85)
 
   (use-package org-z
-    :defer t
-    :straight (org-z :type git :host github :repo "landakram/org-z"))
-
-  (use-package org-z-selectrum
-    :general
-    ("C-c C-." 'org-z-insert-link)
     :straight (org-z :type git :host github :repo "landakram/org-z")
     :config
-    (setq org-z-knowledge-dirs (-concat org-z-directories
-                                        '("/Users/mark/Dropbox (Personal)/Apps/KiwiApp/wiki/")))
-
-    (setq org-z-refile-missing-heading nil)
     (org-z-mode 1))
+
+  (use-package org-z-selectrum
+    :straight (org-z-selectrum :type git :host github :repo "landakram/org-z"))
 #+END_SRC
 
 #+RESULTS:
 
 ** Keyboard shortcuts
 *** Agenda
+:PROPERTIES:
+:ID:       D91B4095-128B-4BA7-99B3-BABAFAA4FDFD
+:END:
 
 #+BEGIN_SRC emacs-lisp 
   (general-define-key
@@ -2147,6 +2554,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
 ** Editing
 *** Useful functions
+:PROPERTIES:
+:ID:       7BF50ED6-95B7-4801-8F0E-910BF84B0AFB
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -2186,6 +2596,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 : org-insert-todo-after-current-and-enter-insert
 
 ** Tasks
+:PROPERTIES:
+:ID:       33F2269C-EEE6-4108-A6C8-3A0BE48EEECC
+:END:
 
 #+BEGIN_SRC emacs-lisp 
 
@@ -2220,6 +2633,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 (setq org-agenda-span 2)
 #+END_SRC
 ** Exporters
+:PROPERTIES:
+:ID:       4597FA54-FEFF-43A7-8372-E471711AE93C
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (defun my/configure-org-exporters ()
@@ -2243,6 +2659,9 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 : my/configure-org-exporters
 
 ** JIRA
+:PROPERTIES:
+:ID:       032A22E0-8CFD-46C2-8FE7-20E27318BCA5
+:END:
 I often link to JIRA issues in my tasks. This function lets me add link JIRA issues by issue title rather than needing to paste in the full link.
 
 #+BEGIN_SRC emacs-lisp
@@ -2298,6 +2717,9 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 | n | Note | entry | (file+headline ~/org/inbox.org Notes) | * %? |
 
 ** Org protocol
+:PROPERTIES:
+:ID:       66322C9C-82D7-4782-A7FD-1BE5F40F5762
+:END:
 #+BEGIN_SRC emacs-lisp
   (defun my/configure-org-protocol ()
     (use-package org-protocol)
@@ -2307,6 +2729,9 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 #+RESULTS:
 : my/configure-org-protocol
 ** Installation
+:PROPERTIES:
+:ID:       1E1326EE-5754-4744-B210-DE8503D8EF7F
+:END:
 #+BEGIN_SRC emacs-lisp 
 
   (use-package org
@@ -2354,6 +2779,9 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
 : t
 
 ** Archive using same hierarchy
+:PROPERTIES:
+:ID:       772343C0-97D9-4F35-9981-D281B7936B5D
+:END:
 
 Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 
@@ -2463,6 +2891,9 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 : org-archive-subtree
 
 ** PlantUML
+:PROPERTIES:
+:ID:       3D647185-4AB2-407D-8E12-7BDD86A55D19
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package plantuml-mode
@@ -2484,15 +2915,14 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
 #+RESULTS:
 : t
-** org-sidebar and org-ql
+** org-sidebar
+:PROPERTIES:
+:ID:       A2ED60B7-649C-4E8E-97E1-3290F85C6D21
+:END:
 
 #+begin_src emacs-lisp
-  (use-package org-ql
-    :ensure t
-    :defer t)
-
   (use-package org-sidebar
-    :ensure t
+    :straight t
     :general
     (leader-def :infix "o"
       "b" 'org-sidebar-backlinks)
@@ -2503,9 +2933,11 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 #+end_src
 
 #+RESULTS:
-: t
 
 ** Encryption
+:PROPERTIES:
+:ID:       ABCC7698-8EC7-4C93-B3A3-09E8137B9C74
+:END:
 
 #+begin_src emacs-lisp
   (require 'org-crypt)
@@ -2520,6 +2952,9 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 
 * IRC
 ** Circe
+:PROPERTIES:
+:ID:       458A884E-E64A-43B9-B9F6-2FE2C0F1A577
+:END:
 #+BEGIN_SRC emacs-lisp 
   (setq my-credentials-file "~/.private.el")
 
@@ -2596,6 +3031,9 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 : t
 
 ** URL queue timeout
+:PROPERTIES:
+:ID:       AFFB4433-8921-49DE-9077-D3410216E969
+:END:
 This is long so that fetching feeds does not timeout.
 
 #+BEGIN_SRC emacs-lisp 
@@ -2760,6 +3198,9 @@ This is long so that fetching feeds does not timeout.
 : t
 
 * Budgeting
+:PROPERTIES:
+:ID:       6C7B48B1-04BA-418F-B500-B187F1DB18C4
+:END:
 
 Not actively using this right now.
 
@@ -2771,6 +3212,9 @@ Not actively using this right now.
 
 #+RESULTS:
 * External services (Prodigy)
+:PROPERTIES:
+:ID:       F950CDDF-C861-40BA-92E0-83071C5F7FCA
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package prodigy
@@ -2780,6 +3224,9 @@ Not actively using this right now.
 Services are defined in [[*Load host specific configuration][host specific configuration files]].
 * Emacs lisp utility functions and libraries
 ** shell-command-ignore-stderr
+:PROPERTIES:
+:ID:       D36DA267-51F4-45EF-984D-39002C2A70D9
+:END:
 
 Like shell-command, but only returns stdout.
 
@@ -2791,6 +3238,9 @@ Like shell-command, but only returns stdout.
 #+END_SRC
 
 ** request.el
+:PROPERTIES:
+:ID:       3178D4D4-B836-4DB7-A08A-89084EF81738
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package request
@@ -2803,6 +3253,9 @@ Like shell-command, but only returns stdout.
 #+RESULTS:
 ** Concurrency
 *** deferred.el
+:PROPERTIES:
+:ID:       445E213C-56D4-44C6-8AC9-8B9BF3C5DBDA
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package deferred
@@ -2812,6 +3265,9 @@ Like shell-command, but only returns stdout.
 #+RESULTS:
 
 *** concurrent.el
+:PROPERTIES:
+:ID:       6951C8B5-10CA-4909-97A3-78BC90C04BB9
+:END:
 
 Higher level wrapper on-top of deferred.el. Interesting to play around with.
 
@@ -2858,6 +3314,9 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 #+RESULTS:
 : camel-case-thing-at-point
 ** List manipulation (dash.el)
+:PROPERTIES:
+:ID:       7A38C2A2-EFD7-4581-9365-6E69BA462870
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package dash
@@ -2867,6 +3326,9 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 #+RESULTS:
 
 ** Hash table manipulation (ht.el)
+:PROPERTIES:
+:ID:       D9F27FDF-D469-47ED-836F-D531585B1A78
+:END:
 
 #+BEGIN_SRC emacs-lisp
   (use-package ht
@@ -2876,6 +3338,9 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 #+RESULTS:
 * Profiling emacs
 ** Start-up time
+:PROPERTIES:
+:ID:       7D01476F-458B-4DA9-A5A5-FF22B1F4DE33
+:END:
 #+begin_src emacs-lisp
     (use-package esup
       :straight t
