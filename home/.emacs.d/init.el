@@ -3,8 +3,9 @@
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
 
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-(setq frame-resize-pixelwise t)
+(when (string-equal system-type "darwin")
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (setq frame-resize-pixelwise t))
 
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message "# This buffer is for notes you don't want to save.")
@@ -670,7 +671,7 @@ Version 2017-01-27"
                       :background (plist-get base16-tomorrow-night-colors :base00)))
 
 (add-to-list 'default-frame-alist
-             '(font . "Fira Code Medium"))
+             '(font . "Fira Code Medium-11"))
 
 (use-package ligature
   :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
@@ -1170,14 +1171,29 @@ Version 2017-01-27"
 (use-package cider
   :ensure t
   :defer t
-  :config)
+  :config
+  (require 'general)
+
+  (defun cider-system-reset ()
+    "Call (user/reset)."
+    (interactive)
+    (save-excursion
+      (cider-switch-to-repl-buffer)
+      (goto-char cider-repl-input-start-mark)
+      (delete-region (point) (point-max))
+      (insert "(user/reset)")
+      (cider-repl--send-input t)))
+
+  (general-define-key
+   :keymaps 'cider-mode-map
+   "C-c r" 'cider-system-reset))
 
 (use-package cljsbuild-mode
   :ensure t)
 
 (use-package clojure-mode
   :mode (("\\.clj\\'" . clojure-mode)
-         ("\\.cljs\\'" . clojure-mode)
+         ("\\.cljs\\'" . clojurescript-mode)
          ("\\.edn\\'" . clojure-mode))
   :ensure t)
 
@@ -1456,7 +1472,7 @@ Version 2017-01-27"
   :ensure t
   :defer t
   :config
-  (setq inferior-lisp-program "/usr/local/bin/sbcl")
+  (setq inferior-lisp-program "sbcl")
   (setq slime-contribs '(slime-fancy)))
 
 (use-package bundler
@@ -1699,6 +1715,22 @@ Version 2017-01-27"
                 ("PHONE" :foreground "forest green" :weight bold))))
 
   (setq org-use-fast-todo-selection t))
+
+(defun org-todo-with-date (&optional arg)
+  (interactive "P")
+  (cl-letf* ((org-read-date-prefer-future nil)
+             (my-current-time (org-read-date t t nil "when:" nil nil nil))
+             ((symbol-function 'current-time)
+              #'(lambda () my-current-time))
+             ((symbol-function 'org-today)
+              #'(lambda () (time-to-days my-current-time)))
+             ((symbol-function 'org-current-effective-time)
+              #'(lambda () my-current-time))
+             (super (symbol-function 'format-time-string))
+             ((symbol-function 'format-time-string)
+              #'(lambda (fmt &optional time time-zone)
+                  (funcall super fmt my-current-time time-zone))))
+    (org-todo arg)))
 
 (setq org-agenda-span 2)
 
@@ -1968,6 +2000,9 @@ belongs as a list."
                       "#swift-lang"
                       "#racket"
                       "#chicken"
+                      "#lisp"
+                      "#stumpwm"
+                      "#archlinux"
                       "#ethereum"
                       "#ethereum-dev"
                       "#bitcoin"
@@ -2161,8 +2196,8 @@ belongs as a list."
   :mode ("\\.ledger\\'" . ledger-mode)
   :ensure t)
 
-(use-package prodigy
-  :ensure t)
+(use-package elpher
+  :straight t)
 
 (defun shell-command-ignore-stderr (some-command)
   (with-output-to-string

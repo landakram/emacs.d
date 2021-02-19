@@ -47,8 +47,9 @@ Let's set ~custom-file~, which emacs writes to automatically.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
-  (setq frame-resize-pixelwise t)
+  (when (string-equal system-type "darwin")
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
+    (setq frame-resize-pixelwise t))
 #+END_SRC
 
 #+RESULTS:
@@ -1193,7 +1194,7 @@ Version 2017-01-27"
 
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'default-frame-alist
-               '(font . "Fira Code Medium"))
+               '(font . "Fira Code Medium-11"))
 
   (use-package ligature
     :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
@@ -1886,14 +1887,29 @@ Autodetect indentation:
   (use-package cider
     :ensure t
     :defer t
-    :config)
+    :config
+    (require 'general)
+
+    (defun cider-system-reset ()
+      "Call (user/reset)."
+      (interactive)
+      (save-excursion
+        (cider-switch-to-repl-buffer)
+        (goto-char cider-repl-input-start-mark)
+        (delete-region (point) (point-max))
+        (insert "(user/reset)")
+        (cider-repl--send-input t)))
+
+    (general-define-key
+     :keymaps 'cider-mode-map
+     "C-c r" 'cider-system-reset))
 
   (use-package cljsbuild-mode
     :ensure t)
 
   (use-package clojure-mode
     :mode (("\\.clj\\'" . clojure-mode)
-           ("\\.cljs\\'" . clojure-mode)
+           ("\\.cljs\\'" . clojurescript-mode)
            ("\\.edn\\'" . clojure-mode))
     :ensure t)
 
@@ -2408,7 +2424,7 @@ Let's use web-mode, which supports font locking for templating.
     :ensure t
     :defer t
     :config
-    (setq inferior-lisp-program "/usr/local/bin/sbcl")
+    (setq inferior-lisp-program "sbcl")
     (setq slime-contribs '(slime-fancy)))
 #+END_SRC
 
@@ -2823,6 +2839,32 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 #+RESULTS:
 : my/configure-org-todos
 
+*** Retroactive TODO state
+:PROPERTIES:
+:ID:       afcb93e6-d4f1-4b07-a36e-b945607d1b06
+:END:
+
+#+begin_src emacs-lisp
+  (defun org-todo-with-date (&optional arg)
+    (interactive "P")
+    (cl-letf* ((org-read-date-prefer-future nil)
+               (my-current-time (org-read-date t t nil "when:" nil nil nil))
+               ((symbol-function 'current-time)
+                #'(lambda () my-current-time))
+               ((symbol-function 'org-today)
+                #'(lambda () (time-to-days my-current-time)))
+               ((symbol-function 'org-current-effective-time)
+                #'(lambda () my-current-time))
+               (super (symbol-function 'format-time-string))
+               ((symbol-function 'format-time-string)
+                #'(lambda (fmt &optional time time-zone)
+                    (funcall super fmt my-current-time time-zone))))
+      (org-todo arg)))
+#+end_src
+
+#+RESULTS:
+: org-todo-with-date
+
 ** Agenda
 :PROPERTIES:
 :ID:       F795FCB9-5F9F-459A-92A1-E46585933E9E
@@ -3202,6 +3244,9 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
                         "#swift-lang"
                         "#racket"
                         "#chicken"
+                        "#lisp"
+                        "#stumpwm"
+                        "#archlinux"
                         "#ethereum"
                         "#ethereum-dev"
                         "#bitcoin"
@@ -3442,17 +3487,14 @@ Not actively using this right now.
 #+END_SRC
 
 #+RESULTS:
-* External services (Prodigy)
+* Gopher / gemini
 :PROPERTIES:
-:ID:       F950CDDF-C861-40BA-92E0-83071C5F7FCA
+:ID:       9f59d88a-73ec-487c-9d35-f154c7034391
 :END:
-
-#+BEGIN_SRC emacs-lisp
-  (use-package prodigy
-    :ensure t)
-#+END_SRC
-
-Services are defined in [[*Load host specific configuration][host specific configuration files]].
+#+begin_src emacs-lisp
+  (use-package elpher
+    :straight t)
+#+end_src
 * elisp utilities
 ** shell-command-ignore-stderr
 :PROPERTIES:
