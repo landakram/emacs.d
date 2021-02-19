@@ -2062,3 +2062,58 @@ belongs as a list."
 
 (use-package ht
   :ensure t)
+
+(use-package parse-csv
+  :straight (parse-csv :type git :host github :repo "mrc/el-csv")
+  :config
+  (defun csv-row-get (header row key)
+    (let ((index (-find-index (-partial #'equal key) header)))
+      (nth index row)))
+
+  (defun venmo-to-ynab-row (header row)
+    (let* ((memo (->> (or (csv-row-get header row "Note") "")
+                      (s-collapse-whitespace)))
+           (date (ignore-errors
+                   (--> (csv-row-get header row "Datetime")
+                        (parse-iso8601-time-string it))))
+           (ynab-date (and (car date) (format-time-string "%m/%d/%Y" date)))
+           (amount (-some->> (csv-row-get header row "Amount (total)")
+                     (s-replace " $" "")
+                     (s-replace "," "")
+                     (string-to-number)))
+           (inflow (when (and amount (>= amount 0))
+                     (format "%0.2f" (abs amount))))
+           (outflow (when (and amount (< amount 0))
+                      (format "%0.2f" (abs amount))))
+           (payee (if inflow
+                      (csv-row-get header row "From")
+                    (csv-row-get header row "To"))))
+      (when (and (or inflow outflow)
+                 ynab-date)
+        (list ynab-date payee memo outflow inflow))))
+
+  (defun venmo-to-ynab ()
+    (interactive)
+    (let* ((venmo-statement-filename (read-file-name
+                                      "Venmo statement: "
+                                      "~/Downloads/venmo_statement.csv"))
+           (venmo-statement (--> venmo-statement-filename
+                                 (with-temp-buffer
+                                   (insert-file-contents it)
+                                   (buffer-string))
+                                 (parse-csv-string-rows it  ?\, ?\" "\n")))
+           (header (car venmo-statement))
+           (body (cdr venmo-statement))
+           (new-body 
+            (->> body
+                 (mapcar (-partial #'venmo-to-ynab-row header))
+                 (remove nil)))
+           (new-header '("Date" "Payee" "Memo" "Outflow" "Inflow"))
+           (ynab-statement-filename "~/Downloads/venmo_ynab_statement.csv"))
+      (with-temp-file ynab-statement-filename
+        (insert (s-join "," new-header) "\n")
+        (dolist (row new-body)
+          (insert (s-join "," row) "\n")))
+
+      (let ((default-directory "~/Downloads"))
+        (shell-command "open -R .")))))
