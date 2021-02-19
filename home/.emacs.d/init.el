@@ -256,9 +256,6 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     :config
     (global-evil-surround-mode 1))
 
-  (use-package evil-magit
-    :straight (evil-magit :type git :host github :repo "emacs-evil/evil-magit"))
-
   (use-package evil-matchit
     :ensure t
     :config
@@ -266,7 +263,7 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
   (use-package evil-collection
     :after evil
-    :ensure t
+    :straight t
     :config
     (evil-collection-init))
 
@@ -699,6 +696,37 @@ Version 2017-01-27"
 
 (setq help-window-select t)
 
+(defun my-org-pop-to-buffer (orig-fn buf &optional norecord)
+  (if shackle-mode
+      (pop-to-buffer buf nil norecord)
+    (funcall orig-fn buf norecord)))
+(advice-add 'org-switch-to-buffer-other-window :around #'my-org-pop-to-buffer)
+
+(defun my-suppress-delete-other-windows (orig-fn &rest args)
+  (if shackle-mode
+      (letf (((symbol-function 'delete-other-windows) #'ignore)
+             ((symbol-function 'delete-window)        #'ignore))
+        (apply orig-fn args))
+    (apply orig-fn args)))
+
+(setq org-agenda-window-setup 'other-window)
+
+(use-package shackle
+  :ensure t
+  :init
+
+  (setq shackle-rules
+        '((help-mode :align below
+                     :select t
+                     :size 0.4
+                     :popup t)
+          (" *Agenda Commands*"
+           :align below
+           :size 0.4
+           :popup t)
+          ("*Org Agenda*" :align below :popup t :size 0.4))) 
+  (shackle-mode))
+
 (use-package smooth-scrolling
   :ensure t
   :config
@@ -822,12 +850,20 @@ Version 2017-01-27"
   (general-define-key :states '(normal)
                       "F" 'consult-imenu)
 
+  (defun consult-ripgrep-at-point ()
+    (interactive)
+    (consult-ripgrep default-directory (thing-at-point 'symbol)))
+
+  (defun consult-project-ripgrep-at-point ()
+    (interactive)
+    (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
+
   (leader-def :infix "p"
-    "a" 'consult-ripgrep)
+    "a" 'consult-project-ripgrep-at-point)
 
   (def-projectile-commander-method ?a
     "Full text search in the project."
-    (consult-ripgrep))
+    (consult-project-ripgrep-at-point))
 
   (add-hook 'eshell-mode-hook
             (lambda()
@@ -899,6 +935,25 @@ Version 2017-01-27"
 
 (set-fringe-mode 10)
 
+(use-package beacon
+  :straight t
+  :config
+  (beacon-mode 1)
+  (setq beacon-color (plist-get base16-tomorrow-night-colors :base02)))
+
+(use-package dimmer
+  :straight t
+  :config
+  (dimmer-mode t)
+  (dimmer-configure-which-key)
+  (dimmer-configure-company-box)
+  (dimmer-configure-magit)
+  (dimmer-configure-org)
+  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*Help\\*")
+  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation-mode\\*")
+  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-headers\\*")
+  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-view\\*"))
+
 (use-package olivetti
   :ensure t
   :defer t
@@ -937,6 +992,16 @@ Version 2017-01-27"
 (use-package tdd
   :load-path "site-lisp/tdd/")
 
+(defun local/postprocess-compilation-buffer ()
+  (goto-char compilation-filter-start)
+  (when (looking-at "\033c")
+    (delete-region (point-min) (match-end 0)))
+  (ansi-color-apply-on-region (point) (point-max)))
+
+(add-hook 'compilation-filter-hook 'local/postprocess-compilation-buffer)
+
+(setq compilation-scroll-output 'first-error)
+
 (use-package dtrt-indent
   :ensure t
   :config
@@ -970,6 +1035,7 @@ Version 2017-01-27"
 
 (use-package magit
   :ensure t
+  :commands (magit-get-current-branch)
   :defer t
   :config
   ;; Uncomment this to improve performance
@@ -1084,6 +1150,9 @@ Version 2017-01-27"
 
   (yas-global-mode 1))
 
+(use-package yasnippet-snippets
+  :straight t)
+
 (defvar my/lisp-mode-hooks
   '(emacs-lisp-mode-hook
     lisp-mode-hook
@@ -1138,6 +1207,13 @@ Version 2017-01-27"
 
 (use-package extempore-mode
   :ensure t)
+
+(defvar keyword-lambda
+  '(("(\\(lambda\\)\\>"
+     (0 (prog1 () (compose-region
+                   (match-beginning 1)
+                   (match-end 1) ?λ))))))
+(font-lock-add-keywords 'emacs-lisp-mode keyword-lambda)
 
 ;; Indenting module body code at column 0
 (defun scheme-module-indent (state indent-point normal-indent) 0)
@@ -1233,21 +1309,63 @@ Version 2017-01-27"
 (setenv "DOCKER_MACHINE_NAME" "default")
 
 (use-package eshell
+  :commands (eshell)
   :config
-  (setq eshell-prompt-function
-        (lambda ()
-          (set-face-attribute 'eshell-prompt
-                              nil
-                              :foreground (plist-get base16-tomorrow-night-colors :base0D)
-                              :background (plist-get base16-tomorrow-night-colors :base00))
+  (defun esh-customize-faces ()
+    (set-face-attribute 'eshell-ls-directory
+                        nil
+                        :foreground (plist-get base16-tomorrow-night-colors :base0C)
+                        :background (plist-get base16-tomorrow-night-colors :base00)))
 
-          (set-face-attribute 'eshell-ls-directory
-                              nil
-                              :foreground (plist-get base16-tomorrow-night-colors :base0C)
-                              :background (plist-get base16-tomorrow-night-colors :base00))
+  (defmacro esh-section (name form &rest props)
+    `(setq ,name
+           (lambda ()
+             (when ,form
+               (-> ,form
+                   (propertize 'face (list ,@props)))))))
 
-          (concat (abbreviate-file-name (eshell/pwd))
-                  (if (= (user-uid) 0) " # " " $ ")))))
+  (defun esh-acc (acc x)
+    (if-let ((section (funcall x)))
+        (if (string-empty-p acc)
+            section
+          (concat acc esh-sep section))
+      acc))
+
+  (defun esh-prompt-func ()
+    (concat
+     (reduce #'esh-acc esh-funcs :initial-value "")
+     ;; Reset face to default for input
+     (propertize " " 'face 'default)))
+
+  (esh-section esh-header
+               "λ"
+               `(:foreground ,(plist-get base16-tomorrow-night-colors :base08)))
+
+  (esh-section esh-user
+               (user-login-name)
+               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0B)))
+
+  (esh-section esh-dir
+               (concat "[" (abbreviate-file-name (eshell/pwd)) "]")
+               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0E)))
+
+  (esh-section esh-git
+               (when-let ((branch (magit-get-current-branch))) 
+                 (concat " " branch))
+               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0D)))
+
+  (esh-section esh-footer
+               "\n→"
+               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0A)))
+
+  (setq eshell-prompt-regexp "\n→ ")
+  (setq eshell-skip-prompt-function #'eshell-skip-prompt)
+  (setq esh-sep " ")
+  (setq esh-funcs (list esh-header esh-user esh-dir esh-git esh-footer))
+
+  (setq eshell-prompt-function 'esh-prompt-func)
+
+  (add-hook 'eshell-mode-hook 'esh-customize-faces))
 
 (use-package yaml-mode
   :ensure t)
@@ -1329,7 +1447,6 @@ Version 2017-01-27"
 (use-package rspec-mode
   :init
   (defun my/rspec-init ()
-    (setq compilation-scroll-output t)
     (linum-mode -1)
     (local-set-key (kbd "r") 'inf-ruby-switch-from-compilation))
   (add-hook 'rspec-compilation-mode-hook 'my/rspec-init)
@@ -1421,19 +1538,25 @@ Version 2017-01-27"
   :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
   :defer t
   :init
+  (setq solidity-flycheck-solium-checker-active t)
   (setq solidity-flycheck-solc-checker-active t)
-  (add-hook 'solidity-mode-hook (lambda ()
-                                  (require 'solidity-flycheck))))
+  (setq solidity-flycheck-chaining-error-level t)
+  (setq solidity-flycheck-use-project t)
+  (setq solidity-flycheck-solc-additional-allow-paths '("~/.brownie/packages"))
+
+  (add-hook
+   'solidity-mode-hook
+   (lambda ()
+     (require 'solidity-flycheck))))
 
 (use-package company-solidity
-  :ensure t
+  :straight (company-solidity :type git :host github :repo "ethereum/emacs-solidity")
   :defer t
   :init
   (add-hook 'solidity-mode-hook
             (lambda ()
               (set (make-local-variable 'company-backends)
-                   (append '((company-solidity company-capf company-dabbrev-code))
-                           company-backends)))))
+                   '((company-dabbrev-code company-solidity company-capf))))))
 
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
@@ -1579,6 +1702,21 @@ Version 2017-01-27"
 
 (setq org-agenda-span 2)
 
+(use-package org-super-agenda
+  :straight t
+  :hook (org-agenda-mode . org-super-agenda-mode)
+  :config
+  ;; See https://github.com/alphapapa/org-super-agenda/issues/50
+  (setq org-super-agenda-header-map (make-sparse-keymap))
+  (setq org-super-agenda-header-separator "")
+  (setq org-super-agenda-unmatched-name "Scheduled")
+  (setq org-super-agenda-groups
+        '((:name "Important"
+                 :priority "A")
+          (:name "Habits"
+                 :habit t)))
+  )
+
 (defun my/configure-org-exporters ()
   (use-package ox-gfm
     :ensure t)
@@ -1627,7 +1765,9 @@ Version 2017-01-27"
           ("c" "Calendar" entry (file+olp+datetree "~/org/calendar.org" "Calendar")
            "* %?\n")
           ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
-           "* %?\n" :unnarrowed t)
+           "* %<%H:%M>\n%?")
+          ("m" "Email follow-up" entry (file+headline "~/org/inbox.org" "Tasks")
+           "* TODO Follow up with %:fromname\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n%?")
           ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
            "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n"))))
 
@@ -1869,11 +2009,13 @@ belongs as a list."
 
   (use-package mu4e
     :load-path "/usr/local/opt/mu/share/emacs/site-lisp/mu/mu4e"
-    :defer t
+    :commands (mu4e)
     :after general
     :config
-    ;; default
+    ;; Sync every 10 minutes
+    (setq mu4e-update-interval (* 60 10))
     (setq mu4e-maildir (expand-file-name "~/Maildir"))
+    (setq mu4e-compose-format-flowed t)
 
     ;; (setq mu4e-drafts-folder "/[Gmail].Drafts")
     ;; (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
@@ -1897,8 +2039,12 @@ belongs as a list."
     (setq mu4e-view-show-images t)
 
     ;; Don't use mu4e's default HTML renderer. It's hard to read for most messages.
-    ;; (setq mu4e-html2text-command 'mu4e-shr2text)
     (setq mu4e-html2text-command "html2text -utf8 -nobs -width 72")
+    ;; Ignore mu4e's plaintext heuristic.
+    ;; See https://200ok.ch/posts/2018-10-25_disable_mu4e_html_over_plain_text_heuristic.html
+    (setq mu4e-view-html-plaintext-ratio-heuristic most-positive-fixnum)
+
+    (setq mu4e-view-show-addresses t)
 
     (setq browse-url-generic-program 'browse-url-default-browser)
 
@@ -1991,8 +2137,9 @@ belongs as a list."
                        (mu4e-trash-folder        . "/Personal/[Gmail]/.Trash")
                        (mu4e-refile-folder       . "/Personal/[Gmail]/.All Mail")
                        (mu4e-maildir-shortcuts   . (("/Personal/INBOX" . ?i)
-                                                    ("Personal/[Gmail]/.Sent Mail"  . ?s)
-                                                    ("Personal/[Gmail]/.Trash" . ?t)))
+                                                    ("/Personal/[Gmail]/.Sent Mail"  . ?s)
+                                                    ("/Personal/[Gmail]/.All Mail"  . ?a)
+                                                    ("/Personal/[Gmail]/.Trash" . ?t)))
                        (mu4e-compose-signature   . nil)))))
 
     ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
@@ -2006,7 +2153,8 @@ belongs as a list."
     ;; default is to ask 
     ;; '(setq mu4e-compose-context-policy nil)
 
-    ;; (setq mu4e-update-interval 300)
+    (add-hook 'mu4e-view-mode-hook 'visual-line-mode)
+    (add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
 )
 
 (use-package ledger-mode

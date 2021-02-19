@@ -560,71 +560,68 @@ better-defaults enables ido-mode, but we're using selectrum.
 
 #+BEGIN_SRC emacs-lisp 
 
-    (defun split-window-right-and-focus ()
-      (interactive)
-      (split-window-right)
-      (other-window 1))
+  (defun split-window-right-and-focus ()
+    (interactive)
+    (split-window-right)
+    (other-window 1))
 
-    (defun split-window-below-and-focus ()
-      (interactive)
-      (split-window-below)
-      (other-window 1))
+  (defun split-window-below-and-focus ()
+    (interactive)
+    (split-window-below)
+    (other-window 1))
 
-    (use-package undo-tree
-      :diminish undo-tree-mode
+  (use-package undo-tree
+    :diminish undo-tree-mode
+    :ensure t
+    :config
+    (global-undo-tree-mode))
+
+  (use-package evil
+    :ensure t
+    :defer .1
+    :diminish evil-mode
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    :config
+    ;; Make movement keys work over visual lines
+    (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+    (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+    (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+    (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+
+    (evil-set-undo-system 'undo-tree)
+
+    ;; Make * search over whole symbols instead of words. This means 
+    ;; it will match "this-variable" rather than just "this".
+    (setq-default evil-symbol-word-search 1)
+    (setq-default evil-want-fine-undo t)
+
+    ;; Make insert mode just like regular emacs
+    (setq evil-insert-state-map (make-sparse-keymap))
+    (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
+
+
+    (setq evil-move-cursor-back nil)
+
+    (evil-mode 1)
+
+    (use-package evil-surround
+      :ensure t
+      :diminish evil-surround-mode
+      :config
+      (global-evil-surround-mode 1))
+
+    (use-package evil-matchit
       :ensure t
       :config
-      (global-undo-tree-mode))
+      (global-evil-matchit-mode 1)))
 
-    (use-package evil
-      :ensure t
-      :defer .1
-      :diminish evil-mode
-      :init
-      (setq evil-want-integration t)
-      (setq evil-want-keybinding nil)
+    (use-package evil-collection
+      :after evil
+      :straight t
       :config
-      ;; Make movement keys work over visual lines
-      (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-      (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-      (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-      (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-
-      (evil-set-undo-system 'undo-tree)
-
-      ;; Make * search over whole symbols instead of words. This means 
-      ;; it will match "this-variable" rather than just "this".
-      (setq-default evil-symbol-word-search 1)
-      (setq-default evil-want-fine-undo t)
-
-      ;; Make insert mode just like regular emacs
-      (setq evil-insert-state-map (make-sparse-keymap))
-      (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
-
-
-      (setq evil-move-cursor-back nil)
-
-      (evil-mode 1)
-
-      (use-package evil-surround
-        :ensure t
-        :diminish evil-surround-mode
-        :config
-        (global-evil-surround-mode 1))
-
-      (use-package evil-magit
-        :straight (evil-magit :type git :host github :repo "emacs-evil/evil-magit"))
-
-      (use-package evil-matchit
-        :ensure t
-        :config
-        (global-evil-matchit-mode 1)))
-
-      (use-package evil-collection
-        :after evil
-        :ensure t
-        :config
-        (evil-collection-init))
+      (evil-collection-init))
 #+END_SRC
 
 #+RESULTS:
@@ -1236,7 +1233,7 @@ Version 2017-01-27"
 :ID:       26FA602F-89D6-41D3-B94D-F9C466AE774C
 :END:
 
-Always focus the curor in help windows.
+Always focus the cursor in help windows.
 
 #+BEGIN_SRC emacs-lisp
   (setq help-window-select t)
@@ -1244,6 +1241,44 @@ Always focus the curor in help windows.
 
 #+RESULTS:
 : t
+*** Shackle
+:PROPERTIES:
+:ID:       30CF47DD-AD7D-4AED-9B92-E6B0525E5CAC
+:END:
+#+begin_src emacs-lisp
+
+  (defun my-org-pop-to-buffer (orig-fn buf &optional norecord)
+    (if shackle-mode
+        (pop-to-buffer buf nil norecord)
+      (funcall orig-fn buf norecord)))
+  (advice-add 'org-switch-to-buffer-other-window :around #'my-org-pop-to-buffer)
+
+  (defun my-suppress-delete-other-windows (orig-fn &rest args)
+    (if shackle-mode
+        (letf (((symbol-function 'delete-other-windows) #'ignore)
+               ((symbol-function 'delete-window)        #'ignore))
+          (apply orig-fn args))
+      (apply orig-fn args)))
+
+  (setq org-agenda-window-setup 'other-window)
+
+  (use-package shackle
+    :ensure t
+    :init
+
+    (setq shackle-rules
+          '((help-mode :align below
+                       :select t
+                       :size 0.4
+                       :popup t)
+            (" *Agenda Commands*"
+             :align below
+             :size 0.4
+             :popup t)
+            ("*Org Agenda*" :align below :popup t :size 0.4))) 
+    (shackle-mode))
+#+end_src
+
 ** Scrolling
 :PROPERTIES:
 :ID:       3B9B25D7-3B43-4FD0-A03B-98A60E62BBAD
@@ -1395,12 +1430,20 @@ Selectrum is basically how I want completing-read to work. Simple, composable, f
     (general-define-key :states '(normal)
                         "F" 'consult-imenu)
 
+    (defun consult-ripgrep-at-point ()
+      (interactive)
+      (consult-ripgrep default-directory (thing-at-point 'symbol)))
+
+    (defun consult-project-ripgrep-at-point ()
+      (interactive)
+      (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
+
     (leader-def :infix "p"
-      "a" 'consult-ripgrep)
+      "a" 'consult-project-ripgrep-at-point)
 
     (def-projectile-commander-method ?a
       "Full text search in the project."
-      (consult-ripgrep))
+      (consult-project-ripgrep-at-point))
 
     (add-hook 'eshell-mode-hook
               (lambda()
@@ -1497,6 +1540,41 @@ Small padding:
 #+RESULTS:
 : ((ns-appearance . dark) (ns-transparent-titlebar . t) (horizontal-scroll-bars) (fullscreen . maximized) (vertical-scroll-bars) (left-fringe . 10) (right-fringe . 10))
 
+** Beacon
+:PROPERTIES:
+:ID:       02E65DC6-7FC2-4673-964E-AEE554BF1966
+:END:
+Highlight the cursor whenever I scroll around.
+
+#+begin_src emacs-lisp
+    (use-package beacon
+      :straight t
+      :config
+      (beacon-mode 1)
+      (setq beacon-color (plist-get base16-tomorrow-night-colors :base02)))
+#+end_src
+
+** Dimmer
+:PROPERTIES:
+:ID:       B113A925-7B37-4C98-9FE6-60EF568C6E5E
+:END:
+Dim inactive buffers.
+
+#+begin_src emacs-lisp
+  (use-package dimmer
+    :straight t
+    :config
+    (dimmer-mode t)
+    (dimmer-configure-which-key)
+    (dimmer-configure-company-box)
+    (dimmer-configure-magit)
+    (dimmer-configure-org)
+    (add-to-list 'dimmer-buffer-exclusion-regexps "\\*Help\\*")
+    (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation-mode\\*")
+    (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-headers\\*")
+    (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-view\\*"))
+#+end_src
+
 * Writing
 ** Perfect Margin
 :PROPERTIES:
@@ -1557,6 +1635,36 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 #+END_SRC
 
 #+RESULTS:
+** compilation-mode
+:PROPERTIES:
+:ID:       9E812C88-EB21-40CB-8F3D-AA737F78D7C6
+:END:
+Some defaults for compilation-mode.
+
+First, handle colors as best as we can:
+
+#+begin_src emacs-lisp
+  (defun local/postprocess-compilation-buffer ()
+    (goto-char compilation-filter-start)
+    (when (looking-at "\033c")
+      (delete-region (point-min) (match-end 0)))
+    (ansi-color-apply-on-region (point) (point-max)))
+
+  (add-hook 'compilation-filter-hook 'local/postprocess-compilation-buffer)
+#+end_src
+
+#+RESULTS:
+| local/postprocess-compilation-buffer |
+
+Scroll compilation until the first error:
+
+#+begin_src emacs-lisp
+  (setq compilation-scroll-output 'first-error)
+#+end_src
+
+#+RESULTS:
+: first-error
+
 ** Indentation
 :PROPERTIES:
 :ID:       BD5E4B63-D866-479E-A0E4-FFC89E2B6AA0
@@ -1615,14 +1723,15 @@ Autodetect indentation:
 :ID:       5A7C93D2-2F53-47EA-BAE1-7F373979B30A
 :END:
 #+BEGIN_SRC emacs-lisp 
-  (use-package magit
-    :ensure t
-    :defer t
-    :config
-    ;; Uncomment this to improve performance
-    ;; (setq magit-refresh-status-buffer nil)
-    ;; (setq magit-refresh-verbose t)
-    )
+    (use-package magit
+      :ensure t
+      :commands (magit-get-current-branch)
+      :defer t
+      :config
+      ;; Uncomment this to improve performance
+      ;; (setq magit-refresh-status-buffer nil)
+      ;; (setq magit-refresh-verbose t)
+      )
 #+END_SRC
 
 #+RESULTS:
@@ -1749,6 +1858,9 @@ Autodetect indentation:
                 (define-key yas/keymap [tab] 'yas/next-field)))
 
     (yas-global-mode 1))
+
+  (use-package yasnippet-snippets
+    :straight t)
 #+END_SRC
 
 ** Lisp
@@ -1811,6 +1923,13 @@ Autodetect indentation:
 
   (use-package extempore-mode
     :ensure t)
+
+  (defvar keyword-lambda
+    '(("(\\(lambda\\)\\>"
+       (0 (prog1 () (compose-region
+                     (match-beginning 1)
+                     (match-end 1) ?λ))))))
+  (font-lock-add-keywords 'emacs-lisp-mode keyword-lambda)
 #+END_SRC
 
 #+RESULTS:
@@ -2055,22 +2174,67 @@ I typically use 2 spaces to indent.
 :END:
 #+BEGIN_SRC emacs-lisp
   (use-package eshell
+    :commands (eshell)
     :config
-    (setq eshell-prompt-function
-          (lambda ()
-            (set-face-attribute 'eshell-prompt
-                                nil
-                                :foreground (plist-get base16-tomorrow-night-colors :base0D)
-                                :background (plist-get base16-tomorrow-night-colors :base00))
+    (defun esh-customize-faces ()
+      (set-face-attribute 'eshell-ls-directory
+                          nil
+                          :foreground (plist-get base16-tomorrow-night-colors :base0C)
+                          :background (plist-get base16-tomorrow-night-colors :base00)))
 
-            (set-face-attribute 'eshell-ls-directory
-                                nil
-                                :foreground (plist-get base16-tomorrow-night-colors :base0C)
-                                :background (plist-get base16-tomorrow-night-colors :base00))
+    (defmacro esh-section (name form &rest props)
+      `(setq ,name
+             (lambda ()
+               (when ,form
+                 (-> ,form
+                     (propertize 'face (list ,@props)))))))
 
-            (concat (abbreviate-file-name (eshell/pwd))
-                    (if (= (user-uid) 0) " # " " $ ")))))
+    (defun esh-acc (acc x)
+      (if-let ((section (funcall x)))
+          (if (string-empty-p acc)
+              section
+            (concat acc esh-sep section))
+        acc))
+
+    (defun esh-prompt-func ()
+      (concat
+       (reduce #'esh-acc esh-funcs :initial-value "")
+       ;; Reset face to default for input
+       (propertize " " 'face 'default)))
+
+    (esh-section esh-header
+                 "λ"
+                 `(:foreground ,(plist-get base16-tomorrow-night-colors :base08)))
+
+    (esh-section esh-user
+                 (user-login-name)
+                 `(:foreground ,(plist-get base16-tomorrow-night-colors :base0B)))
+
+    (esh-section esh-dir
+                 (concat "[" (abbreviate-file-name (eshell/pwd)) "]")
+                 `(:foreground ,(plist-get base16-tomorrow-night-colors :base0E)))
+
+    (esh-section esh-git
+                 (when-let ((branch (magit-get-current-branch))) 
+                   (concat " " branch))
+                 `(:foreground ,(plist-get base16-tomorrow-night-colors :base0D)))
+
+    (esh-section esh-footer
+                 "\n→"
+                 `(:foreground ,(plist-get base16-tomorrow-night-colors :base0A)))
+
+    (setq eshell-prompt-regexp "\n→ ")
+    (setq eshell-skip-prompt-function #'eshell-skip-prompt)
+    (setq esh-sep " ")
+    (setq esh-funcs (list esh-header esh-user esh-dir esh-git esh-footer))
+
+    (setq eshell-prompt-function 'esh-prompt-func)
+
+    (add-hook 'eshell-mode-hook 'esh-customize-faces))
 #+END_SRC
+
+#+RESULTS:
+: t
 
 ** YAML
 :PROPERTIES:
@@ -2226,7 +2390,6 @@ Let's use web-mode, which supports font locking for templating.
   (use-package rspec-mode
     :init
     (defun my/rspec-init ()
-      (setq compilation-scroll-output t)
       (linum-mode -1)
       (local-set-key (kbd "r") 'inf-ruby-switch-from-compilation))
     (add-hook 'rspec-compilation-mode-hook 'my/rspec-init)
@@ -2388,23 +2551,30 @@ Let's use web-mode, which supports font locking for templating.
     :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
     :defer t
     :init
+    (setq solidity-flycheck-solium-checker-active t)
     (setq solidity-flycheck-solc-checker-active t)
-    (add-hook 'solidity-mode-hook (lambda ()
-                                    (require 'solidity-flycheck))))
+    (setq solidity-flycheck-chaining-error-level t)
+    (setq solidity-flycheck-use-project t)
+    (setq solidity-flycheck-solc-additional-allow-paths '("~/.brownie/packages"))
+
+    (add-hook
+     'solidity-mode-hook
+     (lambda ()
+       (require 'solidity-flycheck))))
 
   (use-package company-solidity
-    :ensure t
+    :straight (company-solidity :type git :host github :repo "ethereum/emacs-solidity")
     :defer t
     :init
     (add-hook 'solidity-mode-hook
               (lambda ()
                 (set (make-local-variable 'company-backends)
-                     (append '((company-solidity company-capf company-dabbrev-code))
-                             company-backends)))))
+                     '((company-dabbrev-code company-solidity company-capf))))))
 #+end_src
 
 #+RESULTS:
-: t
+| lambda | nil | (set (make-local-variable 'company-backends) (append '((company-dabbrev-code company-solidity company-capf)) company-backends)) |                                                |                                                 |                                        |                                                                             |                              |
+| lambda | nil | (setq solidity-flycheck-solium-checker-active t)                                                                                | (setq solidity-flycheck-solc-checker-active t) | (setq solidity-flycheck-chaining-error-level t) | (setq solidity-flycheck-use-project t) | (setq solidity-flycheck-solc-additional-allow-paths '(~/.brownie/packages)) | (require 'solidity-flycheck) |
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
@@ -2661,6 +2831,27 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 #+BEGIN_SRC emacs-lisp 
 (setq org-agenda-span 2)
 #+END_SRC
+*** Super agenda
+:PROPERTIES:
+:ID:       23DEE77C-53D8-4B1B-AAA9-6F576BE74060
+:END:
+#+begin_src emacs-lisp
+  (use-package org-super-agenda
+    :straight t
+    :hook (org-agenda-mode . org-super-agenda-mode)
+    :config
+    ;; See https://github.com/alphapapa/org-super-agenda/issues/50
+    (setq org-super-agenda-header-map (make-sparse-keymap))
+    (setq org-super-agenda-header-separator "")
+    (setq org-super-agenda-unmatched-name "Scheduled")
+    (setq org-super-agenda-groups
+          '((:name "Important"
+                   :priority "A")
+            (:name "Habits"
+                   :habit t)))
+    )
+#+end_src
+
 ** Exporters
 :PROPERTIES:
 :ID:       4597FA54-FEFF-43A7-8372-E471711AE93C
@@ -2737,10 +2928,13 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
             ("c" "Calendar" entry (file+olp+datetree "~/org/calendar.org" "Calendar")
              "* %?\n")
             ("j" "Journal entry" entry (file+datetree "~/org/journal.org")
-             "* %?\n" :unnarrowed t)
+             "* %<%H:%M>\n%?")
+            ("m" "Email follow-up" entry (file+headline "~/org/inbox.org" "Tasks")
+             "* TODO Follow up with %:fromname\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n%?")
             ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
              "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n"))))
 #+END_SRC
+
 
 #+RESULTS:
 | n | Note | entry | (file+headline ~/org/inbox.org Notes) | * %? |
@@ -3082,11 +3276,13 @@ This is long so that fetching feeds does not timeout.
 
     (use-package mu4e
       :load-path "/usr/local/opt/mu/share/emacs/site-lisp/mu/mu4e"
-      :defer t
+      :commands (mu4e)
       :after general
       :config
-      ;; default
+      ;; Sync every 10 minutes
+      (setq mu4e-update-interval (* 60 10))
       (setq mu4e-maildir (expand-file-name "~/Maildir"))
+      (setq mu4e-compose-format-flowed t)
 
       ;; (setq mu4e-drafts-folder "/[Gmail].Drafts")
       ;; (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
@@ -3110,8 +3306,12 @@ This is long so that fetching feeds does not timeout.
       (setq mu4e-view-show-images t)
 
       ;; Don't use mu4e's default HTML renderer. It's hard to read for most messages.
-      ;; (setq mu4e-html2text-command 'mu4e-shr2text)
       (setq mu4e-html2text-command "html2text -utf8 -nobs -width 72")
+      ;; Ignore mu4e's plaintext heuristic.
+      ;; See https://200ok.ch/posts/2018-10-25_disable_mu4e_html_over_plain_text_heuristic.html
+      (setq mu4e-view-html-plaintext-ratio-heuristic most-positive-fixnum)
+
+      (setq mu4e-view-show-addresses t)
 
       (setq browse-url-generic-program 'browse-url-default-browser)
 
@@ -3204,8 +3404,9 @@ This is long so that fetching feeds does not timeout.
                          (mu4e-trash-folder        . "/Personal/[Gmail]/.Trash")
                          (mu4e-refile-folder       . "/Personal/[Gmail]/.All Mail")
                          (mu4e-maildir-shortcuts   . (("/Personal/INBOX" . ?i)
-                                                      ("Personal/[Gmail]/.Sent Mail"  . ?s)
-                                                      ("Personal/[Gmail]/.Trash" . ?t)))
+                                                      ("/Personal/[Gmail]/.Sent Mail"  . ?s)
+                                                      ("/Personal/[Gmail]/.All Mail"  . ?a)
+                                                      ("/Personal/[Gmail]/.Trash" . ?t)))
                          (mu4e-compose-signature   . nil)))))
 
       ;; set `mu4e-context-policy` and `mu4e-compose-policy` to tweak when mu4e should
@@ -3219,7 +3420,8 @@ This is long so that fetching feeds does not timeout.
       ;; default is to ask 
       ;; '(setq mu4e-compose-context-policy nil)
 
-      ;; (setq mu4e-update-interval 300)
+      (add-hook 'mu4e-view-mode-hook 'visual-line-mode)
+      (add-hook 'mu4e-compose-mode-hook 'flyspell-mode)
   )
 #+END_SRC
 
@@ -3251,7 +3453,7 @@ Not actively using this right now.
 #+END_SRC
 
 Services are defined in [[*Load host specific configuration][host specific configuration files]].
-* Emacs lisp utility functions and libraries
+* elisp utilities
 ** shell-command-ignore-stderr
 :PROPERTIES:
 :ID:       D36DA267-51F4-45EF-984D-39002C2A70D9

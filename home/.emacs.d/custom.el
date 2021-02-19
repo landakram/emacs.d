@@ -32,7 +32,9 @@
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(safe-local-variable-values
-   '((eval add-hook 'after-save-hook
+   '((cider-shadow-watched-builds "app")
+     (cider-shadow-watched-builds "<first-build>" "<other-build>")
+     (eval add-hook 'after-save-hook
            (lambda nil
              (if
                  (y-or-n-p "Tangle?")
@@ -154,6 +156,7 @@
      (cider-cljs-lein-repl . "(do (dev) (go) (cljs-repl))")
      (cider-refresh-after-fn . "reloaded.repl/resume")
      (cider-refresh-before-fn . "reloaded.repl/suspend")))
+ '(session-use-package t nil (session))
  '(vc-annotate-background nil)
  '(vc-annotate-color-map
    '((20 . "#f2777a")
