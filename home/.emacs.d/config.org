@@ -1642,6 +1642,16 @@ Dim inactive buffers.
 #+RESULTS:
 | org-capture-write-mode |
 
+** Gemini
+:PROPERTIES:
+:ID:       68b7e416-33ad-4416-bd60-7498a7c49413
+:END:
+
+#+begin_src emacs-lisp
+  (use-package gemini-mode
+    :mode (("\\.gmi\\'" . gemini-mode))
+    :straight t)
+#+end_src
 * Coding
 ** Testing
 :PROPERTIES:
@@ -3513,7 +3523,15 @@ Not actively using this right now.
 :END:
 #+begin_src emacs-lisp
   (use-package elpher
-    :straight t)
+    :straight t
+    :after (general)
+    :defer t
+    :config
+    (evil-set-initial-state 'elpher-mode 'motion)
+    (general-define-key
+     :keymaps '(elpher-mode-map)
+     "C-j" 'evil-scroll-down
+     "C-k" 'evil-scroll-up))
 #+end_src
 * elisp utilities
 ** shell-command-ignore-stderr
