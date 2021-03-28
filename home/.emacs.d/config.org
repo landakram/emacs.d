@@ -696,6 +696,8 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
       "c" '(:which-key "config-file"
                        :def (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
       "m" '(mu4e :which-key "mu4e")
+      "s" '(:which-key "stump"
+                         :def (lambda () (interactive) (find-file "~/.stumpwmrc")))
       "o" '(:which-key "org-file"
                        :def (lambda () (interactive) (find-file "~/org/projects.org"))))
 
