@@ -127,8 +127,50 @@
 
 (setq ring-bell-function 'ignore)
 
-(use-package better-defaults
-  :ensure t)
+;; Lifted from the better-defaults package, with various things changed
+
+(progn
+  (unless (eq window-system 'ns)
+    (menu-bar-mode -1)) 
+  (when (fboundp 'tool-bar-mode)
+    (tool-bar-mode -1))
+  (when (fboundp 'scroll-bar-mode)
+    (scroll-bar-mode -1))
+  (when (fboundp 'horizontal-scroll-bar-mode)
+    (horizontal-scroll-bar-mode -1))
+
+  (autoload 'zap-up-to-char "misc"
+    "Kill up to, but not including ARGth occurrence of CHAR." t)
+
+  (require 'uniquify)
+  (setq uniquify-buffer-name-style 'forward)
+
+  ;; https://www.emacswiki.org/emacs/SavePlace
+  (save-place-mode 1)
+
+  (global-set-key (kbd "M-/") 'hippie-expand)
+  (global-set-key (kbd "C-x C-b") 'ibuffer)
+  (global-set-key (kbd "M-z") 'zap-up-to-char)
+
+  (global-set-key (kbd "C-s") 'isearch-forward-regexp)
+  (global-set-key (kbd "C-r") 'isearch-backward-regexp)
+  (global-set-key (kbd "C-M-s") 'isearch-forward)
+  (global-set-key (kbd "C-M-r") 'isearch-backward)
+
+  (show-paren-mode 1)
+  (setq-default indent-tabs-mode nil)
+  (setq save-interprogram-paste-before-kill t
+        apropos-do-all t
+        mouse-yank-at-point t
+        require-final-newline t
+        visible-bell t
+        load-prefer-newer t
+        ediff-window-setup-function 'ediff-setup-windows-plain
+        custom-file (expand-file-name "~/.emacs.d/custom.el"))
+
+  (unless backup-directory-alist
+    (setq backup-directory-alist `(("." . ,(concat user-emacs-directory
+                                                   "backups"))))))
 
 (use-package ag
   :ensure t
@@ -289,6 +331,8 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     "c" '(:which-key "config-file"
                      :def (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
     "m" '(mu4e :which-key "mu4e")
+    "s" '(:which-key "stump"
+                       :def (lambda () (interactive) (find-file "~/.stumpwmrc")))
     "o" '(:which-key "org-file"
                      :def (lambda () (interactive) (find-file "~/org/projects.org"))))
 
@@ -316,20 +360,6 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     "d" 'delete-this-file
     "c" 'xah-copy-file-path
     "s" 'save-buffer)
-
-  (defun lsp-find-definition-with-fallback ()
-    (interactive)
-    (let ((definition (lsp-find-definition)))
-      (when (or (string-prefix-p "Not found for:" definition))
-        (dumb-jump-go))))
-
-  ;; JavaScript
-  (general-define-key :keymaps '(typescript-mode-map javascript-mode-map)
-                      "gf" 'lsp-find-definition-with-fallback)
-
-  ;; Ruby
-  (general-define-key :keymaps '(ruby-mode-map)
-                      "gf" 'lsp-find-definition-with-fallback)
 
   ;; Use go-specific jumping for go-mode since it works wells
   (general-define-key :keymaps 'go-mode-map
@@ -405,16 +435,7 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
   (general-define-key
    :states '(normal)
-   "f" 'avy-goto-word-or-subword-1)
-
-  (general-define-key
-   :states '(normal)
-   "gf" (lambda () 
-          (interactive)
-          (if current-prefix-arg
-              (dumb-jump-go-other-window)
-            (dumb-jump-go)))
-   "gb" 'dumb-jump-back))
+   "f" 'avy-goto-word-or-subword-1))
 
 (use-package projectile
   :ensure t
@@ -487,8 +508,10 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 (setq mouse-wheel-progressive-speed nil)
 
 (use-package dumb-jump
-  :ensure t
-  :commands (dumb-jump-go dumb-jump-go-back dumb-jump-go-other-window)
+  :straight t
+  :commands (dumb-jump-xref-activate)
+  :init 
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate)
   :config
   (setq dumb-jump-selector 'completing-read)
   (setq dumb-jump-force-searcher 'rg))
@@ -990,6 +1013,10 @@ Version 2017-01-27"
 
 (add-hook 'org-capture-mode-hook 'org-capture-write-mode)
 
+(use-package gemini-mode
+  :mode (("\\.gmi\\'" . gemini-mode))
+  :straight t)
+
 (use-package tdd
   :load-path "site-lisp/tdd/")
 
@@ -1006,7 +1033,10 @@ Version 2017-01-27"
 (use-package dtrt-indent
   :ensure t
   :config
-  (dtrt-indent-mode))
+  (dtrt-indent-global-mode)
+
+  (add-to-list 'dtrt-indent-hook-mapping-list '(scss-mode css css-indent-offset))
+  (add-to-list 'dtrt-indent-hook-mapping-list '(solidity-mode c/c++/java c-basic-offset)))
 
 (use-package company
   :ensure t
@@ -1035,14 +1065,14 @@ Version 2017-01-27"
   (advice-add 'company-capf :around #'pin-completion-styles))
 
 (use-package magit
-  :ensure t
+  :straight t
   :commands (magit-get-current-branch)
   :defer t
   :config
   ;; Uncomment this to improve performance
   ;; (setq magit-refresh-status-buffer nil)
   ;; (setq magit-refresh-verbose t)
-  )
+  (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
 
 (defun parse-host-path-syntax (host-path-string)
   (let ((ssh-host-path-regex "\\(.*\\)\@\\(.*\\):\\(.*\\)"))
@@ -1202,7 +1232,7 @@ Version 2017-01-27"
   :ensure t)
 
 (use-package geiser
-  :ensure t
+  :straight t
   :init
   (setq geiser-active-implementations '(chicken guile)))
 
@@ -1230,6 +1260,7 @@ Version 2017-01-27"
                    (match-beginning 1)
                    (match-end 1) ?λ))))))
 (font-lock-add-keywords 'emacs-lisp-mode keyword-lambda)
+(font-lock-add-keywords 'lisp-mode keyword-lambda)
 
 ;; Indenting module body code at column 0
 (defun scheme-module-indent (state indent-point normal-indent) 0)
@@ -1293,6 +1324,62 @@ Version 2017-01-27"
 (use-package typescript-mode
   :mode ("\\.tsx?\\'" . typescript-mode)
   :ensure t)
+
+(use-package js2-mode
+  :straight t
+  :hook ((js-mode . js2-minor-mode))
+  :config
+  (setf js2-mode-show-parse-errors nil)
+  (setf js2-strict-missing-semi-warning nil))
+
+(use-package mocha
+  :straight t
+  :general
+  (general-define-key
+   "C-c t ." 'mocha-test-at-point
+   "C-c t f" 'mocha-test-file
+   "C-c t p" 'mocha-test-project
+   "C-c t r" 'recompile) 
+  :config
+  (setf mocha-environment-variables "FORCE_COLOR=1 NODE_ENV=test")
+  (setf mocha-reporter "spec"))
+
+(use-package add-node-modules-path
+  :straight t
+  :hook ((js-mode . add-node-modules-path)
+         (solidity-mode . add-node-modules-path)))
+
+(use-package nvm
+  :straight t
+  :hook ((js-mode . nvm-use-for)
+         (solidity-mode . nvm-use-for)))
+
+ (defun js2-imenu-make-index ()
+    (save-excursion
+    (imenu--generic-function '(("describe" "\\s-*describe\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                               ("it" "\\s-*it\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                               ("before" "\\s-*before\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                               ("after" "\\s-*after\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+
+                                ;;add more keyword for mocha here
+                               ("Function" "function[ \t]+\\([a-zA-Z0-9_$.]+\\)[ \t]*(" 1)
+                               ("Function" "^[ \t]*\\([a-zA-Z0-9_$.]+\\)[ \t]*=[ \t]*function[ \t]*(" 1)
+
+                               ))))
+
+ (add-hook 'js2-minor-mode-hook
+          (lambda ()
+            (setq imenu-create-index-function 'js2-imenu-make-index)))
+
+(defcustom prepend-mocha-generate-command ""
+  "Prepend the mocha command with this string. Useful for running compilation step before tests."
+  :safe #'stringp)
+
+(defun wrap-mocha-generate-command (fn &rest args)
+  (let ((cmd (apply fn args)))
+    (concat prepend-mocha-generate-command cmd)))
+
+(advice-add 'mocha-generate-command :around #'wrap-mocha-generate-command)
 
 (use-package haskell-mode
   :mode ("\\.hs\\'" . haskell-mode)
@@ -1554,11 +1641,11 @@ Version 2017-01-27"
   :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
   :defer t
   :init
-  (setq solidity-flycheck-solium-checker-active t)
+  (setq solidity-flycheck-solium-checker-active nil)
   (setq solidity-flycheck-solc-checker-active t)
+  (setq solidity-flycheck-solhint-checker-active t)
   (setq solidity-flycheck-chaining-error-level t)
   (setq solidity-flycheck-use-project t)
-  (setq solidity-flycheck-solc-additional-allow-paths '("~/.brownie/packages"))
 
   (add-hook
    'solidity-mode-hook
@@ -2197,7 +2284,15 @@ belongs as a list."
   :ensure t)
 
 (use-package elpher
-  :straight t)
+  :straight t
+  :after (general)
+  :defer t
+  :config
+  (evil-set-initial-state 'elpher-mode 'motion)
+  (general-define-key
+   :keymaps '(elpher-mode-map)
+   "C-j" 'evil-scroll-down
+   "C-k" 'evil-scroll-up))
 
 (defun shell-command-ignore-stderr (some-command)
   (with-output-to-string

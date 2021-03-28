@@ -32,7 +32,13 @@
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(safe-local-variable-values
-   '((cider-shadow-watched-builds "app")
+   '((mocha-reporter . "spec")
+     (mocha-environment-variables . "FORCE_COLOR=1 NODE_ENV=test")
+     (eval add-hook 'after-save-hook
+           (lambda nil
+             (org-babel-tangle))
+           nil t)
+     (cider-shadow-watched-builds "app")
      (cider-shadow-watched-builds "<first-build>" "<other-build>")
      (eval add-hook 'after-save-hook
            (lambda nil
@@ -178,6 +184,7 @@
      (340 . "#ffcc66")
      (360 . "#99cc99")))
  '(vc-annotate-very-old-color nil)
+ '(warning-suppress-types '((use-package) (use-package)))
  '(weechat-color-list
    (unspecified "#272822" "#49483E" "#F70057" "#F92672" "#86C30D" "#A6E22E" "#BEB244" "#E6DB74" "#40CAE4" "#66D9EF" "#FB35EA" "#FD5FF0" "#74DBCD" "#A1EFE4" "#F8F8F2" "#F8F8F0")))
 (custom-set-faces

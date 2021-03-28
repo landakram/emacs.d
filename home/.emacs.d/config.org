@@ -975,6 +975,9 @@ Reduce the amount that the mouse scrolls.
 (setq tramp-auto-save-directory temporary-file-directory)
 #+END_SRC
 
+#+RESULTS:
+: /tmp/
+
 #+BEGIN_SRC emacs-lisp
 ;; TODO: unfortunately this doesn't quite work
   (defun tail-this-file ()
@@ -1757,19 +1760,20 @@ Autodetect indentation:
 :ID:       5A7C93D2-2F53-47EA-BAE1-7F373979B30A
 :END:
 #+BEGIN_SRC emacs-lisp 
-    (use-package magit
-      :ensure t
-      :commands (magit-get-current-branch)
-      :defer t
-      :config
-      ;; Uncomment this to improve performance
-      ;; (setq magit-refresh-status-buffer nil)
-      ;; (setq magit-refresh-verbose t)
-      )
+  (use-package magit
+    :straight t
+    :commands (magit-get-current-branch)
+    :defer t
+    :config
+    ;; Uncomment this to improve performance
+    ;; (setq magit-refresh-status-buffer nil)
+    ;; (setq magit-refresh-verbose t)
+    (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
 #+END_SRC
 
 #+RESULTS:
 : t
+
 *** Open GitHub from file
 :PROPERTIES:
 :ID:       0D190EFD-ED2F-4219-B777-18AEF8DD3245
@@ -1951,7 +1955,7 @@ Autodetect indentation:
     :ensure t)
 
   (use-package geiser
-    :ensure t
+    :straight t
     :init
     (setq geiser-active-implementations '(chicken guile)))
 
@@ -1979,6 +1983,7 @@ Autodetect indentation:
                      (match-beginning 1)
                      (match-end 1) ?λ))))))
   (font-lock-add-keywords 'emacs-lisp-mode keyword-lambda)
+  (font-lock-add-keywords 'lisp-mode keyword-lambda)
 #+END_SRC
 
 #+RESULTS:
@@ -2666,11 +2671,11 @@ Let's use web-mode, which supports font locking for templating.
     :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
     :defer t
     :init
-    (setq solidity-flycheck-solium-checker-active t)
+    (setq solidity-flycheck-solium-checker-active nil)
     (setq solidity-flycheck-solc-checker-active t)
+    (setq solidity-flycheck-solhint-checker-active t)
     (setq solidity-flycheck-chaining-error-level t)
     (setq solidity-flycheck-use-project t)
-    (setq solidity-flycheck-solc-additional-allow-paths '("~/.brownie/packages"))
 
     (add-hook
      'solidity-mode-hook
@@ -3785,5 +3790,5 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 The following will tangle this file on save. By tangling on save, I don't need to dynamically tangle on startup, which makes startup a lot faster.
 
 ;; Local Variables: 
-;; eval: (add-hook 'after-save-hook (lambda ()(if (y-or-n-p "Tangle?")(org-babel-tangle))) nil t) 
+;; eval: (add-hook 'after-save-hook (lambda () (org-babel-tangle)) nil t) 
 ;; End:
