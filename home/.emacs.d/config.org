@@ -1706,7 +1706,10 @@ Autodetect indentation:
   (use-package dtrt-indent
     :ensure t
     :config
-    (dtrt-indent-mode))
+    (dtrt-indent-global-mode)
+
+    (add-to-list 'dtrt-indent-hook-mapping-list '(scss-mode css css-indent-offset))
+    (add-to-list 'dtrt-indent-hook-mapping-list '(solidity-mode c/c++/java c-basic-offset)))
 #+END_SRC
 
 #+RESULTS:
@@ -2139,6 +2142,72 @@ I typically use 2 spaces to indent.
 #+END_SRC
 
 #+RESULTS:
+*** Mocha
+:PROPERTIES:
+:ID:       580bd8ed-d929-4ab3-add9-2a3686a75c59
+:END:
+
+#+begin_src emacs-lisp
+  (use-package js2-mode
+    :straight t
+    :hook ((js-mode . js2-minor-mode))
+    :config
+    (setf js2-mode-show-parse-errors nil)
+    (setf js2-strict-missing-semi-warning nil))
+
+  (use-package mocha
+    :straight t
+    :general
+    (general-define-key
+     "C-c t ." 'mocha-test-at-point
+     "C-c t f" 'mocha-test-file
+     "C-c t p" 'mocha-test-project
+     "C-c t r" 'recompile) 
+    :config
+    (setf mocha-environment-variables "FORCE_COLOR=1 NODE_ENV=test")
+    (setf mocha-reporter "spec"))
+
+  (use-package add-node-modules-path
+    :straight t
+    :hook ((js-mode . add-node-modules-path)
+           (solidity-mode . add-node-modules-path)))
+
+  (use-package nvm
+    :straight t
+    :hook ((js-mode . nvm-use-for)
+           (solidity-mode . nvm-use-for)))
+
+   (defun js2-imenu-make-index ()
+      (save-excursion
+      (imenu--generic-function '(("describe" "\\s-*describe\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                                 ("it" "\\s-*it\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                                 ("before" "\\s-*before\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                                 ("after" "\\s-*after\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+
+                                  ;;add more keyword for mocha here
+                                 ("Function" "function[ \t]+\\([a-zA-Z0-9_$.]+\\)[ \t]*(" 1)
+                                 ("Function" "^[ \t]*\\([a-zA-Z0-9_$.]+\\)[ \t]*=[ \t]*function[ \t]*(" 1)
+
+                                 ))))
+
+   (add-hook 'js2-minor-mode-hook
+            (lambda ()
+              (setq imenu-create-index-function 'js2-imenu-make-index)))
+
+  (defcustom prepend-mocha-generate-command ""
+    "Prepend the mocha command with this string. Useful for running compilation step before tests."
+    :safe #'stringp)
+
+  (defun wrap-mocha-generate-command (fn &rest args)
+    (let ((cmd (apply fn args)))
+      (concat prepend-mocha-generate-command cmd)))
+
+  (advice-add 'mocha-generate-command :around #'wrap-mocha-generate-command)
+#+end_src
+
+#+RESULTS:
+| (lambda nil (setq imenu-create-index-function 'js2-imenu-make-index)) | evil-collection-js2-set-evil-shift-width | er/add-js2-mode-expansions | er/add-js-mode-expansions |
+
 
 ** Haskell
 :PROPERTIES:
