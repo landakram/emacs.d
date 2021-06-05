@@ -1720,6 +1720,29 @@ Scroll compilation until the first error:
 #+RESULTS:
 : first-error
 
+#+begin_src emacs-lisp
+    (defun compilation-mode-common-search-paths (orig-fn &rest args)
+      (let* ((project-root (car (project-roots (project-current))))
+             (compilation-search-path
+              (list
+               project-root
+               (concat (file-name-as-directory project-root) "node_modules"))))
+        (prin1 compilation-search-path)
+        (apply orig-fn args)))
+
+    (advice-add 'compilation-find-file :around #'compilation-mode-common-search-paths)
+
+    (add-to-list 'compilation-error-regexp-alist 'mocha)
+    (add-to-list 'compilation-error-regexp-alist 'mocha-abs)
+
+    (add-to-list 'compilation-error-regexp-alist-alist
+                 '(mocha "at.*(\\(.+?\\):\\([0-9]+\\):\\([0-9]+\\))" 1 2 3))
+
+    (add-to-list 'compilation-error-regexp-alist-alist
+                 '(mocha-abs "at \\([^ ]+?\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3))
+
+#+end_src
+
 ** Indentation
 :PROPERTIES:
 :ID:       BD5E4B63-D866-479E-A0E4-FFC89E2B6AA0

@@ -1044,6 +1044,26 @@ Version 2017-01-27"
 
 (setq compilation-scroll-output 'first-error)
 
+(defun compilation-mode-common-search-paths (orig-fn &rest args)
+  (let* ((project-root (car (project-roots (project-current))))
+         (compilation-search-path
+          (list
+           project-root
+           (concat (file-name-as-directory project-root) "node_modules"))))
+    (prin1 compilation-search-path)
+    (apply orig-fn args)))
+
+(advice-add 'compilation-find-file :around #'compilation-mode-common-search-paths)
+
+(add-to-list 'compilation-error-regexp-alist 'mocha)
+(add-to-list 'compilation-error-regexp-alist 'mocha-abs)
+
+(add-to-list 'compilation-error-regexp-alist-alist
+             '(mocha "at.*(\\(.+?\\):\\([0-9]+\\):\\([0-9]+\\))" 1 2 3))
+
+(add-to-list 'compilation-error-regexp-alist-alist
+             '(mocha-abs "at \\([^ ]+?\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3))
+
 (use-package dtrt-indent
   :ensure t
   :config
