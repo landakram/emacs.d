@@ -193,15 +193,15 @@
 (setq create-lockfiles nil)
 
 (use-package exec-path-from-shell
-  :ensure t
-  :config
-  (setq exec-path-from-shell-arguments '("-l"))
-  (setq exec-path-from-shell-variables '("PATH"
-                                         "MANPATH"
-                                         "NIX_PATH"
-                                         "SSH_AGENT_PID"
-                                         "SSH_AUTH_SOCK"))
-  (exec-path-from-shell-initialize))
+ :ensure t
+ :config
+ (setq exec-path-from-shell-arguments '("-l"))
+ (setq exec-path-from-shell-variables '("PATH"
+                                        "MANPATH"
+                                        "NIX_PATH"
+                                        "SSH_AGENT_PID"
+                                        "SSH_AUTH_SOCK"))
+ (exec-path-from-shell-initialize))
 
 (defun my/gpg-agent ()
   "Load your gpg-agent.env file in to the environment
@@ -294,13 +294,13 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   (evil-mode 1)
 
   (use-package evil-surround
-    :ensure t
+    :straight t
     :diminish evil-surround-mode
     :config
     (global-evil-surround-mode 1))
 
   (use-package evil-matchit
-    :ensure t
+    :straight t
     :config
     (global-evil-matchit-mode 1)))
 
@@ -334,7 +334,9 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     "s" '(:which-key "stump"
                        :def (lambda () (interactive) (find-file "~/.stumpwmrc")))
     "o" '(:which-key "org-file"
-                     :def (lambda () (interactive) (find-file "~/org/projects.org"))))
+                     :def (lambda () (interactive) (find-file "~/org/projects.org")))
+    "g" '(:which-key "goldfinch"
+                     :def (lambda () (interactive) (find-file "~/org/goldfinch.org"))))
 
   (leader-def :infix "w"
     "" '(:ignore t :which-key "windows")
@@ -737,19 +739,38 @@ Version 2017-01-27"
 
 (use-package shackle
   :ensure t
-  :init
-
+  :config
   (setq shackle-rules
         '((help-mode :align below
                      :select t
                      :size 0.4
                      :popup t)
+          (compilation-mode :align below
+                            :select t
+                            :size 0.3
+                            :popup t)
           (" *Agenda Commands*"
            :align below
            :size 0.4
            :popup t)
-          ("*Org Agenda*" :align below :popup t :size 0.4))) 
+          ("*Org Agenda*" :align below :popup t :size 0.4)))
   (shackle-mode))
+
+(use-package popper
+  :ensure t
+  :general
+  (general-define-key
+   "C-`" 'popper-toggle-latest
+   "M-`" 'popper-cycle)
+  :init
+  (setq popper-reference-buffers
+        '("\\*Messages\\*"
+          "Output\\*$"
+          help-mode
+          compilation-mode))
+  (popper-mode +1)
+  :config
+  (setq popper-display-control nil))
 
 (use-package smooth-scrolling
   :ensure t
@@ -821,10 +842,6 @@ Version 2017-01-27"
   (set-face-attribute 'selectrum-current-candidate nil
                       :foreground (plist-get base16-tomorrow-night-colors :base09)
                       :background (plist-get base16-tomorrow-night-colors :base01))
-  (set-face-attribute 'selectrum-primary-highlight nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0E))
-  (set-face-attribute 'selectrum-secondary-highlight nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0D))
 
   (selectrum-mode +1)
 
@@ -907,6 +924,10 @@ Version 2017-01-27"
 (use-package selectrum-prescient
   :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
   :config
+  (set-face-attribute 'selectrum-prescient-primary-highlight nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0E))
+  (set-face-attribute 'selectrum-prescient-secondary-highlight nil
+                      :foreground (plist-get base16-tomorrow-night-colors :base0D))
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
 
@@ -917,32 +938,25 @@ Version 2017-01-27"
         ("C-j" . embark-act))
 
   :config
-  (defun current-candidate+category ()
-    (when selectrum-active-p
-      (cons (selectrum--get-meta 'category)
-            (selectrum-get-current-candidate))))
+  (defun refresh-selectrum ()
+    (setq selectrum--previous-input-string nil))
 
-  (add-hook 'embark-target-finders #'current-candidate+category)
-
-  (defun current-candidates+category ()
-    (when selectrum-active-p
-      (cons (selectrum--get-meta 'category)
-            (selectrum-get-current-candidates
-             ;; Pass relative file names for dired.
-             minibuffer-completing-file-name))))
-
-  (add-hook 'embark-candidate-collectors #'current-candidates+category)
-
-  ;; No unnecessary computation delay after injection.
-  (add-hook 'embark-setup-hook 'selectrum-set-selected-candidate)
+  (add-hook 'embark-pre-action-hook #'refresh-selectrum)
 
   ;; Pop up which-key when running embark-act
   (setq embark-action-indicator
-        (lambda (map)
+        (lambda (map &optional _target)
           (which-key--show-keymap "Embark" map nil nil 'no-paging)
           #'which-key--hide-popup-ignore-command)
         embark-become-indicator embark-action-indicator)
   (setq embark-prompter 'embark-keymap-prompter))
+
+(use-package embark-consult
+  :straight (embark-consult :type git :host github :repo "oantolin/embark")
+  :after (embark consult)
+  :demand t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package marginalia
   :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
@@ -974,7 +988,7 @@ Version 2017-01-27"
   (dimmer-configure-magit)
   (dimmer-configure-org)
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*Help\\*")
-  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation-mode\\*")
+  (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation\\*")
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-headers\\*")
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-view\\*"))
 
@@ -1461,7 +1475,7 @@ Version 2017-01-27"
                "\n→"
                `(:foreground ,(plist-get base16-tomorrow-night-colors :base0A)))
 
-  (setq eshell-prompt-regexp "\n→ ")
+  (setq eshell-prompt-regexp "→ ")
   (setq eshell-skip-prompt-function #'eshell-skip-prompt)
   (setq esh-sep " ")
   (setq esh-funcs (list esh-header esh-user esh-dir esh-git esh-footer))
@@ -1569,7 +1583,7 @@ Version 2017-01-27"
 (add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
 
 (use-package lsp-mode
-  :ensure t
+  :straight t
   :commands (lsp lsp-deferred)
   :hook ((go-mode . lsp-deferred)
          (typescript-mode . lsp-deferred)
@@ -1589,15 +1603,15 @@ Version 2017-01-27"
   (add-hook 'before-save-hook #'lsp-organize-imports t t))
 
 (use-package lsp-ui
-  :ensure t
+  :straight t
   :commands lsp-ui-mode)
 
 (use-package company-lsp
-  :ensure t
+  :straight t
   :commands company-lsp)
 
 (use-package yasnippet
-  :ensure t
+  :straight t
   :commands yas-minor-mode
   :hook (go-mode . yas-minor-mode))
 
@@ -1641,9 +1655,6 @@ Version 2017-01-27"
   :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
   :defer t
   :init
-  (setq solidity-flycheck-solium-checker-active nil)
-  (setq solidity-flycheck-solc-checker-active t)
-  (setq solidity-flycheck-solhint-checker-active t)
   (setq solidity-flycheck-chaining-error-level t)
   (setq solidity-flycheck-use-project t)
 
@@ -1660,6 +1671,11 @@ Version 2017-01-27"
             (lambda ()
               (set (make-local-variable 'company-backends)
                    '((company-dabbrev-code company-solidity company-capf))))))
+
+(use-package prettier
+  :straight t
+  :config
+  (global-prettier-mode))
 
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
@@ -1716,7 +1732,8 @@ Version 2017-01-27"
   (eval-after-load 'org-indent '(diminish 'org-indent-mode))
   (setq org-hide-emphasis-markers t)
 
-  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 2.5))
+  (setq org-babel-python-command (concat (file-name-as-directory org-directory) "venv/bin/python"))
 
   (progn
     (set-face-attribute 'org-level-1 nil :height 1.5 :weight 'bold)
@@ -1746,6 +1763,9 @@ Version 2017-01-27"
   :straight (org-z :type git :host github :repo "landakram/org-z")
   :config
   (org-z-mode 1))
+
+(use-package org-ql
+  :straight t)
 
 (use-package org-z-selectrum
   :straight (org-z-selectrum :type git :host github :repo "landakram/org-z"))
@@ -1895,7 +1915,7 @@ Version 2017-01-27"
   (server-start))
 
 (use-package org
-  :ensure org-plus-contrib
+  :straight t
   :general
   (:states '(normal)
    :keymaps 'org-mode-map

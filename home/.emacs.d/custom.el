@@ -32,7 +32,8 @@
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(safe-local-variable-values
-   '((mocha-reporter . "spec")
+   '((Syntax . COMMON-LISP)
+     (mocha-reporter . "spec")
      (mocha-environment-variables . "FORCE_COLOR=1 NODE_ENV=test")
      (eval add-hook 'after-save-hook
            (lambda nil
