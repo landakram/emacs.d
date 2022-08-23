@@ -240,75 +240,11 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
 (use-package session
   :ensure t
-  :hook (after-init . session-initialize))
+  :hook (after-init . session-initialize)
+  :config
+  (setq session-save-file-coding-system 'utf-8))
 
 (ido-mode -1)
-
-(define-key global-map (kbd "C-+") 'text-scale-increase)
-(define-key global-map (kbd "C--") 'text-scale-decrease)
-
-(defun split-window-right-and-focus ()
-  (interactive)
-  (split-window-right)
-  (other-window 1))
-
-(defun split-window-below-and-focus ()
-  (interactive)
-  (split-window-below)
-  (other-window 1))
-
-(use-package undo-tree
-  :diminish undo-tree-mode
-  :ensure t
-  :config
-  (global-undo-tree-mode))
-
-(use-package evil
-  :ensure t
-  :defer .1
-  :diminish evil-mode
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  :config
-  ;; Make movement keys work over visual lines
-  (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-  (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-  (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
-  (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
-
-  (evil-set-undo-system 'undo-tree)
-
-  ;; Make * search over whole symbols instead of words. This means 
-  ;; it will match "this-variable" rather than just "this".
-  (setq-default evil-symbol-word-search 1)
-  (setq-default evil-want-fine-undo t)
-
-  ;; Make insert mode just like regular emacs
-  (setq evil-insert-state-map (make-sparse-keymap))
-  (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
-
-
-  (setq evil-move-cursor-back nil)
-
-  (evil-mode 1)
-
-  (use-package evil-surround
-    :straight t
-    :diminish evil-surround-mode
-    :config
-    (global-evil-surround-mode 1))
-
-  (use-package evil-matchit
-    :straight t
-    :config
-    (global-evil-matchit-mode 1)))
-
-  (use-package evil-collection
-    :after evil
-    :straight t
-    :config
-    (evil-collection-init))
 
 (use-package general
   :ensure t
@@ -362,10 +298,6 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     "d" 'delete-this-file
     "c" 'xah-copy-file-path
     "s" 'save-buffer)
-
-  ;; Use go-specific jumping for go-mode since it works wells
-  (general-define-key :keymaps 'go-mode-map
-                      "gf" 'godef-jump)
 
   ;; Clojure
   (general-define-key :keymaps 'cider-mode-map
@@ -438,6 +370,92 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   (general-define-key
    :states '(normal)
    "f" 'avy-goto-word-or-subword-1))
+
+(define-key global-map (kbd "C-+") 'text-scale-increase)
+(define-key global-map (kbd "C--") 'text-scale-decrease)
+
+(use-package gumshoe
+  :general
+  (:states '(motion)
+           "C-o" 'gumshoe-backtrack-back
+           "C-i" 'gumshoe-backtrack-forward)
+  :straight (gumshoe :type git
+                     :host github
+                     :repo "Overdr0ne/gumshoe"
+                     :branch "master")
+  :init
+  (add-hook 'evil-mode-hook
+            (lambda ()
+              (global-gumshoe-mode 1)
+              (setq gumshoe-prefer-same-window t)
+              (setq gumshoe-show-footprints-p nil)
+              (defun consult-gumshoe-global ()
+                (interactive)
+                (consult-global-mark (ring-elements (oref gumshoe--global-backlog log)))))))
+
+(defun split-window-right-and-focus ()
+  (interactive)
+  (split-window-right)
+  (other-window 1))
+
+(defun split-window-below-and-focus ()
+  (interactive)
+  (split-window-below)
+  (other-window 1))
+
+(use-package undo-tree
+  :diminish undo-tree-mode
+  :ensure t
+  :config
+  (setq undo-tree-history-directory-alist `(("." . ,(concat user-emacs-directory
+                                                     "undo-tree"))))
+  (global-undo-tree-mode))
+
+(use-package evil
+  :ensure t
+  :diminish evil-mode
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  :config
+  ;; Make movement keys work over visual lines
+  (define-key evil-normal-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+  (define-key evil-normal-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+  (define-key evil-motion-state-map (kbd "<remap> <evil-next-line>") 'evil-next-visual-line)
+  (define-key evil-motion-state-map (kbd "<remap> <evil-previous-line>") 'evil-previous-visual-line)
+
+  (evil-set-undo-system 'undo-tree)
+
+  ;; Make * search over whole symbols instead of words. This means 
+  ;; it will match "this-variable" rather than just "this".
+  (setq-default evil-symbol-word-search 1)
+  (setq-default evil-want-fine-undo t)
+
+  ;; Make insert mode just like regular emacs
+  (setq evil-insert-state-map (make-sparse-keymap))
+  (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
+
+
+  (setq evil-move-cursor-back nil)
+
+  (evil-mode 1)
+
+  (use-package evil-surround
+    :straight t
+    :diminish evil-surround-mode
+    :config
+    (global-evil-surround-mode 1))
+
+  (use-package evil-matchit
+    :straight t
+    :config
+    (global-evil-matchit-mode 1)))
+
+  (use-package evil-collection
+    :after evil
+    :straight t
+    :config
+    (evil-collection-init))
 
 (use-package projectile
   :ensure t
@@ -579,50 +597,6 @@ Version 2017-01-27"
          (message "File path copied: %s" -fpath)
          -fpath )))))
 
-(setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
-
-(use-package pdf-tools
-  :ensure t
-  :after evil
-  :mode ("\\.pdf\\'" . pdf-view-mode)
-  :config
-  (custom-set-variables
-   '(pdf-tools-handle-upgrades nil)) ;; Use brew upgrade pdf-tools instead
-  (pdf-tools-install :no-query)
-
-  (setq-default image-mode-winprops-alist nil)
-
-  (leader-def :infix ","
-    :keymaps 'pdf-view-mode-map
-    "h" 'pdf-annot-add-highlight-markup-annotation
-    "m" 'pdf-annot-add-annotation)
-
-  (add-hook 'pdf-annot-edit-contents-minor-mode-hook (lambda ()
-                                                       (org-mode)
-                                                       ))
-  )
-
-(use-package pdf-view-restore
-  :ensure t
-  :after pdf-tools
-  :hook (pdf-view-mode . pdf-view-restore-mode))
-
-(use-package org-noter
-  :defer t
-  :ensure t)
-
-(use-package org-pdftools
-  :ensure t
-  :hook (org-mode . org-pdftools-setup-link))
-
-(use-package org-noter-pdftools
-  :ensure t
-  :after (org-noter)
-  :commands org-noter-pdftools-jump-to-note
-  :init
-  (with-eval-after-load 'pdf-annot
-    (add-hook 'pdf-annot-activate-created-annotations #'org-noter-pdftools-jump-to-note)))
-
 (use-package direnv
   :ensure t
   :config
@@ -647,53 +621,58 @@ Version 2017-01-27"
   (diredfl-global-mode)
 
   (set-face-attribute 'diredfl-dir-priv nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0D)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0D)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-read-priv nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0B)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0B)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-write-priv nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0A)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0A)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-exec-priv nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base08)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base08)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-no-priv nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base03)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base03)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-dir-name nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0C)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0C)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-symlink nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base05)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base05)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-dir-heading nil
                       :weight 'bold
-                      :foreground (plist-get base16-tomorrow-night-colors :base0B)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0B)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-file-name nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base05)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base05)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-file-suffix nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0B)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0B)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-number nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0A)
-                      :background (plist-get base16-tomorrow-night-colors :base00))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0A)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
 
   (set-face-attribute 'diredfl-date-time nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0D)
-                      :background (plist-get base16-tomorrow-night-colors :base00)))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0D)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base00)))
+
+(use-package json-navigator
+  :straight t)
+
+(global-so-long-mode t)
 
 (add-to-list 'default-frame-alist
              '(font . "Fira Code Medium-11"))
@@ -716,6 +695,10 @@ Version 2017-01-27"
                                        "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
 
   (global-ligature-mode 't))
+
+(when (member "Twemoji" (font-family-list))
+  (set-fontset-font
+   t 'symbol (font-spec :family "Twemoji") nil 'prepend))
 
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
@@ -838,10 +821,10 @@ Version 2017-01-27"
   :straight (selectrum :type git :host github :repo "raxod502/selectrum")
   :config
 
-  (plist-get base16-shell-colors-256 :base09)
+  (plist-get base16-theme-shell-colors-256 :base09)
   (set-face-attribute 'selectrum-current-candidate nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base09)
-                      :background (plist-get base16-tomorrow-night-colors :base01))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base09)
+                      :background (plist-get base16-tomorrow-night-theme-colors :base01))
 
   (selectrum-mode +1)
 
@@ -888,9 +871,6 @@ Version 2017-01-27"
   (leader-def :infix "b"
     "b" 'consult-buffer)
 
-  (general-define-key :states '(normal)
-                      "F" 'consult-imenu)
-
   (defun consult-ripgrep-at-point ()
     (interactive)
     (consult-ripgrep default-directory (thing-at-point 'symbol)))
@@ -902,6 +882,34 @@ Version 2017-01-27"
   (leader-def :infix "p"
     "a" 'consult-project-ripgrep-at-point)
 
+  (defun consult--buffer-sort-visibility-in-other-windows (buffers)
+    "Sort BUFFERS by visibility, only excluding a visibile buffer if its in the current window."
+    (let ((hidden)
+          (current (current-buffer)))
+      (consult--keep! buffers
+        (unless (eq it current)
+          (if
+              (eq (get-buffer-window it 'visible)
+                  (selected-window))
+              it
+            (push it hidden)
+            nil)))
+      (nconc (nreverse hidden) buffers (list (current-buffer)))))
+
+  ;; Overriding to change the 'visibility sort. This makes the last visited buffer
+  ;; appear in the buffer list, even if it is open in a different window.
+  (setq consult--source-buffer
+        `(:name     "Buffer"
+                    :narrow   ?b
+                    :category buffer
+                    :face     consult-buffer
+                    :history  buffer-name-history
+                    :state    ,#'consult--buffer-state
+                    :default  t
+                    :items
+                    ,(lambda () (consult--buffer-query :sort 'visibility-in-other-windows
+                                                  :as #'buffer-name))))
+
   (def-projectile-commander-method ?a
     "Full text search in the project."
     (consult-project-ripgrep-at-point))
@@ -909,6 +917,12 @@ Version 2017-01-27"
   (add-hook 'eshell-mode-hook
             (lambda()
               (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
+
+(use-package consult-imenu
+  :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
+  :general (general-define-key
+            :states '(normal)
+            "F" 'consult-imenu))
 
 (use-package consult-selectrum
   :straight (consult-selectrum :type git :host github :repo "minad/consult" :branch "main")
@@ -925,9 +939,9 @@ Version 2017-01-27"
   :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
   :config
   (set-face-attribute 'selectrum-prescient-primary-highlight nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0E))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0E))
   (set-face-attribute 'selectrum-prescient-secondary-highlight nil
-                      :foreground (plist-get base16-tomorrow-night-colors :base0D))
+                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0D))
   (selectrum-prescient-mode +1)
   (prescient-persist-mode +1))
 
@@ -977,7 +991,7 @@ Version 2017-01-27"
   :straight t
   :config
   (beacon-mode 1)
-  (setq beacon-color (plist-get base16-tomorrow-night-colors :base02)))
+  (setq beacon-color (plist-get base16-tomorrow-night-theme-colors :base02)))
 
 (use-package dimmer
   :straight t
@@ -987,6 +1001,19 @@ Version 2017-01-27"
   (dimmer-configure-company-box)
   (dimmer-configure-magit)
   (dimmer-configure-org)
+
+  ;; Make dimmer work with lsp doc: https://github.com/gonewest818/dimmer.el/issues/49
+  (defun dimmer-lsp-ui-doc-p ()
+    (string-prefix-p " *lsp-ui-doc-" (buffer-name)))
+  (add-to-list 'dimmer-prevent-dimming-predicates #'dimmer-lsp-ui-doc-p)
+
+  (defun advices/dimmer-config-change-handler ()
+    (dimmer--dbg-buffers 1 "dimmer-config-change-handler")
+    (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
+                           dimmer-prevent-dimming-predicates)))
+      (dimmer-process-all (not ignore))))
+  (advice-add 'dimmer-config-change-handler :override #'advices/dimmer-config-change-handler)
+
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*Help\\*")
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation\\*")
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-headers\\*")
@@ -1451,8 +1478,8 @@ Version 2017-01-27"
   (defun esh-customize-faces ()
     (set-face-attribute 'eshell-ls-directory
                         nil
-                        :foreground (plist-get base16-tomorrow-night-colors :base0C)
-                        :background (plist-get base16-tomorrow-night-colors :base00)))
+                        :foreground (plist-get base16-tomorrow-night-theme-colors :base0C)
+                        :background (plist-get base16-tomorrow-night-theme-colors :base00)))
 
   (defmacro esh-section (name form &rest props)
     `(setq ,name
@@ -1476,24 +1503,24 @@ Version 2017-01-27"
 
   (esh-section esh-header
                "λ"
-               `(:foreground ,(plist-get base16-tomorrow-night-colors :base08)))
+               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base08)))
 
   (esh-section esh-user
                (user-login-name)
-               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0B)))
+               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0B)))
 
   (esh-section esh-dir
                (concat "[" (abbreviate-file-name (eshell/pwd)) "]")
-               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0E)))
+               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0E)))
 
   (esh-section esh-git
                (when-let ((branch (magit-get-current-branch))) 
                  (concat " " branch))
-               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0D)))
+               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0D)))
 
   (esh-section esh-footer
                "\n→"
-               `(:foreground ,(plist-get base16-tomorrow-night-colors :base0A)))
+               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0A)))
 
   (setq eshell-prompt-regexp "→ ")
   (setq eshell-skip-prompt-function #'eshell-skip-prompt)
@@ -1615,6 +1642,16 @@ Version 2017-01-27"
   (customize-set-variable 'lsp-solargraph-use-bundler nil)
   (customize-set-variable 'lsp-solargraph-multi-root nil)
 
+  (setq lsp-headerline-breadcrumb-enable nil)
+
+  (setq lsp-ui-sideline-show-code-actions t)
+
+  (setq lsp-ui-doc-enable t)
+  (setq lsp-ui-doc-show-with-cursor t)
+
+  ;; Only show type signatures in modeline
+  (setq lsp-signature-render-documentation nil)
+
   (setq lsp-log-io nil)
   (setq lsp-clients-typescript-server-args '("--stdio")))
 
@@ -1673,15 +1710,10 @@ Version 2017-01-27"
 
 (use-package solidity-flycheck
   :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
-  :defer t
-  :init
+  :hook solidity-mode
+  :config
   (setq solidity-flycheck-chaining-error-level t)
-  (setq solidity-flycheck-use-project t)
-
-  (add-hook
-   'solidity-mode-hook
-   (lambda ()
-     (require 'solidity-flycheck))))
+  (setq solidity-flycheck-use-project t))
 
 (use-package company-solidity
   :straight (company-solidity :type git :host github :repo "ethereum/emacs-solidity")
@@ -1696,6 +1728,9 @@ Version 2017-01-27"
   :straight t
   :config
   (global-prettier-mode))
+
+(use-package vyper-mode
+  :straight t)
 
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
@@ -1779,8 +1814,16 @@ Version 2017-01-27"
 
 (setq-default fill-column 85)
 
+(use-package org
+  :straight org-contrib
+  :config
+  (require 'org-eldoc))
+
 (use-package org-z
   :straight (org-z :type git :host github :repo "landakram/org-z")
+  :general
+  (leader-def :infix "o"
+    "b" 'org-z-backlinks-at-point)
   :config
   (org-z-mode 1))
 
@@ -2086,16 +2129,6 @@ belongs as a list."
           (lambda ()
             (when org-inline-image-overlays
               (org-redisplay-inline-images))))
-
-(use-package org-sidebar
-  :straight t
-  :general
-  (leader-def :infix "o"
-    "b" 'org-sidebar-backlinks)
-  :after (general)
-  :config
-  ;; Work around https://github.com/alphapapa/org-sidebar/issues/32
-  (require 'org-ql-search))
 
 (require 'org-crypt)
 (require 'epa-file)
