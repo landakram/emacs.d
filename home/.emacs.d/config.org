@@ -1299,6 +1299,20 @@ Enable automatic optimizations for files with long lines
 #+RESULTS:
 : t
 
+*** Emojis
+:PROPERTIES:
+:ID:       d5d93bd2-0fb0-4250-96d3-be1fe0bc208b
+:END:
+
+#+begin_src emacs-lisp
+  (when (member "Twemoji" (font-family-list))
+    (set-fontset-font
+     t 'symbol (font-spec :family "Twemoji") nil 'prepend))
+#+end_src
+
+Here's a test to make sure it works:
+
+ - 🚀
 ** Dark title bar
 :PROPERTIES:
 :ID:       A4F9B025-8D9A-4244-930E-D77E20B10EEE
