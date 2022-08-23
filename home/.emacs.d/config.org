@@ -1714,10 +1714,24 @@ Dim inactive buffers.
     (dimmer-configure-company-box)
     (dimmer-configure-magit)
     (dimmer-configure-org)
+
+    ;; Make dimmer work with lsp doc: https://github.com/gonewest818/dimmer.el/issues/49
+    (defun dimmer-lsp-ui-doc-p ()
+      (string-prefix-p " *lsp-ui-doc-" (buffer-name)))
+    (add-to-list 'dimmer-prevent-dimming-predicates #'dimmer-lsp-ui-doc-p)
+
+    (defun advices/dimmer-config-change-handler ()
+      (dimmer--dbg-buffers 1 "dimmer-config-change-handler")
+      (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
+                             dimmer-prevent-dimming-predicates)))
+        (dimmer-process-all (not ignore))))
+    (advice-add 'dimmer-config-change-handler :override #'advices/dimmer-config-change-handler)
+
     (add-to-list 'dimmer-buffer-exclusion-regexps "\\*Help\\*")
     (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation\\*")
     (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-headers\\*")
     (add-to-list 'dimmer-buffer-exclusion-regexps "\\*mu4e-view\\*"))
+ 
 #+end_src
 
 * Writing
@@ -2712,6 +2726,16 @@ Let's use web-mode, which supports font locking for templating.
     (require 'lsp-solargraph)
     (customize-set-variable 'lsp-solargraph-use-bundler nil)
     (customize-set-variable 'lsp-solargraph-multi-root nil)
+
+    (setq lsp-headerline-breadcrumb-enable nil)
+
+    (setq lsp-ui-sideline-show-code-actions t)
+
+    (setq lsp-ui-doc-enable t)
+    (setq lsp-ui-doc-show-with-cursor t)
+
+    ;; Only show type signatures in modeline
+    (setq lsp-signature-render-documentation nil)
 
     (setq lsp-log-io nil)
     (setq lsp-clients-typescript-server-args '("--stdio")))
