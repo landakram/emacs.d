@@ -1096,60 +1096,6 @@ Version 2017-01-27"
 
 #+RESULTS:
 : xah-copy-file-path
-** PDF tools
-:PROPERTIES:
-:ID:       A0204B00-48E4-4D60-9EE3-5FF28ED6AD5B
-:END:
-
-#+begin_src emacs-lisp
-  (setq pdf-info-epdfinfo-program "/usr/local/bin/epdfinfo")
-
-  (use-package pdf-tools
-    :ensure t
-    :after evil
-    :mode ("\\.pdf\\'" . pdf-view-mode)
-    :config
-    (custom-set-variables
-     '(pdf-tools-handle-upgrades nil)) ;; Use brew upgrade pdf-tools instead
-    (pdf-tools-install :no-query)
-
-    (setq-default image-mode-winprops-alist nil)
-
-    (leader-def :infix ","
-      :keymaps 'pdf-view-mode-map
-      "h" 'pdf-annot-add-highlight-markup-annotation
-      "m" 'pdf-annot-add-annotation)
-
-    (add-hook 'pdf-annot-edit-contents-minor-mode-hook (lambda ()
-                                                         (org-mode)
-                                                         ))
-    )
-
-  (use-package pdf-view-restore
-    :ensure t
-    :after pdf-tools
-    :hook (pdf-view-mode . pdf-view-restore-mode))
-
-  (use-package org-noter
-    :defer t
-    :ensure t)
-
-  (use-package org-pdftools
-    :ensure t
-    :hook (org-mode . org-pdftools-setup-link))
-
-  (use-package org-noter-pdftools
-    :ensure t
-    :after (org-noter)
-    :commands org-noter-pdftools-jump-to-note
-    :init
-    (with-eval-after-load 'pdf-annot
-      (add-hook 'pdf-annot-activate-created-annotations #'org-noter-pdftools-jump-to-note)))
-#+end_src
-
-#+RESULTS:
-: t
-
 ** direnv
 :PROPERTIES:
 :ID:       44464C04-19FC-42EB-B528-95949E112FCE
