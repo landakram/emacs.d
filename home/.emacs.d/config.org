@@ -1490,140 +1490,171 @@ Helm is out again for now. ~helm-M-x~ was getting unbearably slow. After switchi
 :END:
 Selectrum is basically how I want completing-read to work. Simple, composable, fast.
 #+begin_src emacs-lisp
-  (use-package selectrum
-    :straight (selectrum :type git :host github :repo "raxod502/selectrum")
-    :config
+    (use-package selectrum
+      :straight (selectrum :type git :host github :repo "raxod502/selectrum")
+      :config
 
-    (plist-get base16-theme-shell-colors-256 :base09)
-    (set-face-attribute 'selectrum-current-candidate nil
-                        :foreground (plist-get base16-tomorrow-night-theme-colors :base09)
-                        :background (plist-get base16-tomorrow-night-theme-colors :base01))
+      (plist-get base16-theme-shell-colors-256 :base09)
+      (set-face-attribute 'selectrum-current-candidate nil
+                          :foreground (plist-get base16-tomorrow-night-theme-colors :base09)
+                          :background (plist-get base16-tomorrow-night-theme-colors :base01))
 
-    (selectrum-mode +1)
+      (selectrum-mode +1)
 
-    (leader-def :infix "f"
-      "f" 'find-file)
+      (leader-def :infix "f"
+        "f" 'find-file)
 
-    (leader-def 
-      "x" 'execute-extended-command))
+      (leader-def 
+        "x" 'execute-extended-command))
 
-  (use-package consult
-    :straight (consult :type git :host github :repo "minad/consult" :branch "main")
-    :after projectile
-    :bind (("C-x M-:" . consult-complex-command)
-           ("C-c h" . consult-history)
-           ("C-c m" . consult-mode-command)
-           ("C-x b" . consult-buffer)
-           ("C-x 4 b" . consult-buffer-other-window)
-           ("C-x 5 b" . consult-buffer-other-frame)
-           ("C-x r x" . consult-register)
-           ("C-x r b" . consult-bookmark)
-           ("M-g g" . consult-goto-line)
-           ("M-g M-g" . consult-goto-line)
-           ("M-g o" . consult-outline)
-           ("M-g l" . consult-line)
-           ("M-g m" . consult-mark)
-           ("M-g k" . consult-global-mark)
-           ("M-g r" . consult-git-grep)
-           ("M-g f" . consult-find)
-           ("M-g i" . consult-project-imenu)
-           ("M-g e" . consult-error)
-           ("M-s m" . consult-multi-occur)
-           ("M-y" . consult-yank-pop)
-           ("<help> a" . consult-apropos))
-    :init
-    ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
-    (fset 'multi-occur #'consult-multi-occur)
+    (use-package consult
+      :straight (consult :type git :host github :repo "minad/consult" :branch "main")
+      :after projectile
+      :bind (("C-x M-:" . consult-complex-command)
+             ("C-c h" . consult-history)
+             ("C-c m" . consult-mode-command)
+             ("C-x b" . consult-buffer)
+             ("C-x 4 b" . consult-buffer-other-window)
+             ("C-x 5 b" . consult-buffer-other-frame)
+             ("C-x r x" . consult-register)
+             ("C-x r b" . consult-bookmark)
+             ("M-g g" . consult-goto-line)
+             ("M-g M-g" . consult-goto-line)
+             ("M-g o" . consult-outline)
+             ("M-g l" . consult-line)
+             ("M-g m" . consult-mark)
+             ("M-g k" . consult-global-mark)
+             ("M-g r" . consult-git-grep)
+             ("M-g f" . consult-find)
+             ("M-g i" . consult-project-imenu)
+             ("M-g e" . consult-error)
+             ("M-s m" . consult-multi-occur)
+             ("M-y" . consult-yank-pop)
+             ("<help> a" . consult-apropos))
+      :init
+      ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
+      (fset 'multi-occur #'consult-multi-occur)
 
-    :config
-    (autoload 'projectile-project-root "projectile")
-    (setq consult-project-root-function #'projectile-project-root)
+      :config
+      (autoload 'projectile-project-root "projectile")
+      (setq consult-project-root-function #'projectile-project-root)
 
-    (setq consult-narrow-key "<")
+      (setq consult-narrow-key "<")
 
-    (leader-def :infix "b"
-      "b" 'consult-buffer)
+      (leader-def :infix "b"
+        "b" 'consult-buffer)
 
-    (general-define-key :states '(normal)
-                        "F" 'consult-imenu)
+      (defun consult-ripgrep-at-point ()
+        (interactive)
+        (consult-ripgrep default-directory (thing-at-point 'symbol)))
 
-    (defun consult-ripgrep-at-point ()
-      (interactive)
-      (consult-ripgrep default-directory (thing-at-point 'symbol)))
+      (defun consult-project-ripgrep-at-point ()
+        (interactive)
+        (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
 
-    (defun consult-project-ripgrep-at-point ()
-      (interactive)
-      (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
+      (leader-def :infix "p"
+        "a" 'consult-project-ripgrep-at-point)
 
-    (leader-def :infix "p"
-      "a" 'consult-project-ripgrep-at-point)
+      (defun consult--buffer-sort-visibility-in-other-windows (buffers)
+        "Sort BUFFERS by visibility, only excluding a visibile buffer if its in the current window."
+        (let ((hidden)
+              (current (current-buffer)))
+          (consult--keep! buffers
+            (unless (eq it current)
+              (if
+                  (eq (get-buffer-window it 'visible)
+                      (selected-window))
+                  it
+                (push it hidden)
+                nil)))
+          (nconc (nreverse hidden) buffers (list (current-buffer)))))
 
-    (def-projectile-commander-method ?a
-      "Full text search in the project."
-      (consult-project-ripgrep-at-point))
+      ;; Overriding to change the 'visibility sort. This makes the last visited buffer
+      ;; appear in the buffer list, even if it is open in a different window.
+      (setq consult--source-buffer
+            `(:name     "Buffer"
+                        :narrow   ?b
+                        :category buffer
+                        :face     consult-buffer
+                        :history  buffer-name-history
+                        :state    ,#'consult--buffer-state
+                        :default  t
+                        :items
+                        ,(lambda () (consult--buffer-query :sort 'visibility-in-other-windows
+                                                      :as #'buffer-name))))
 
-    (add-hook 'eshell-mode-hook
-              (lambda()
-                (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
+      (def-projectile-commander-method ?a
+        "Full text search in the project."
+        (consult-project-ripgrep-at-point))
 
-  (use-package consult-selectrum
-    :straight (consult-selectrum :type git :host github :repo "minad/consult" :branch "main")
-    :after selectrum
-    :demand t)
+      (add-hook 'eshell-mode-hook
+                (lambda()
+                  (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
 
-  ;; Optionally add the `consult-flycheck' command.
-  (use-package consult-flycheck
-    :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
-    :bind (:map flycheck-command-map
-                ("!" . consult-flycheck)))
+    (use-package consult-imenu
+      :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
+      :general (general-define-key
+                :states '(normal)
+                "F" 'consult-imenu))
 
-  (use-package selectrum-prescient
-    :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
-    :config
-    (set-face-attribute 'selectrum-prescient-primary-highlight nil
-                        :foreground (plist-get base16-tomorrow-night-theme-colors :base0E))
-    (set-face-attribute 'selectrum-prescient-secondary-highlight nil
-                        :foreground (plist-get base16-tomorrow-night-theme-colors :base0D))
-    (selectrum-prescient-mode +1)
-    (prescient-persist-mode +1))
+    (use-package consult-selectrum
+      :straight (consult-selectrum :type git :host github :repo "minad/consult" :branch "main")
+      :after selectrum
+      :demand t)
 
-  (use-package embark
-    :straight (embark :type git :host github :repo "oantolin/embark")
-    :bind
-    (:map selectrum-minibuffer-map
-          ("C-j" . embark-act))
+    ;; Optionally add the `consult-flycheck' command.
+    (use-package consult-flycheck
+      :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
+      :bind (:map flycheck-command-map
+                  ("!" . consult-flycheck)))
 
-    :config
-    (defun refresh-selectrum ()
-      (setq selectrum--previous-input-string nil))
+    (use-package selectrum-prescient
+      :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
+      :config
+      (set-face-attribute 'selectrum-prescient-primary-highlight nil
+                          :foreground (plist-get base16-tomorrow-night-theme-colors :base0E))
+      (set-face-attribute 'selectrum-prescient-secondary-highlight nil
+                          :foreground (plist-get base16-tomorrow-night-theme-colors :base0D))
+      (selectrum-prescient-mode +1)
+      (prescient-persist-mode +1))
 
-    (add-hook 'embark-pre-action-hook #'refresh-selectrum)
+    (use-package embark
+      :straight (embark :type git :host github :repo "oantolin/embark")
+      :bind
+      (:map selectrum-minibuffer-map
+            ("C-j" . embark-act))
 
-    ;; Pop up which-key when running embark-act
-    (setq embark-action-indicator
-          (lambda (map &optional _target)
-            (which-key--show-keymap "Embark" map nil nil 'no-paging)
-            #'which-key--hide-popup-ignore-command)
-          embark-become-indicator embark-action-indicator)
-    (setq embark-prompter 'embark-keymap-prompter))
+      :config
+      (defun refresh-selectrum ()
+        (setq selectrum--previous-input-string nil))
 
-  (use-package embark-consult
-    :straight (embark-consult :type git :host github :repo "oantolin/embark")
-    :after (embark consult)
-    :demand t
-    :hook
-    (embark-collect-mode . consult-preview-at-point-mode))
+      (add-hook 'embark-pre-action-hook #'refresh-selectrum)
 
-  (use-package marginalia
-    :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
-    :bind (:map minibuffer-local-map
-                ("C-M-a" . marginalia-cycle))
-    :init
-    (marginalia-mode)
+      ;; Pop up which-key when running embark-act
+      (setq embark-action-indicator
+            (lambda (map &optional _target)
+              (which-key--show-keymap "Embark" map nil nil 'no-paging)
+              #'which-key--hide-popup-ignore-command)
+            embark-become-indicator embark-action-indicator)
+      (setq embark-prompter 'embark-keymap-prompter))
 
-    ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
-    (advice-add #'marginalia-cycle :after
-                (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
+    (use-package embark-consult
+      :straight (embark-consult :type git :host github :repo "oantolin/embark")
+      :after (embark consult)
+      :demand t
+      :hook
+      (embark-collect-mode . consult-preview-at-point-mode))
+
+    (use-package marginalia
+      :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
+      :bind (:map minibuffer-local-map
+                  ("C-M-a" . marginalia-cycle))
+      :init
+      (marginalia-mode)
+
+      ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
+      (advice-add #'marginalia-cycle :after
+                  (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
 
 #+end_src
 
