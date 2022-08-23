@@ -2837,15 +2837,10 @@ Let's use web-mode, which supports font locking for templating.
 
   (use-package solidity-flycheck
     :straight (solidity-flycheck :type git :host github :repo "ethereum/emacs-solidity")
-    :defer t
-    :init
+    :hook solidity-mode
+    :config
     (setq solidity-flycheck-chaining-error-level t)
-    (setq solidity-flycheck-use-project t)
-
-    (add-hook
-     'solidity-mode-hook
-     (lambda ()
-       (require 'solidity-flycheck))))
+    (setq solidity-flycheck-use-project t))
 
   (use-package company-solidity
     :straight (company-solidity :type git :host github :repo "ethereum/emacs-solidity")
@@ -2865,6 +2860,16 @@ Let's use web-mode, which supports font locking for templating.
 #+RESULTS:
 | lambda | nil | (set (make-local-variable 'company-backends) (append '((company-dabbrev-code company-solidity company-capf)) company-backends)) |                                                |                                                 |                                        |                                                                             |                              |
 | lambda | nil | (setq solidity-flycheck-solium-checker-active t)                                                                                | (setq solidity-flycheck-solc-checker-active t) | (setq solidity-flycheck-chaining-error-level t) | (setq solidity-flycheck-use-project t) | (setq solidity-flycheck-solc-additional-allow-paths '(~/.brownie/packages)) | (require 'solidity-flycheck) |
+
+** Vyper
+:PROPERTIES:
+:ID:       3866069f-b94e-4284-b014-be947fb8c411
+:END:
+
+#+begin_src emacs-lisp
+  (use-package vyper-mode
+    :straight t)
+#+end_src
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
