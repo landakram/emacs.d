@@ -568,7 +568,9 @@ Save some variables between sessions.
 #+begin_src emacs-lisp
   (use-package session
     :ensure t
-    :hook (after-init . session-initialize))
+    :hook (after-init . session-initialize)
+    :config
+    (setq session-save-file-coding-system 'utf-8))
 #+end_src
 
 #+RESULTS:
@@ -618,7 +620,6 @@ better-defaults enables ido-mode, but we're using selectrum.
 
   (use-package evil
     :ensure t
-    :defer .1
     :diminish evil-mode
     :init
     (setq evil-want-integration t)
