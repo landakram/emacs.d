@@ -3015,8 +3015,16 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
   (setq-default fill-column 85)
 
+  (use-package org
+    :straight org-contrib
+    :config
+    (require 'org-eldoc))
+
   (use-package org-z
     :straight (org-z :type git :host github :repo "landakram/org-z")
+    :general
+    (leader-def :infix "o"
+      "b" 'org-z-backlinks-at-point)
     :config
     (org-z-mode 1))
 
@@ -3458,24 +3466,6 @@ Source: https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d.
 | lambda | nil | (when org-inline-image-overlays (org-redisplay-inline-images)) |
 #+RESULTS:
 : t
-** org-sidebar
-:PROPERTIES:
-:ID:       A2ED60B7-649C-4E8E-97E1-3290F85C6D21
-:END:
-
-#+begin_src emacs-lisp
-  (use-package org-sidebar
-    :straight t
-    :general
-    (leader-def :infix "o"
-      "b" 'org-sidebar-backlinks)
-    :after (general)
-    :config
-    ;; Work around https://github.com/alphapapa/org-sidebar/issues/32
-    (require 'org-ql-search))
-#+end_src
-
-#+RESULTS:
 
 ** Encryption
 :PROPERTIES:
