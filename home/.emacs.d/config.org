@@ -2939,6 +2939,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     (require 'org-tempo)
     (setq org-image-actual-width 300)
     (setq org-src-fontify-natively t)
+    (setq org-src-tab-acts-natively nil)
     (setq org-fontify-done-headline nil)
     (setq org-log-done 'time)
 

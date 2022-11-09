@@ -1783,6 +1783,7 @@ Version 2017-01-27"
   (require 'org-tempo)
   (setq org-image-actual-width 300)
   (setq org-src-fontify-natively t)
+  (setq org-src-tab-acts-natively nil)
   (setq org-fontify-done-headline nil)
   (setq org-log-done 'time)
 
