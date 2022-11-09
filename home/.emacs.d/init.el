@@ -1058,6 +1058,19 @@ Version 2017-01-27"
   :mode (("\\.gmi\\'" . gemini-mode))
   :straight t)
 
+(use-package copilot
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook 'copilot-mode)
+
+  (with-eval-after-load 'company
+    ;; disable inline previews
+    (delq 'company-preview-if-just-one-frontend company-frontends))
+
+  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+  (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion))
+
 (use-package tdd
   :load-path "site-lisp/tdd/")
 

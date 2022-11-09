@@ -1733,6 +1733,27 @@ Dim inactive buffers.
     :straight t)
 #+end_src
 * Coding
+** GitHub Copilot
+:PROPERTIES:
+:ID:       3a3911e4-b2ee-4073-80da-5d7f04d5f87f
+:END:
+#+begin_src emacs-lisp
+  (use-package copilot
+    :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+    :ensure t
+    :config
+    (add-hook 'prog-mode-hook 'copilot-mode)
+
+    (with-eval-after-load 'company
+      ;; disable inline previews
+      (delq 'company-preview-if-just-one-frontend company-frontends))
+
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion))
+#+end_src
+
+#+RESULTS:
+
 ** Testing
 :PROPERTIES:
 :ID:       283EAF79-A1DC-4EFF-B6CD-AE91C3C5AC5D
