@@ -334,6 +334,7 @@ Flycheck is an on-the-fly syntax checker.
     (setq-default flycheck-disabled-checkers
                   (append flycheck-disabled-checkers
                           '(javascript-jshint
+                            python-flake8
                             ruby-rubocop
                             ruby-reek
                             emacs-lisp-checkdoc))))
@@ -1215,8 +1216,11 @@ Enable automatic optimizations for files with long lines
 :END:
 
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'default-frame-alist
-               '(font . "Fira Code Medium-11"))
+  ;;(add-to-list 'default-frame-alist
+  ;;             '(font . "Fira Code Medium-12"))
+
+  (set-face-attribute 'default nil
+                      :family "Fira Code" :height 120 :weight 'normal)
 
   (use-package ligature
     :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
@@ -1236,6 +1240,8 @@ Enable automatic optimizations for files with long lines
                                          "<~" "<~~" "</" "</>" "~@" "~-" "~>" "~~" "~~>" "%%"))
 
     (global-ligature-mode 't))
+
+
 #+END_SRC
 
 #+RESULTS:
@@ -1366,149 +1372,157 @@ Make scrolling behavior more like vim:
 :END:
 These packages succeed selectrum (RIP).
 #+begin_src emacs-lisp
-(use-package consult
-  :straight (consult :type git :host github :repo "minad/consult" :branch "main")
-  :after projectile
-  :bind (("C-x M-:" . consult-complex-command)
-         ("C-c h" . consult-history)
-         ("C-c m" . consult-mode-command)
-         ("C-x b" . consult-buffer)
-         ("C-x 4 b" . consult-buffer-other-window)
-         ("C-x 5 b" . consult-buffer-other-frame)
-         ("C-x r x" . consult-register)
-         ("C-x r b" . consult-bookmark)
-         ("M-g g" . consult-goto-line)
-         ("M-g M-g" . consult-goto-line)
-         ("M-g o" . consult-outline)
-         ("M-g l" . consult-line)
-         ("M-g m" . consult-mark)
-         ("M-g k" . consult-global-mark)
-         ("M-g r" . consult-git-grep)
-         ("M-g f" . consult-find)
-         ("M-g i" . consult-project-imenu)
-         ("M-g e" . consult-error)
-         ("M-s m" . consult-multi-occur)
-         ("M-y" . consult-yank-pop)
-         ("<help> a" . consult-apropos))
-  :init
-  ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
-  (fset 'multi-occur #'consult-multi-occur)
+  (use-package consult
+    :straight (consult :type git :host github :repo "minad/consult" :branch "main")
+    :after projectile
+    :bind (("C-x M-:" . consult-complex-command)
+           ("C-c h" . consult-history)
+           ("C-c m" . consult-mode-command)
+           ("C-x b" . consult-buffer)
+           ("C-x 4 b" . consult-buffer-other-window)
+           ("C-x 5 b" . consult-buffer-other-frame)
+           ("C-x r x" . consult-register)
+           ("C-x r b" . consult-bookmark)
+           ("M-g g" . consult-goto-line)
+           ("M-g M-g" . consult-goto-line)
+           ("M-g o" . consult-outline)
+           ("M-g l" . consult-line)
+           ("M-g m" . consult-mark)
+           ("M-g k" . consult-global-mark)
+           ("M-g r" . consult-git-grep)
+           ("M-g f" . consult-find)
+           ("M-g i" . consult-project-imenu)
+           ("M-g e" . consult-error)
+           ("M-s m" . consult-multi-occur)
+           ("M-y" . consult-yank-pop)
+           ("<help> a" . consult-apropos))
+    :init
+    ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
+    (fset 'multi-occur #'consult-multi-occur)
 
-  :config
-  (autoload 'projectile-project-root "projectile")
-  (setq consult-project-root-function #'projectile-project-root)
+    :config
+    (autoload 'projectile-project-root "projectile")
+    (setq consult-project-root-function #'projectile-project-root)
 
-  (setq consult-narrow-key "<")
+    (setq consult-narrow-key "<")
 
-  (leader-def :infix "b"
-    "b" 'consult-buffer)
+    (setq xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
 
-  (defun consult-ripgrep-at-point ()
-    (interactive)
-    (consult-ripgrep default-directory (thing-at-point 'symbol)))
+    (leader-def :infix "b"
+      "b" 'consult-buffer)
 
-  (defun consult-project-ripgrep-at-point ()
-    (interactive)
-    (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
+    (defun consult-ripgrep-at-point ()
+      (interactive)
+      (consult-ripgrep default-directory (thing-at-point 'symbol)))
 
-  (leader-def :infix "p"
-    "a" 'consult-project-ripgrep-at-point)
+    (defun consult-project-ripgrep-at-point ()
+      (interactive)
+      (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
 
-  (defun consult--buffer-sort-visibility-in-other-windows (buffers)
-    "Sort BUFFERS by visibility, only excluding a visibile buffer if its in the current window."
-    (let ((hidden)
-          (current (current-buffer)))
-      (consult--keep! buffers
-        (unless (eq it current)
-          (if
-              (eq (get-buffer-window it 'visible)
-                  (selected-window))
-              it
-            (push it hidden)
-            nil)))
-      (nconc (nreverse hidden) buffers (list (current-buffer)))))
+    (leader-def :infix "p"
+      "a" 'consult-project-ripgrep-at-point)
 
-  ;; Overriding to change the 'visibility sort. This makes the last visited buffer
-  ;; appear in the buffer list, even if it is open in a different window.
-  (setq consult--source-buffer
-        `(:name     "Buffer"
-                    :narrow   ?b
-                    :category buffer
-                    :face     consult-buffer
-                    :history  buffer-name-history
-                    :state    ,#'consult--buffer-state
-                    :default  t
-                    :items
-                    ,(lambda () (consult--buffer-query :sort 'visibility-in-other-windows
-                                                  :as #'buffer-name))))
+    (defun consult--buffer-sort-visibility-in-other-windows (buffers)
+      "Sort BUFFERS by visibility, only excluding a visibile buffer if its in the current window."
+      (let ((hidden)
+            (current (current-buffer)))
+        (consult--keep! buffers
+          (unless (eq it current)
+            (if
+                (eq (get-buffer-window it 'visible)
+                    (selected-window))
+                it
+              (push it hidden)
+              nil)))
+        (nconc (nreverse hidden) buffers (list (current-buffer)))))
 
-  (def-projectile-commander-method ?a
-    "Full text search in the project."
-    (consult-project-ripgrep-at-point))
+    ;; Overriding to change the 'visibility sort. This makes the last visited buffer
+    ;; appear in the buffer list, even if it is open in a different window.
+    (setq consult--source-buffer
+          `(:name     "Buffer"
+                      :narrow   ?b
+                      :category buffer
+                      :face     consult-buffer
+                      :history  buffer-name-history
+                      :state    ,#'consult--buffer-state
+                      :default  t
+                      :items
+                      ,(lambda () (consult--buffer-query :sort 'visibility-in-other-windows
+                                                    :as #'buffer-name))))
 
-  (add-hook 'eshell-mode-hook
-            (lambda()
-              (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
+    (def-projectile-commander-method ?a
+      "Full text search in the project."
+      (consult-project-ripgrep-at-point))
 
-(use-package consult-imenu
-  :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
-  :general (general-define-key
-            :states '(normal)
-            "F" 'consult-imenu))
+    (add-hook 'eshell-mode-hook
+              (lambda()
+                (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
 
-(use-package vertico
-  :straight t
-  :init
-  (vertico-mode))
+  (use-package consult-imenu
+    :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
+    :general (general-define-key
+              :states '(normal)
+              "F" 'consult-imenu))
 
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion))))
+  (use-package vertico
+    :straight t
+    :init
+    (vertico-mode))
 
-  :config
-  (leader-def :infix "f"
-    "f" 'find-file)
+  (use-package orderless
+    :straight t
+    :init
+    (setq completion-styles '(orderless basic)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles partial-completion))))
 
-  (leader-def 
-    "x" 'execute-extended-command))
+    :config
+    (leader-def :infix "f"
+      "f" 'find-file)
+
+    (leader-def 
+      "x" 'execute-extended-command)
+
+    (leader-def :infix "b"
+      "b" 'consult-buffer)
+    )
 
 
-;; Optionally add the `consult-flycheck' command.
-(use-package consult-flycheck
-  :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
-  :bind (:map flycheck-command-map
-              ("!" . consult-flycheck)))
+  ;; Optionally add the `consult-flycheck' command.
+  (use-package consult-flycheck
+    :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
+    :bind (:map flycheck-command-map
+                ("!" . consult-flycheck)))
 
-(use-package embark
-  :straight (embark :type git :host github :repo "oantolin/embark")
-  :bind
-  (:map electrum-minibuffer-map
-        ("C-j" . embark-act))
+  (use-package embark
+    :straight (embark :type git :host github :repo "oantolin/embark")
+    :bind
+    (:map electrum-minibuffer-map
+          ("C-j" . embark-act))
 
-  :config
-  ;; Pop up which-key when running embark-act
-  (setq embark-action-indicator
-        (lambda (map &optional _target)
-          (which-key--show-keymap "Embark" map nil nil 'no-paging)
-          #'which-key--hide-popup-ignore-command)
-        embark-become-indicator embark-action-indicator)
-  (setq embark-prompter 'embark-keymap-prompter))
+    :config
+    ;; Pop up which-key when running embark-act
+    (setq embark-action-indicator
+          (lambda (map &optional _target)
+            (which-key--show-keymap "Embark" map nil nil 'no-paging)
+            #'which-key--hide-popup-ignore-command)
+          embark-become-indicator embark-action-indicator)
+    (setq embark-prompter 'embark-keymap-prompter))
 
-(use-package embark-consult
-  :straight (embark-consult :type git :host github :repo "oantolin/embark")
-  :after (embark consult)
-  :demand t
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
+  (use-package embark-consult
+    :straight (embark-consult :type git :host github :repo "oantolin/embark")
+    :after (embark consult)
+    :demand t
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package marginalia
-  :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
-  :bind (:map minibuffer-local-map
-              ("C-M-a" . marginalia-cycle))
-  :init
-  (marginalia-mode))
+  (use-package marginalia
+    :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
+    :bind (:map minibuffer-local-map
+                ("C-M-a" . marginalia-cycle))
+    :init
+    (marginalia-mode))
 
 #+end_src
 
@@ -1568,11 +1582,6 @@ Dim inactive buffers.
     (dimmer-configure-company-box)
     (dimmer-configure-magit)
     (dimmer-configure-org)
-
-    ;; Make dimmer work with lsp doc: https://github.com/gonewest818/dimmer.el/issues/49
-    (defun dimmer-lsp-ui-doc-p ()
-      (string-prefix-p " *lsp-ui-doc-" (buffer-name)))
-    (add-to-list 'dimmer-prevent-dimming-predicates #'dimmer-lsp-ui-doc-p)
 
     (defun advices/dimmer-config-change-handler ()
       (dimmer--dbg-buffers 1 "dimmer-config-change-handler")
@@ -1659,6 +1668,8 @@ Dim inactive buffers.
     (with-eval-after-load 'company
       ;; disable inline previews
       (delq 'company-preview-if-just-one-frontend company-frontends))
+
+    (setq copilot-max-char 200000)
 
     (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
     (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion))
@@ -1768,20 +1779,7 @@ Autodetect indentation:
     (define-key company-active-map (kbd "M-n") nil)
     (define-key company-active-map (kbd "M-p") nil)
     (define-key company-active-map (kbd "C-n") #'company-select-next)
-    (define-key company-active-map (kbd "C-p") #'company-select-previous)
-
-    ;; Certain helm-mode functions rely on 'helm being in completion-styles to
-    ;; be able to use helm-style searching with e.g. helm-M-x.
-    ;;
-    ;; But that also causes completion-at-point using capf to be really slow,
-    ;; since it does some non-prefix matching over really big lists.
-    ;; To get around that, pin completion styles to remove 'helm when doing
-    ;; company-capf
-    (defun pin-completion-styles (orig-fn &rest args)
-      (let ((completion-styles (remove 'helm completion-styles)))
-        (apply orig-fn args)))
-
-    (advice-add 'company-capf :around #'pin-completion-styles))
+    (define-key company-active-map (kbd "C-p") #'company-select-previous))
 #+END_SRC
 
 #+RESULTS:
@@ -2043,6 +2041,17 @@ Autodetect indentation:
 : 1
 
 ** Python
+:PROPERTIES:
+:ID:       191B7BF5-730D-4E57-81C6-46CD889505A1
+:END:
+
+#+begin_src emacs-lisp
+  (use-package python
+    :ensure t
+    :hook ((python-ts-mode . eglot-ensure))
+    :mode (("\\.py\\'" . python-ts-mode)))
+#+end_src
+
 *** Virtualenv
 :PROPERTIES:
 :ID:       DD126725-5346-49C2-B480-49A306D3BEBB
@@ -2074,15 +2083,6 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 :END:
 
 #+BEGIN_SRC emacs-lisp
-  (use-package elpy
-    :ensure t
-    :hook (python-mode . elpy-enable)
-    :config
-    ;; Set pytest as the default test runner
-    (elpy-set-test-runner 'elpy-test-pytest-runner)
-
-    ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
-    (setq python-shell-completion-native-enable nil))
 #+END_SRC
 
 #+RESULTS:
@@ -2093,14 +2093,50 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 :END:
 
 #+BEGIN_SRC emacs-lisp
-  (use-package py-yapf
-    :ensure t
-    :config
-    (add-hook 'python-mode-hook 'py-yapf-enable-on-save))
+  (use-package python-black
+    :straight t
+    :after python
+    :hook ((python-mode . python-black-on-save-mode)
+           (python-ts-mode . python-black-on-save-mode)))
 #+END_SRC
 
+#+begin_src emacs-lisp
+  (flycheck-def-config-file-var flycheck-python-ruff-config python-ruff
+                                '("pyproject.toml" "ruff.toml" ".ruff.toml"))
+
+  (flycheck-define-checker python-ruff
+    "A Python syntax and style checker using the ruff.
+  To override the path to the ruff executable, set
+  `flycheck-python-ruff-executable'.
+
+  See URL `https://beta.ruff.rs/docs/'."
+    :command ("ruff"
+              "check"
+              (config-file "--config" flycheck-python-ruff-config)
+              "--format=text"
+              "--stdin-filename" source-original
+              "-")
+    :standard-input t
+    :error-filter (lambda (errors)
+                    (let ((errors (flycheck-sanitize-errors errors)))
+                      (seq-map #'flycheck-flake8-fix-error-level errors)))
+    :error-patterns
+    ((warning line-start
+              (file-name) ":" line ":" (optional column ":") " "
+              (id (one-or-more (any alpha)) (one-or-more digit)) " "
+              (message (one-or-more not-newline))
+              line-end))
+    :modes (python-mode python-ts-mode)
+    :next-checkers ((warning . python-mypy)))
+
+
+  (setq-default flycheck-checkers
+                    (append flycheck-checkers
+                            '(python-ruff)))
+#+end_src
+
 #+RESULTS:
-: t
+| python-black-on-save-mode-enable-dwim | evil-collection-python-set-evil-shift-width | eglot-ensure |
 
 ** JSON
 :PROPERTIES:
@@ -2145,6 +2181,14 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 
 #+END_SRC
 ** JavaScript
+:PROPERTIES:
+:ID:       0426E873-0B57-4A19-BDD7-64F855FB9093
+:END:
+
+#+begin_src emacs-lisp
+
+#+end_src
+
 *** REPL
 :PROPERTIES:
 :ID:       72787F88-9631-4EAD-9616-F4C3B7AB39A2
@@ -2256,19 +2300,6 @@ I typically use 2 spaces to indent.
   (use-package haskell-mode
     :mode ("\\.hs\\'" . haskell-mode)
     :ensure t)
-
-  (use-package lsp-haskell
-    :ensure t
-    :hook ((haskell-mode . lsp))
-    :init
-    (add-hook 'haskell-literate-mode-abbrev-table #'lsp)
-    (setq lsp-haskell-server-wrapper-function
-          (lambda (argv)
-            (append
-             (append (list "nix-shell" "-I" "." "--command" )
-                     (list (mapconcat 'identity argv " "))
-                     )
-             (list (nix-current-sandbox))))))
 #+END_SRC
 
 #+RESULTS:
@@ -2481,10 +2512,9 @@ Let's use web-mode, which supports font locking for templating.
 #+BEGIN_SRC emacs-lisp
   (use-package go-mode
     :ensure t
-    :mode (("go\\.mod\\'" . go-dot-mod-mode)
-           ("\\.go\\'" . go-mode))
-    :config
-    (add-hook 'go-mode-hook #'lsp-go-install-save-hooks))
+    :mode (("go\\.mod\\'" . go-mod-ts-mode)
+           ("\\.go\\'" . go-ts-mode))
+    :config)
 
   (use-package gotest
     :defer t
@@ -2589,44 +2619,6 @@ Let's use web-mode, which supports font locking for templating.
 :ID:       C0674ED2-A9C5-41FB-9D18-2B8BF72D5E80
 :END:
 #+begin_src emacs-lisp
-  (use-package lsp-mode
-    :straight t
-    :commands (lsp lsp-deferred)
-    :hook ((go-mode . lsp-deferred)
-           (typescript-mode . lsp-deferred)
-           (rust-mode . lsp-deferred)
-           (ruby-mode . lsp-deferred))
-    :config
-    (require 'lsp-go)
-    (require 'lsp-solargraph)
-    (customize-set-variable 'lsp-solargraph-use-bundler nil)
-    (customize-set-variable 'lsp-solargraph-multi-root nil)
-
-    (setq lsp-headerline-breadcrumb-enable nil)
-
-    (setq lsp-ui-sideline-show-code-actions t)
-
-    (setq lsp-ui-doc-enable t)
-    (setq lsp-ui-doc-show-with-cursor t)
-
-    ;; Only show type signatures in modeline
-    (setq lsp-signature-render-documentation nil)
-
-    (setq lsp-log-io nil)
-    (setq lsp-clients-typescript-server-args '("--stdio")))
-
-  (defun lsp-go-install-save-hooks ()
-    (add-hook 'before-save-hook #'lsp-format-buffer t t)
-    (add-hook 'before-save-hook #'lsp-organize-imports t t))
-
-  (use-package lsp-ui
-    :straight t
-    :commands lsp-ui-mode)
-
-  (use-package company-lsp
-    :straight t
-    :commands company-lsp)
-
   (use-package yasnippet
     :straight t
     :commands yas-minor-mode
@@ -2634,7 +2626,6 @@ Let's use web-mode, which supports font locking for templating.
 
   (setq gc-cons-threshold 100000000)
   (setq read-process-output-max (* 1024 1024))
-  (setq lsp-prefer-capf t)
 
 #+end_src
 
@@ -2654,9 +2645,9 @@ Let's use web-mode, which supports font locking for templating.
     (add-hook 'rust-mode-hook
               (lambda () (setq indent-tabs-mode nil)))
     (setq rust-format-on-save t)
-    (general-define-key :keymaps '(rust-mode-map)
-                        "gf" 'lsp-find-definition))
-  
+    )
+    
+
 #+end_src
 
 #+RESULTS:
@@ -2728,8 +2719,8 @@ Let's use web-mode, which supports font locking for templating.
 
   (use-package prettier
     :straight t
-    :config
-    (global-prettier-mode))
+    :config)
+    
 #+end_src
 
 #+RESULTS:

@@ -121,6 +121,7 @@
   (setq-default flycheck-disabled-checkers
                 (append flycheck-disabled-checkers
                         '(javascript-jshint
+                          python-flake8
                           ruby-rubocop
                           ruby-reek
                           emacs-lisp-checkdoc))))
@@ -669,13 +670,16 @@ Version 2017-01-27"
                       :foreground (plist-get base16-tomorrow-night-theme-colors :base0D)
                       :background (plist-get base16-tomorrow-night-theme-colors :base00)))
 
-(use-package json-navigator
-  :straight t)
+;;(use-package json-navigator
+;;  :straight t)
 
 (global-so-long-mode t)
 
-(add-to-list 'default-frame-alist
-             '(font . "Fira Code Medium-11"))
+;;(add-to-list 'default-frame-alist
+;;             '(font . "Fira Code Medium-12"))
+
+(set-face-attribute 'default nil
+                    :family "Fira Code" :height 120 :weight 'normal)
 
 (use-package ligature
   :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
@@ -761,79 +765,6 @@ Version 2017-01-27"
   (smooth-scrolling-mode 1)
   (setq smooth-scroll-margin 5))
 
-;; (use-package helm
-;;   :ensure t
-;;   :defer t
-;;   :after (general projectile)
-;;   :diminish helm-mode
-;;   :config
-;;   (require 'helm-config)
-;;   (helm-mode 1)
-;;   (global-set-key (kbd "M-x") 'helm-M-x)
-;;   (global-set-key (kbd "M-y") 'helm-show-kill-ring)
-;;   (global-set-key (kbd "C-x b") 'helm-mini)
-;;   (global-set-key (kbd "C-h a") 'helm-apropos)
-;;   (setq helm-buffer-max-length nil)
-;;   (add-to-list 'completion-styles 'helm)
-;;   (helm-autoresize-mode t)
-
-;;   (require 'helm-imenu)
-
-;;   (leader-def :infix "b"
-;;     "b" 'helm-mini)
-
-;;   (leader-def
-;;     "x" 'helm-M-x)
-
-;;   (leader-def :infix "f"
-;;     "f" 'helm-find-files)
-
-;;   (leader-def :infix "p"
-;;     "a" 'helm-do-ag-project-root)
-
-;;   (def-projectile-commander-method ?a
-;;     "Full text search in the project."
-;;     (helm-do-ag-project-root))
-
-;;   (general-define-key :states '(normal)
-;;                       "F" 'helm-semantic-or-imenu)
-
-;;   (add-hook 'eshell-mode-hook
-;;             (lambda()
-;;               (define-key eshell-mode-map (kbd "M-r") 'helm-eshell-history)
-;;               (define-key eshell-mode-map [remap eshell-pcomplete] 'helm-esh-pcomplete)
-;;               (define-key eshell-mode-map (kbd "M-p") 'helm-eshell-history))))
-
-;; (use-package helm-ag
-;;   :ensure t
-;;   :config
-;;   (setq helm-ag-base-command "rg --no-heading --smart-case --hidden"))
-
-;; (use-package helm-rg
-;;   :ensure t)
-
-;; (use-package helm-projectile
-;;   :ensure t
-;;   :config
-;;   (helm-projectile-on))
-
-(use-package selectrum
-  :straight (selectrum :type git :host github :repo "raxod502/selectrum")
-  :config
-
-  (plist-get base16-theme-shell-colors-256 :base09)
-  (set-face-attribute 'selectrum-current-candidate nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base09)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base01))
-
-  (selectrum-mode +1)
-
-  (leader-def :infix "f"
-    "f" 'find-file)
-
-  (leader-def 
-    "x" 'execute-extended-command))
-
 (use-package consult
   :straight (consult :type git :host github :repo "minad/consult" :branch "main")
   :after projectile
@@ -867,6 +798,9 @@ Version 2017-01-27"
   (setq consult-project-root-function #'projectile-project-root)
 
   (setq consult-narrow-key "<")
+
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
 
   (leader-def :infix "b"
     "b" 'consult-buffer)
@@ -924,10 +858,29 @@ Version 2017-01-27"
             :states '(normal)
             "F" 'consult-imenu))
 
-(use-package consult-selectrum
-  :straight (consult-selectrum :type git :host github :repo "minad/consult" :branch "main")
-  :after selectrum
-  :demand t)
+(use-package vertico
+  :straight t
+  :init
+  (vertico-mode))
+
+(use-package orderless
+  :straight t
+  :init
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion))))
+
+  :config
+  (leader-def :infix "f"
+    "f" 'find-file)
+
+  (leader-def 
+    "x" 'execute-extended-command)
+
+  (leader-def :infix "b"
+    "b" 'consult-buffer)
+  )
+
 
 ;; Optionally add the `consult-flycheck' command.
 (use-package consult-flycheck
@@ -935,28 +888,13 @@ Version 2017-01-27"
   :bind (:map flycheck-command-map
               ("!" . consult-flycheck)))
 
-(use-package selectrum-prescient
-  :straight (selectrum-prescient :type git :host github :repo "raxod502/prescient.el")
-  :config
-  (set-face-attribute 'selectrum-prescient-primary-highlight nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0E))
-  (set-face-attribute 'selectrum-prescient-secondary-highlight nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0D))
-  (selectrum-prescient-mode +1)
-  (prescient-persist-mode +1))
-
 (use-package embark
   :straight (embark :type git :host github :repo "oantolin/embark")
   :bind
-  (:map selectrum-minibuffer-map
+  (:map electrum-minibuffer-map
         ("C-j" . embark-act))
 
   :config
-  (defun refresh-selectrum ()
-    (setq selectrum--previous-input-string nil))
-
-  (add-hook 'embark-pre-action-hook #'refresh-selectrum)
-
   ;; Pop up which-key when running embark-act
   (setq embark-action-indicator
         (lambda (map &optional _target)
@@ -977,11 +915,7 @@ Version 2017-01-27"
   :bind (:map minibuffer-local-map
               ("C-M-a" . marginalia-cycle))
   :init
-  (marginalia-mode)
-
-  ;; When using Selectrum, ensure that Selectrum is refreshed when cycling annotations.
-  (advice-add #'marginalia-cycle :after
-              (lambda () (when (bound-and-true-p selectrum-mode) (selectrum-exhibit)))))
+  (marginalia-mode))
 
 (column-number-mode)
 
@@ -1001,11 +935,6 @@ Version 2017-01-27"
   (dimmer-configure-company-box)
   (dimmer-configure-magit)
   (dimmer-configure-org)
-
-  ;; Make dimmer work with lsp doc: https://github.com/gonewest818/dimmer.el/issues/49
-  (defun dimmer-lsp-ui-doc-p ()
-    (string-prefix-p " *lsp-ui-doc-" (buffer-name)))
-  (add-to-list 'dimmer-prevent-dimming-predicates #'dimmer-lsp-ui-doc-p)
 
   (defun advices/dimmer-config-change-handler ()
     (dimmer--dbg-buffers 1 "dimmer-config-change-handler")
@@ -1068,6 +997,8 @@ Version 2017-01-27"
     ;; disable inline previews
     (delq 'company-preview-if-just-one-frontend company-frontends))
 
+  (setq copilot-max-char 200000)
+
   (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
   (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion))
 
@@ -1123,20 +1054,7 @@ Version 2017-01-27"
   (define-key company-active-map (kbd "M-n") nil)
   (define-key company-active-map (kbd "M-p") nil)
   (define-key company-active-map (kbd "C-n") #'company-select-next)
-  (define-key company-active-map (kbd "C-p") #'company-select-previous)
-
-  ;; Certain helm-mode functions rely on 'helm being in completion-styles to
-  ;; be able to use helm-style searching with e.g. helm-M-x.
-  ;;
-  ;; But that also causes completion-at-point using capf to be really slow,
-  ;; since it does some non-prefix matching over really big lists.
-  ;; To get around that, pin completion styles to remove 'helm when doing
-  ;; company-capf
-  (defun pin-completion-styles (orig-fn &rest args)
-    (let ((completion-styles (remove 'helm completion-styles)))
-      (apply orig-fn args)))
-
-  (advice-add 'company-capf :around #'pin-completion-styles))
+  (define-key company-active-map (kbd "C-p") #'company-select-previous))
 
 (use-package magit
   :straight t
@@ -1347,6 +1265,11 @@ Version 2017-01-27"
 (put 'unless 'scheme-indent-function 1)
 (put 'match 'scheme-indent-function 1)
 
+(use-package python
+  :ensure t
+  :hook ((python-ts-mode . eglot-ensure))
+  :mode (("\\.py\\'" . python-ts-mode)))
+
 (use-package pyvenv
   :ensure t
   :config
@@ -1357,20 +1280,46 @@ Version 2017-01-27"
                                           (setq eshell-path-env (getenv "PATH"))))
   )
 
-(use-package elpy
-  :ensure t
-  :hook (python-mode . elpy-enable)
-  :config
-  ;; Set pytest as the default test runner
-  (elpy-set-test-runner 'elpy-test-pytest-runner)
 
-  ;; Temporary workaround for a warning that comes up: https://github.com/jorgenschaefer/elpy/issues/887
-  (setq python-shell-completion-native-enable nil))
 
-(use-package py-yapf
-  :ensure t
-  :config
-  (add-hook 'python-mode-hook 'py-yapf-enable-on-save))
+(use-package python-black
+  :straight t
+  :after python
+  :hook ((python-mode . python-black-on-save-mode)
+         (python-ts-mode . python-black-on-save-mode)))
+
+(flycheck-def-config-file-var flycheck-python-ruff-config python-ruff
+                              '("pyproject.toml" "ruff.toml" ".ruff.toml"))
+
+(flycheck-define-checker python-ruff
+  "A Python syntax and style checker using the ruff.
+To override the path to the ruff executable, set
+`flycheck-python-ruff-executable'.
+
+See URL `https://beta.ruff.rs/docs/'."
+  :command ("ruff"
+            "check"
+            (config-file "--config" flycheck-python-ruff-config)
+            "--format=text"
+            "--stdin-filename" source-original
+            "-")
+  :standard-input t
+  :error-filter (lambda (errors)
+                  (let ((errors (flycheck-sanitize-errors errors)))
+                    (seq-map #'flycheck-flake8-fix-error-level errors)))
+  :error-patterns
+  ((warning line-start
+            (file-name) ":" line ":" (optional column ":") " "
+            (id (one-or-more (any alpha)) (one-or-more digit)) " "
+            (message (one-or-more not-newline))
+            line-end))
+  :modes (python-mode python-ts-mode)
+  :next-checkers ((warning . python-mypy)))
+
+
+(setq-default flycheck-checkers
+                  (append flycheck-checkers
+                          '(python-ruff)))
 
 (use-package json-mode
   :ensure t
@@ -1388,6 +1337,8 @@ Version 2017-01-27"
 (use-package coffee-mode
   :ensure t
   :mode ("\\.coffee\\'" . coffee-mode))
+
+
 
 (use-package js-comint
   :defer t
@@ -1458,19 +1409,6 @@ Version 2017-01-27"
 (use-package haskell-mode
   :mode ("\\.hs\\'" . haskell-mode)
   :ensure t)
-
-(use-package lsp-haskell
-  :ensure t
-  :hook ((haskell-mode . lsp))
-  :init
-  (add-hook 'haskell-literate-mode-abbrev-table #'lsp)
-  (setq lsp-haskell-server-wrapper-function
-        (lambda (argv)
-          (append
-           (append (list "nix-shell" "-I" "." "--command" )
-                   (list (mapconcat 'identity argv " "))
-                   )
-           (list (nix-current-sandbox))))))
 
 (use-package dockerfile-mode
   :ensure t)
@@ -1586,10 +1524,9 @@ Version 2017-01-27"
 
 (use-package go-mode
   :ensure t
-  :mode (("go\\.mod\\'" . go-dot-mod-mode)
-         ("\\.go\\'" . go-mode))
-  :config
-  (add-hook 'go-mode-hook #'lsp-go-install-save-hooks))
+  :mode (("go\\.mod\\'" . go-mod-ts-mode)
+         ("\\.go\\'" . go-ts-mode))
+  :config)
 
 (use-package gotest
   :defer t
@@ -1642,44 +1579,6 @@ Version 2017-01-27"
 
 (add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
 
-(use-package lsp-mode
-  :straight t
-  :commands (lsp lsp-deferred)
-  :hook ((go-mode . lsp-deferred)
-         (typescript-mode . lsp-deferred)
-         (rust-mode . lsp-deferred)
-         (ruby-mode . lsp-deferred))
-  :config
-  (require 'lsp-go)
-  (require 'lsp-solargraph)
-  (customize-set-variable 'lsp-solargraph-use-bundler nil)
-  (customize-set-variable 'lsp-solargraph-multi-root nil)
-
-  (setq lsp-headerline-breadcrumb-enable nil)
-
-  (setq lsp-ui-sideline-show-code-actions t)
-
-  (setq lsp-ui-doc-enable t)
-  (setq lsp-ui-doc-show-with-cursor t)
-
-  ;; Only show type signatures in modeline
-  (setq lsp-signature-render-documentation nil)
-
-  (setq lsp-log-io nil)
-  (setq lsp-clients-typescript-server-args '("--stdio")))
-
-(defun lsp-go-install-save-hooks ()
-  (add-hook 'before-save-hook #'lsp-format-buffer t t)
-  (add-hook 'before-save-hook #'lsp-organize-imports t t))
-
-(use-package lsp-ui
-  :straight t
-  :commands lsp-ui-mode)
-
-(use-package company-lsp
-  :straight t
-  :commands company-lsp)
-
 (use-package yasnippet
   :straight t
   :commands yas-minor-mode
@@ -1687,7 +1586,6 @@ Version 2017-01-27"
 
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
-(setq lsp-prefer-capf t)
 
 (use-package rust-mode
   :ensure t
@@ -1696,8 +1594,7 @@ Version 2017-01-27"
   (add-hook 'rust-mode-hook
             (lambda () (setq indent-tabs-mode nil)))
   (setq rust-format-on-save t)
-  (general-define-key :keymaps '(rust-mode-map)
-                      "gf" 'lsp-find-definition))
+  )
 
 (use-package vimrc-mode
   :ensure t
@@ -1739,8 +1636,7 @@ Version 2017-01-27"
 
 (use-package prettier
   :straight t
-  :config
-  (global-prettier-mode))
+  :config)
 
 (use-package vyper-mode
   :straight t)
