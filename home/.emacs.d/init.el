@@ -65,7 +65,9 @@
   :config
   (setq base16-theme-256-color-source 'base16-shell)
   (setq base16-distinct-fringe-background nil)
-  (load-theme 'base16-tomorrow-night t))
+  (load-theme 'base16-material-darker t)
+
+  (defvar my/base16-colors base16-material-darker-theme-colors))
 
 ;; (use-package monokai-theme
 ;;   :ensure t
@@ -375,25 +377,6 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 (define-key global-map (kbd "C-+") 'text-scale-increase)
 (define-key global-map (kbd "C--") 'text-scale-decrease)
 
-(use-package gumshoe
-  :general
-  (:states '(motion)
-           "C-o" 'gumshoe-backtrack-back
-           "C-i" 'gumshoe-backtrack-forward)
-  :straight (gumshoe :type git
-                     :host github
-                     :repo "Overdr0ne/gumshoe"
-                     :branch "master")
-  :init
-  (add-hook 'evil-mode-hook
-            (lambda ()
-              (global-gumshoe-mode 1)
-              (setq gumshoe-prefer-same-window t)
-              (setq gumshoe-show-footprints-p nil)
-              (defun consult-gumshoe-global ()
-                (interactive)
-                (consult-global-mark (ring-elements (oref gumshoe--global-backlog log)))))))
-
 (defun split-window-right-and-focus ()
   (interactive)
   (split-window-right)
@@ -457,6 +440,27 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     :straight t
     :config
     (evil-collection-init))
+
+(use-package jumpy
+  :general
+  (:states '(motion)
+           "C-o" 'jumpy-back
+           "C-i" 'jumpy-forward)
+  :straight (jumpy :type git
+                     :host github
+                     :repo "landakram/jumpy"
+                     :branch "master")
+  :config
+  (global-jumpy-mode t)
+  (setq jumpy-buffer-filters
+        '("\\*Messages\\*"
+            "Output\\*$"
+            help-mode
+            compilation-mode
+            magit-mode
+            magit-status-mode
+            magit-diff-mode))
+  (setq jumpy-prefer-same-window t))
 
 (use-package projectile
   :ensure t
@@ -622,53 +626,53 @@ Version 2017-01-27"
   (diredfl-global-mode)
 
   (set-face-attribute 'diredfl-dir-priv nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0D)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0D)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-read-priv nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0B)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0B)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-write-priv nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0A)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0A)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-exec-priv nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base08)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base08)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-no-priv nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base03)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base03)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-dir-name nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0C)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0C)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-symlink nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base05)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base05)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-dir-heading nil
                       :weight 'bold
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0B)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0B)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-file-name nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base05)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base05)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-file-suffix nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0B)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0B)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-number nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0A)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00))
+                      :foreground (plist-get my/base16-colors :base0A)
+                      :background (plist-get my/base16-colors :base00))
 
   (set-face-attribute 'diredfl-date-time nil
-                      :foreground (plist-get base16-tomorrow-night-theme-colors :base0D)
-                      :background (plist-get base16-tomorrow-night-theme-colors :base00)))
+                      :foreground (plist-get my/base16-colors :base0D)
+                      :background (plist-get my/base16-colors :base00)))
 
 ;;(use-package json-navigator
 ;;  :straight t)
@@ -925,7 +929,7 @@ Version 2017-01-27"
   :straight t
   :config
   (beacon-mode 1)
-  (setq beacon-color (plist-get base16-tomorrow-night-theme-colors :base02)))
+  (setq beacon-color (plist-get my/base16-colors :base02)))
 
 (use-package dimmer
   :straight t
@@ -1429,8 +1433,8 @@ See URL `https://beta.ruff.rs/docs/'."
   (defun esh-customize-faces ()
     (set-face-attribute 'eshell-ls-directory
                         nil
-                        :foreground (plist-get base16-tomorrow-night-theme-colors :base0C)
-                        :background (plist-get base16-tomorrow-night-theme-colors :base00)))
+                        :foreground (plist-get my/base16-colors :base0C)
+                        :background (plist-get my/base16-colors :base00)))
 
   (defmacro esh-section (name form &rest props)
     `(setq ,name
@@ -1454,24 +1458,24 @@ See URL `https://beta.ruff.rs/docs/'."
 
   (esh-section esh-header
                "λ"
-               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base08)))
+               `(:foreground ,(plist-get my/base16-colors :base08)))
 
   (esh-section esh-user
                (user-login-name)
-               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0B)))
+               `(:foreground ,(plist-get my/base16-colors :base0B)))
 
   (esh-section esh-dir
                (concat "[" (abbreviate-file-name (eshell/pwd)) "]")
-               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0E)))
+               `(:foreground ,(plist-get my/base16-colors :base0E)))
 
   (esh-section esh-git
                (when-let ((branch (magit-get-current-branch))) 
                  (concat " " branch))
-               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0D)))
+               `(:foreground ,(plist-get my/base16-colors :base0D)))
 
   (esh-section esh-footer
                "\n→"
-               `(:foreground ,(plist-get base16-tomorrow-night-theme-colors :base0A)))
+               `(:foreground ,(plist-get my/base16-colors :base0A)))
 
   (setq eshell-prompt-regexp "→ ")
   (setq eshell-skip-prompt-function #'eshell-skip-prompt)
@@ -1629,10 +1633,7 @@ See URL `https://beta.ruff.rs/docs/'."
   :straight (company-solidity :type git :host github :repo "ethereum/emacs-solidity")
   :defer t
   :init
-  (add-hook 'solidity-mode-hook
-            (lambda ()
-              (set (make-local-variable 'company-backends)
-                   '((company-dabbrev-code company-solidity company-capf))))))
+  )
 
 (use-package prettier
   :straight t
@@ -2378,3 +2379,5 @@ belongs as a list."
 
       (let ((default-directory "~/Downloads"))
         (shell-command "open -R .")))))
+
+(electric-pair-mode t)
