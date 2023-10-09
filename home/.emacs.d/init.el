@@ -682,8 +682,9 @@ Version 2017-01-27"
 ;;(add-to-list 'default-frame-alist
 ;;             '(font . "Fira Code Medium-12"))
 
-(set-face-attribute 'default nil
-                    :family "Fira Code" :height 120 :weight 'normal)
+(let ((font-height (if (boundp 'my/font-height) my/font-height 120)))
+  (set-face-attribute 'default nil
+                      :family "Fira Code" :height font-height :weight 'normal))
 
 (use-package ligature
   :straight (ligature :type git :host github :repo "mickeynp/ligature.el")
