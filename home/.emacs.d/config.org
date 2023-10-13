@@ -817,6 +817,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
 #+begin_src emacs-lisp
   (use-package jumpy
+    :demand t
     :general
     (:states '(motion)
              "C-o" 'jumpy-back
@@ -1213,6 +1214,18 @@ Enable automatic optimizations for files with long lines
 #+RESULTS:
 : t
 
+** Breadcrumb
+:PROPERTIES:
+:ID:       3CCC42CA-7305-45F4-9C3C-8E95FF775400
+:END:
+
+#+begin_src emacs-lisp
+  (use-package breadcrumb
+    :straight t
+    :config
+    (breadcrumb-mode 1))
+#+end_src
+
 * UI
 ** Set the font
 :PROPERTIES:
@@ -1553,6 +1566,10 @@ Small padding:
 
 #+begin_src emacs-lisp
   (set-fringe-mode 10)
+
+  (set-face-attribute 'fringe nil
+                       :foreground (face-foreground 'default)
+                       :background (face-background 'default))
 #+end_src
 
 #+RESULTS:
@@ -1769,7 +1786,7 @@ Autodetect indentation:
 
 #+BEGIN_SRC emacs-lisp
   (use-package dtrt-indent
-    :ensure t
+    :straight t
     :config
     (dtrt-indent-global-mode)
 
@@ -1818,11 +1835,86 @@ Autodetect indentation:
     ;; (setq magit-refresh-status-buffer nil)
     ;; (setq magit-refresh-verbose t)
     (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
+
+  (use-package forge
+    :straight t
+    :after magit)
 #+END_SRC
 
 #+RESULTS:
 : t
 
+*** Blamer.el
+:PROPERTIES:
+:ID:       761B966A-2FE2-4FDF-9BF9-01406C89138D
+:END:
+
+Inline git blame like vscode
+
+#+begin_src emacs-lisp
+  (use-package blamer
+    :straight t
+    :defer 20
+    :after forge
+    :config
+    (setq blamer-force-truncate-long-line t)
+    (setq blamer-max-commit-message-length 100)
+    (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
+    (set-face-attribute 'blamer-face
+                            nil
+                            :foreground (plist-get my/base16-colors :base03))
+
+    (add-hook 'evil-insert-state-entry-hook (lambda ()
+                                              (setq blamer--block-render-p t)
+                                              (blamer--clear-overlay)))
+    (add-hook 'evil-normal-state-entry-hook (lambda ()
+                                              (setq blamer--block-render-p nil)
+                                              (copilot-clear-overlay)))
+
+    (defun blamer-callback-show-commit-diff (commit-info)
+      (interactive)
+      (let ((commit-hash (plist-get commit-info :commit-hash)))
+        (when commit-hash)
+        ;; Split window vertically
+        (let ((split-height-threshold nil)
+              (split-width-threshold 0))
+          (magit-show-commit commit-hash))))
+
+    (defun blamer-callback-open-remote (commit-info)
+      (interactive)
+      (let ((commit-hash (plist-get commit-info :commit-hash)))
+        (when commit-hash
+          (message commit-hash)
+          (forge-browse-commit commit-hash))))
+
+    (defun blamer-commit-into-at-point ()
+      (let* ((line-number (line-number-at-pos))
+             (file-name (blamer--get-local-name (buffer-file-name)))
+             (blame-cmd-res (when file-name
+                              (apply #'vc-git--run-command-string file-name
+                                     (append blamer--git-blame-cmd
+                                             (list (format "%s,%s" line-number line-number))))))
+             (blame-cmd-res (when blame-cmd-res (butlast (split-string blame-cmd-res "\n")))))
+        (blamer--parse-line-info (first blame-cmd-res) nil)))
+
+    (defun blamer-open-remote-at-point ()
+      (interactive)
+      (let ((commit-info (blamer-commit-into-at-point)))
+        (blamer-callback-open-remote commit-info)))
+
+    (defun blamer-open-magit-at-point ()
+      (interactive)
+      (let ((commit-info (blamer-commit-into-at-point)))
+        (blamer-callback-show-commit-diff commit-info)))
+
+    (leader-def ".go" 'blamer-open-remote-at-point)
+    (leader-def ".gc" 'blamer-open-magit-at-point)
+
+    (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
+                            ("<mouse-1>" . blamer-callback-show-commit-diff)))
+    
+    (global-blamer-mode 1))
+#+end_src
 *** Open GitHub from file
 :PROPERTIES:
 :ID:       0D190EFD-ED2F-4219-B777-18AEF8DD3245
@@ -2068,6 +2160,7 @@ Autodetect indentation:
     :ensure t
     :hook ((python-ts-mode . eglot-ensure))
     :mode (("\\.py\\'" . python-ts-mode)))
+    
 #+end_src
 
 *** Virtualenv
@@ -3832,6 +3925,14 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 
         (let ((default-directory "~/Downloads"))
           (shell-command "open -R .")))))
+#+end_src
+
+#+RESULTS:
+
+* GPT
+#+begin_src emacs-lisp
+  (use-package gptel
+    :straight t)
 #+end_src
 
 #+RESULTS:

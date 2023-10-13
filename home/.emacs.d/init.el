@@ -505,6 +505,10 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     "Open project root in magit"
     (projectile-vc))
 
+  (def-projectile-commander-method ?a
+    "Open project root in magit"
+    (projectile-ripgrep))
+
 (use-package avy
   :ensure t
   :config
