@@ -2738,6 +2738,14 @@ Let's use web-mode, which supports font locking for templating.
   (setq gc-cons-threshold 100000000)
   (setq read-process-output-max (* 1024 1024))
 
+
+  (use-package eglot
+    :config
+    (defun jsonrpc--log-event (_connection _message &optional type)
+      "Overriding because it grinds completions to a halt on a large python monorepo."
+      nil)
+
+    (add-to-list 'eglot-stay-out-of 'flymake))
 #+end_src
 
 #+RESULTS:
