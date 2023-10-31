@@ -1838,7 +1838,35 @@ Autodetect indentation:
 
   (use-package forge
     :straight t
-    :after magit)
+    :after magit
+    :config
+
+    (defun forge-browse-branch-pullreq ()
+      "Visit the current branch's PR on Github."
+      (interactive)
+      (browse-url (format "https://github.com/%s/pull/new/%s"
+                          (replace-regexp-in-string
+                           "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+                           (magit-get "remote" (magit-get-push-remote) "url"))
+                          (magit-get-current-branch))))
+
+    ;; Set some sane defaults for working with very large git repositories
+    ;; Usage:
+    ;;
+    ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
+    ;;
+    ;; (dir-locals-set-class-variables
+    ;;  'huge-git-repository
+    ;;  '((magit-status-mode
+    ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
+    ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
+    ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
+
+    )
 #+END_SRC
 
 #+RESULTS:
@@ -2159,8 +2187,15 @@ Inline git blame like vscode
   (use-package python
     :ensure t
     :hook ((python-ts-mode . eglot-ensure))
-    :mode (("\\.py\\'" . python-ts-mode)))
-    
+    :mode (("\\.py\\'" . python-ts-mode))
+    :config
+    (add-hook 'python-ts-mode-hook
+              (lambda ()
+                (make-local-variable 'python-shell-interpreter)
+                (make-local-variable 'python-shell-interpreter-args)
+                (when (executable-find "ipython")
+                  (setq python-shell-interpreter "ipython")
+                  (setq python-shell-interpreter-args "--simple-prompt")))))
 #+end_src
 
 *** Virtualenv
@@ -2210,6 +2245,11 @@ We also set up eshell so that it shares its environment with emacs, thus using t
     :hook ((python-mode . python-black-on-save-mode)
            (python-ts-mode . python-black-on-save-mode)))
 #+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package py-isort
+    :straight t)
+#+end_src
 
 #+begin_src emacs-lisp
   (flycheck-def-config-file-var flycheck-python-ruff-config python-ruff
@@ -3937,10 +3977,61 @@ Higher level wrapper on-top of deferred.el. Interesting to play around with.
 
 #+RESULTS:
 
+** LRU cache
+:PROPERTIES:
+:ID:       9991AA47-14B5-4A44-9D0E-4EB77900626D
+:END:
+#+begin_src elisp
+  (use-package lru
+    :straight (lru :type git :host github :repo "landakram/lru"))
+#+end_src
 * GPT
+:PROPERTIES:
+:ID:       FBA2399D-34FD-4560-B80E-B39A316F0688
+:END:
 #+begin_src emacs-lisp
   (use-package gptel
-    :straight t)
+    :straight t
+    :config
+    (defun gptel-code-action (task)
+      "Send a command to gptel, with a prompt to only output code and comments. The resulting completion is ediffed with the highlighted region."
+      (interactive "sCommand: ")
+      (let* ((prompt (concat "TASK: " task "\n\nCONTEXT:\n\n" (buffer-substring-no-properties
+                               (region-beginning) (region-end))))
+           (gptel--system-message
+            (concat "Perform the following task (TASK), only generating code and comments based on "
+                    "the provided context (CONTEXT) with no additional explanation. Your output is going to be "
+                    "used to directly replace the code, which is in an emacs buffer with major mode"
+                    (format "%s" (symbol-name major-mode)) ". Be sure to respect existing indentation.")))
+      (message "Waiting for response... ")
+      (gptel-request
+       prompt
+       :context (cons (region-beginning) (region-end))
+       :callback
+       (lambda (response info)
+         (if (not response)
+             (message "ChatGPT response error: %s" (plist-get info :status))
+           (let* ((gptel-buffer (plist-get info :buffer))
+                  (gptel-bounds (plist-get info :context))
+                  (buffer-mode
+                   (buffer-local-value 'major-mode gptel-buffer)))
+             (pcase-let ((`(,new-buf ,new-beg ,new-end)
+                          (with-current-buffer (get-buffer-create "*gptel-rewrite-Region.B-*")
+                            (erase-buffer)
+                            (funcall buffer-mode)
+                            (insert response)
+                            (goto-char (point-min))
+                            (list (current-buffer) (point-min) (point-max)))))
+               (require 'ediff)
+               (apply
+                #'ediff-regions-internal
+                (get-buffer (ediff-make-cloned-buffer gptel-buffer "-Region.A-"))
+                (car gptel-bounds) (cdr gptel-bounds)
+                new-buf new-beg new-end
+                nil
+                (list 'ediff-regions-linewise nil nil)))))))))
+    
+    )
 #+end_src
 
 #+RESULTS:

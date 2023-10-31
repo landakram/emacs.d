@@ -442,6 +442,7 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     (evil-collection-init))
 
 (use-package jumpy
+  :demand t
   :general
   (:states '(motion)
            "C-o" 'jumpy-back
@@ -504,10 +505,6 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   (def-projectile-commander-method ?g
     "Open project root in magit"
     (projectile-vc))
-
-  (def-projectile-commander-method ?a
-    "Open project root in magit"
-    (projectile-ripgrep))
 
 (use-package avy
   :ensure t
@@ -682,6 +679,11 @@ Version 2017-01-27"
 ;;  :straight t)
 
 (global-so-long-mode t)
+
+(use-package breadcrumb
+  :straight t
+  :config
+  (breadcrumb-mode 1))
 
 ;;(add-to-list 'default-frame-alist
 ;;             '(font . "Fira Code Medium-12"))
@@ -930,6 +932,10 @@ Version 2017-01-27"
 
 (set-fringe-mode 10)
 
+(set-face-attribute 'fringe nil
+                     :foreground (face-foreground 'default)
+                     :background (face-background 'default))
+
 (use-package beacon
   :straight t
   :config
@@ -996,6 +1002,8 @@ Version 2017-01-27"
   :mode (("\\.gmi\\'" . gemini-mode))
   :straight t)
 
+(electric-pair-mode t)
+
 (use-package copilot
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :ensure t
@@ -1045,7 +1053,7 @@ Version 2017-01-27"
              '(mocha-abs "at \\([^ ]+?\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3))
 
 (use-package dtrt-indent
-  :ensure t
+  :straight t
   :config
   (dtrt-indent-global-mode)
 
@@ -1074,6 +1082,101 @@ Version 2017-01-27"
   ;; (setq magit-refresh-status-buffer nil)
   ;; (setq magit-refresh-verbose t)
   (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
+
+(use-package forge
+  :straight t
+  :after magit
+  :config
+
+  (defun forge-browse-branch-pullreq ()
+    "Visit the current branch's PR on Github."
+    (interactive)
+    (browse-url (format "https://github.com/%s/pull/new/%s"
+                        (replace-regexp-in-string
+                         "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+                         (magit-get "remote" (magit-get-push-remote) "url"))
+                        (magit-get-current-branch))))
+
+  ;; Set some sane defaults for working with very large git repositories
+  ;; Usage:
+  ;;
+  ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
+  ;;
+  ;; (dir-locals-set-class-variables
+  ;;  'huge-git-repository
+  ;;  '((magit-status-mode
+  ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
+  ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
+  ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
+
+  )
+
+(use-package blamer
+  :straight t
+  :defer 20
+  :after forge
+  :config
+  (setq blamer-force-truncate-long-line t)
+  (setq blamer-max-commit-message-length 100)
+  (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
+  (set-face-attribute 'blamer-face
+                          nil
+                          :foreground (plist-get my/base16-colors :base03))
+
+  (add-hook 'evil-insert-state-entry-hook (lambda ()
+                                            (setq blamer--block-render-p t)
+                                            (blamer--clear-overlay)))
+  (add-hook 'evil-normal-state-entry-hook (lambda ()
+                                            (setq blamer--block-render-p nil)
+                                            (copilot-clear-overlay)))
+
+  (defun blamer-callback-show-commit-diff (commit-info)
+    (interactive)
+    (let ((commit-hash (plist-get commit-info :commit-hash)))
+      (when commit-hash)
+      ;; Split window vertically
+      (let ((split-height-threshold nil)
+            (split-width-threshold 0))
+        (magit-show-commit commit-hash))))
+
+  (defun blamer-callback-open-remote (commit-info)
+    (interactive)
+    (let ((commit-hash (plist-get commit-info :commit-hash)))
+      (when commit-hash
+        (message commit-hash)
+        (forge-browse-commit commit-hash))))
+
+  (defun blamer-commit-into-at-point ()
+    (let* ((line-number (line-number-at-pos))
+           (file-name (blamer--get-local-name (buffer-file-name)))
+           (blame-cmd-res (when file-name
+                            (apply #'vc-git--run-command-string file-name
+                                   (append blamer--git-blame-cmd
+                                           (list (format "%s,%s" line-number line-number))))))
+           (blame-cmd-res (when blame-cmd-res (butlast (split-string blame-cmd-res "\n")))))
+      (blamer--parse-line-info (first blame-cmd-res) nil)))
+
+  (defun blamer-open-remote-at-point ()
+    (interactive)
+    (let ((commit-info (blamer-commit-into-at-point)))
+      (blamer-callback-open-remote commit-info)))
+
+  (defun blamer-open-magit-at-point ()
+    (interactive)
+    (let ((commit-info (blamer-commit-into-at-point)))
+      (blamer-callback-show-commit-diff commit-info)))
+
+  (leader-def ".go" 'blamer-open-remote-at-point)
+  (leader-def ".gc" 'blamer-open-magit-at-point)
+
+  (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
+                          ("<mouse-1>" . blamer-callback-show-commit-diff)))
+  
+  (global-blamer-mode 1))
 
 (defun parse-host-path-syntax (host-path-string)
   (let ((ssh-host-path-regex "\\(.*\\)\@\\(.*\\):\\(.*\\)"))
@@ -1277,7 +1380,15 @@ Version 2017-01-27"
 (use-package python
   :ensure t
   :hook ((python-ts-mode . eglot-ensure))
-  :mode (("\\.py\\'" . python-ts-mode)))
+  :mode (("\\.py\\'" . python-ts-mode))
+  :config
+  (add-hook 'python-ts-mode-hook
+            (lambda ()
+              (make-local-variable 'python-shell-interpreter)
+              (make-local-variable 'python-shell-interpreter-args)
+              (when (executable-find "ipython")
+                (setq python-shell-interpreter "ipython")
+                (setq python-shell-interpreter-args "--simple-prompt")))))
 
 (use-package pyvenv
   :ensure t
@@ -1296,6 +1407,9 @@ Version 2017-01-27"
   :after python
   :hook ((python-mode . python-black-on-save-mode)
          (python-ts-mode . python-black-on-save-mode)))
+
+(use-package py-isort
+  :straight t)
 
 (flycheck-def-config-file-var flycheck-python-ruff-config python-ruff
                               '("pyproject.toml" "ruff.toml" ".ruff.toml"))
@@ -1595,6 +1709,15 @@ See URL `https://beta.ruff.rs/docs/'."
 
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
+
+
+(use-package eglot
+  :config
+  (defun jsonrpc--log-event (_connection _message &optional type)
+    "Overriding because it grinds completions to a halt on a large python monorepo."
+    nil)
+
+  (add-to-list 'eglot-stay-out-of 'flymake))
 
 (use-package rust-mode
   :ensure t
@@ -2385,4 +2508,48 @@ belongs as a list."
       (let ((default-directory "~/Downloads"))
         (shell-command "open -R .")))))
 
-(electric-pair-mode t)
+(use-package lru
+  :straight (lru :type git :host github :repo "landakram/lru"))
+
+(use-package gptel
+  :straight t
+  :config
+  (defun gptel-code-action (task)
+    "Send a command to gptel, with a prompt to only output code and comments. The resulting completion is ediffed with the highlighted region."
+    (interactive "sCommand: ")
+    (let* ((prompt (concat "TASK: " task "\n\nCONTEXT:\n\n" (buffer-substring-no-properties
+                             (region-beginning) (region-end))))
+         (gptel--system-message
+          (concat "Perform the following task (TASK), only generating code and comments based on "
+                  "the provided context (CONTEXT) with no additional explanation. Your output is going to be "
+                  "used to directly replace the code, which is in an emacs buffer with major mode"
+                  (format "%s" (symbol-name major-mode)) ". Be sure to respect existing indentation.")))
+    (message "Waiting for response... ")
+    (gptel-request
+     prompt
+     :context (cons (region-beginning) (region-end))
+     :callback
+     (lambda (response info)
+       (if (not response)
+           (message "ChatGPT response error: %s" (plist-get info :status))
+         (let* ((gptel-buffer (plist-get info :buffer))
+                (gptel-bounds (plist-get info :context))
+                (buffer-mode
+                 (buffer-local-value 'major-mode gptel-buffer)))
+           (pcase-let ((`(,new-buf ,new-beg ,new-end)
+                        (with-current-buffer (get-buffer-create "*gptel-rewrite-Region.B-*")
+                          (erase-buffer)
+                          (funcall buffer-mode)
+                          (insert response)
+                          (goto-char (point-min))
+                          (list (current-buffer) (point-min) (point-max)))))
+             (require 'ediff)
+             (apply
+              #'ediff-regions-internal
+              (get-buffer (ediff-make-cloned-buffer gptel-buffer "-Region.A-"))
+              (car gptel-bounds) (cdr gptel-bounds)
+              new-buf new-beg new-end
+              nil
+              (list 'ediff-regions-linewise nil nil)))))))))
+  
+  )
