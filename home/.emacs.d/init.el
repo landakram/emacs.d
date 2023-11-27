@@ -878,10 +878,10 @@ Version 2017-01-27"
   :straight t
   :init
   (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
         completion-category-overrides '((file (styles partial-completion))))
 
   :config
+  (setq completion-category-defaults nil)
   (leader-def :infix "f"
     "f" 'find-file)
 
@@ -902,6 +902,7 @@ Version 2017-01-27"
 (use-package embark
   :straight (embark :type git :host github :repo "oantolin/embark")
   :bind
+  ;; TODO: need a different map here
   (:map electrum-minibuffer-map
         ("C-j" . embark-act))
 
@@ -947,7 +948,6 @@ Version 2017-01-27"
   :config
   (dimmer-mode t)
   (dimmer-configure-which-key)
-  (dimmer-configure-company-box)
   (dimmer-configure-magit)
   (dimmer-configure-org)
 
@@ -956,7 +956,20 @@ Version 2017-01-27"
     (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
                            dimmer-prevent-dimming-predicates)))
       (dimmer-process-all (not ignore))))
+
   (advice-add 'dimmer-config-change-handler :override #'advices/dimmer-config-change-handler)
+
+  (defun corfu-frame-p ()
+    "Check if the buffer is a corfu frame buffer."
+    (string-match-p "\\` \\*corfu" (buffer-name)))
+
+  (defun dimmer-configure-corfu ()
+    "Convenience settings for corfu users."
+    (add-to-list
+     'dimmer-prevent-dimming-predicates
+     #'corfu-frame-p))
+
+  (dimmer-configure-corfu)
 
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*Help\\*")
   (add-to-list 'dimmer-buffer-exclusion-regexps "\\*compilation\\*")
@@ -978,14 +991,12 @@ Version 2017-01-27"
         (diminish 'olivetti-mode)
         (diminish 'flyspell-mode)
 
-        (company-mode -1)
         (olivetti-mode)
         (flyspell-mode))
     (progn
         (diminish-undo 'olivetti-mode)
         (diminish-undo 'flyspell-mode)
 
-        (company-mode)
         (olivetti-mode -1)
         (flyspell-mode -1))))
 
@@ -1009,10 +1020,6 @@ Version 2017-01-27"
   :ensure t
   :config
   (add-hook 'prog-mode-hook 'copilot-mode)
-
-  (with-eval-after-load 'company
-    ;; disable inline previews
-    (delq 'company-preview-if-just-one-frontend company-frontends))
 
   (setq copilot-max-char 200000)
 
@@ -1060,18 +1067,26 @@ Version 2017-01-27"
   (add-to-list 'dtrt-indent-hook-mapping-list '(scss-mode css css-indent-offset))
   (add-to-list 'dtrt-indent-hook-mapping-list '(solidity-mode c/c++/java c-basic-offset)))
 
-(use-package company
-  :ensure t
+(use-package corfu
+  :straight t
   :defer 0.1
   :config
-  (setq company-idle-delay 0) 
-  (setq company-minimum-prefix-length 1)
-  (setq company-global-modes '(not org-mode eshell-mode))
-  (global-company-mode)
-  (define-key company-active-map (kbd "M-n") nil)
-  (define-key company-active-map (kbd "M-p") nil)
-  (define-key company-active-map (kbd "C-n") #'company-select-next)
-  (define-key company-active-map (kbd "C-p") #'company-select-previous))
+  (setq corfu-auto t)
+  (setq corfu-auto-delay 0)
+  (setq corfu-auto-prefix 1)
+  (setq corfu-quit-no-match 'separator)
+  (setq corfu-quit-at-boundary 'separator)
+
+  (defun orderless-fast-dispatch (word index total)
+    (and (= index 0) (= total 1) (length< word 3)
+         `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
+
+  (orderless-define-completion-style orderless-fast
+    (orderless-style-dispatchers '(orderless-fast-dispatch))
+    (orderless-matching-styles '(orderless-literal orderless-regexp)))
+
+  (setq completion-styles '(orderless-fast basic))
+  (global-corfu-mode))
 
 (use-package magit
   :straight t
@@ -1756,12 +1771,6 @@ See URL `https://beta.ruff.rs/docs/'."
   :config
   (setq solidity-flycheck-chaining-error-level t)
   (setq solidity-flycheck-use-project t))
-
-(use-package company-solidity
-  :straight (company-solidity :type git :host github :repo "ethereum/emacs-solidity")
-  :defer t
-  :init
-  )
 
 (use-package prettier
   :straight t
