@@ -4,10 +4,10 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(safe-local-variable-values
-   '((eval add-hook 'after-save-hook
-           (lambda nil
-             (org-babel-tangle))
-           nil t)))
+   '((eval setq python-black-extra-args
+           (list "--config"
+                 (expand-file-name "pyproject.toml" (project-root (project-current)))))
+     (eval add-hook 'after-save-hook (lambda nil (org-babel-tangle)) nil t)))
  '(session-use-package t nil (session)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.

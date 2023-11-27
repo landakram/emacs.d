@@ -1077,15 +1077,6 @@ Version 2017-01-27"
   (setq corfu-quit-no-match 'separator)
   (setq corfu-quit-at-boundary 'separator)
 
-  (defun orderless-fast-dispatch (word index total)
-    (and (= index 0) (= total 1) (length< word 3)
-         `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
-
-  (orderless-define-completion-style orderless-fast
-    (orderless-style-dispatchers '(orderless-fast-dispatch))
-    (orderless-matching-styles '(orderless-literal orderless-regexp)))
-
-  (setq completion-styles '(orderless-fast basic))
   (global-corfu-mode))
 
 (use-package magit
