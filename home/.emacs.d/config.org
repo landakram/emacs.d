@@ -68,6 +68,19 @@ Let's set ~custom-file~, which emacs writes to automatically.
 #+RESULTS:
 : # This buffer is for notes you don't want to save.
 
+** Silence native comp warnings
+:PROPERTIES:
+:ID:       41BBB331-1054-4FF1-BE8E-F68F47DAAE61
+:END:
+
+Without this, the warning buffer pops up whenever native-comp has some warning.
+
+#+begin_src emacs-lisp
+(setq native-comp-async-report-warnings-errors nil)
+#+end_src
+
+#+RESULTS:
+
 * Packages
 
 ** Set up ~package.el~
