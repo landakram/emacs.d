@@ -10,6 +10,8 @@
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message "# This buffer is for notes you don't want to save.")
 
+(setq native-comp-async-report-warnings-errors nil)
+
 (require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
@@ -33,8 +35,11 @@
 
 (straight-use-package 'use-package)
 
-(eval-when-compile
-  (require 'use-package))
+  (eval-when-compile
+    (require 'use-package))
+
+;; These should be loaded early on
+(straight-use-package 'org)
 
 (unless (package-installed-p 'diminish)
   (package-install 'diminish))
@@ -441,6 +446,13 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
     :config
     (evil-collection-init))
 
+(use-package evil-textobj-tree-sitter :after evil :straight t
+  :config
+  ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
+  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+  ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
+  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner")))
+
 (use-package jumpy
   :demand t
   :general
@@ -462,6 +474,8 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
             magit-status-mode
             magit-diff-mode))
   (setq jumpy-prefer-same-window t))
+
+(use-package project)
 
 (use-package projectile
   :ensure t
@@ -682,8 +696,8 @@ Version 2017-01-27"
 
 (use-package breadcrumb
   :straight t
-  :config
-  (breadcrumb-mode 1))
+  :hook ((yaml-pro-ts-mode . breadcrumb-local-mode)
+         (json-ts-mode . breadcrumb-local-mode)))
 
 ;;(add-to-list 'default-frame-alist
 ;;             '(font . "Fira Code Medium-12"))
@@ -951,6 +965,10 @@ Version 2017-01-27"
   (dimmer-configure-magit)
   (dimmer-configure-org)
 
+  (defun dimmer-lsp-ui-doc-p ()
+    (string-prefix-p " *lsp-ui-doc-" (buffer-name)))
+  (add-to-list 'dimmer-prevent-dimming-predicates #'dimmer-lsp-ui-doc-p)
+
   (defun advices/dimmer-config-change-handler ()
     (dimmer--dbg-buffers 1 "dimmer-config-change-handler")
     (let ((ignore (cl-some (lambda (f) (and (fboundp f) (funcall f)))
@@ -1014,6 +1032,10 @@ Version 2017-01-27"
   :straight t)
 
 (electric-pair-mode t)
+
+;; Added this because I ran into this issue: https://github.com/copilot-emacs/copilot.el/issues/232
+(use-package jsonrpc
+  :straight t)
 
 (use-package copilot
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
@@ -1079,48 +1101,6 @@ Version 2017-01-27"
 
   (global-corfu-mode))
 
-(use-package magit
-  :straight t
-  :commands (magit-get-current-branch)
-  :defer t
-  :config
-  ;; Uncomment this to improve performance
-  ;; (setq magit-refresh-status-buffer nil)
-  ;; (setq magit-refresh-verbose t)
-  (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
-
-(use-package forge
-  :straight t
-  :after magit
-  :config
-
-  (defun forge-browse-branch-pullreq ()
-    "Visit the current branch's PR on Github."
-    (interactive)
-    (browse-url (format "https://github.com/%s/pull/new/%s"
-                        (replace-regexp-in-string
-                         "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
-                         (magit-get "remote" (magit-get-push-remote) "url"))
-                        (magit-get-current-branch))))
-
-  ;; Set some sane defaults for working with very large git repositories
-  ;; Usage:
-  ;;
-  ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
-  ;;
-  ;; (dir-locals-set-class-variables
-  ;;  'huge-git-repository
-  ;;  '((magit-status-mode
-  ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
-  ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
-  ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
-
-  )
-
 (use-package blamer
   :straight t
   :defer 20
@@ -1179,10 +1159,54 @@ Version 2017-01-27"
   (leader-def ".go" 'blamer-open-remote-at-point)
   (leader-def ".gc" 'blamer-open-magit-at-point)
 
+  (setq blamer-type 'visual)
+
   (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
                           ("<mouse-1>" . blamer-callback-show-commit-diff)))
   
   (global-blamer-mode 1))
+
+(use-package magit
+  :straight t
+  :commands (magit-get-current-branch)
+  :defer t
+  :config
+  ;; Uncomment this to improve performance
+  (setq magit-refresh-status-buffer nil)
+  ;; (setq magit-refresh-verbose t)
+  (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
+
+(use-package forge
+  :straight t
+  :after magit
+  :config
+
+  (defun forge-browse-branch-pullreq ()
+    "Visit the current branch's PR on Github."
+    (interactive)
+    (browse-url (format "https://github.com/%s/pull/new/%s"
+                        (replace-regexp-in-string
+                         "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+                         (magit-get "remote" (magit-get-push-remote) "url"))
+                        (magit-get-current-branch))))
+
+  ;; Set some sane defaults for working with very large git repositories
+  ;; Usage:
+  ;;
+  ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
+  ;;
+  ;; (dir-locals-set-class-variables
+  ;;  'huge-git-repository
+  ;;  '((magit-status-mode
+  ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
+  ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
+  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
+  ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
+
+  )
 
 (defun parse-host-path-syntax (host-path-string)
   (let ((ssh-host-path-regex "\\(.*\\)\@\\(.*\\):\\(.*\\)"))
@@ -1385,7 +1409,7 @@ Version 2017-01-27"
 
 (use-package python
   :ensure t
-  :hook ((python-ts-mode . eglot-ensure))
+  :hook ((python-ts-mode . lsp-deferred))
   :mode (("\\.py\\'" . python-ts-mode))
   :config
   (add-hook 'python-ts-mode-hook
@@ -1449,6 +1473,16 @@ See URL `https://beta.ruff.rs/docs/'."
 (setq-default flycheck-checkers
                   (append flycheck-checkers
                           '(python-ruff)))
+
+(use-package pytest
+  :straight t
+
+  :config
+  ;; Use pyproject.toml to find a suitable project root for pytest
+  ;; This is useful for monorepos
+  (add-to-list 'pytest-project-root-files "pyproject.toml")
+  ;; Don't use `-x -s` by default, we like capturing output
+  (setq pytest-cmd-flags ""))
 
 (use-package json-mode
   :ensure t
@@ -1611,8 +1645,10 @@ See URL `https://beta.ruff.rs/docs/'."
 
   (add-hook 'eshell-mode-hook 'esh-customize-faces))
 
-(use-package yaml-mode
-  :ensure t)
+(use-package yaml-pro
+  :straight t
+  :mode (("\\.yml\\'" . yaml-pro-ts-mode)
+         ("\\.yaml\\'" . yaml-pro-ts-mode)))
 
 (use-package lua-mode
   :ensure t)
@@ -1716,14 +1752,20 @@ See URL `https://beta.ruff.rs/docs/'."
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
 
-
-(use-package eglot
+(use-package lsp-mode
+  :straight t
+  :init
+  (setq flymake-allowed-file-name-masks nil)
   :config
-  (defun jsonrpc--log-event (_connection _message &optional type)
-    "Overriding because it grinds completions to a halt on a large python monorepo."
-    nil)
+  (setq lsp-headerline-breadcrumb-enable-diagnostics nil))
 
-  (add-to-list 'eglot-stay-out-of 'flymake))
+ (use-package lsp-ui
+   :straight t
+   :config
+   (setq lsp-ui-doc-show-with-cursor t))
+
+(use-package lsp-pyright
+  :straight t)
 
 (use-package rust-mode
   :ensure t
@@ -1769,6 +1811,15 @@ See URL `https://beta.ruff.rs/docs/'."
 
 (use-package vyper-mode
   :straight t)
+
+(use-package verb
+  :straight t
+  :config
+  (with-eval-after-load 'org
+    (define-key org-mode-map (kbd "C-c C-r") verb-command-map)
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((verb . t)))))
 
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")

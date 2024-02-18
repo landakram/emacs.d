@@ -137,10 +137,14 @@ Without this, the warning buffer pops up whenever native-comp has some warning.
   (eval-when-compile
     (require 'use-package))
 
+;; These should be loaded early on
+(straight-use-package 'org)
+
 #+END_SRC
 
 #+RESULTS:
 : diminish
+
 
 ** Install ~diminish~
 :PROPERTIES:
@@ -818,6 +822,13 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
       :straight t
       :config
       (evil-collection-init))
+
+  (use-package evil-textobj-tree-sitter :after evil :straight t
+    :config
+    ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
+    (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+    ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
+    (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner")))
 #+END_SRC
 
 #+RESULTS:
@@ -862,6 +873,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 Projectile lets me switch between projects really easily. I set it up to default to ~projectile-commander~, which gives me options to choose what I want to do with a project once I open it.
 
 #+BEGIN_SRC emacs-lisp 
+  (use-package project)
 
   (use-package projectile
     :ensure t
@@ -1725,6 +1737,10 @@ Automatically pair braces
 :ID:       3a3911e4-b2ee-4073-80da-5d7f04d5f87f
 :END:
 #+begin_src emacs-lisp
+  ;; Added this because I ran into this issue: https://github.com/copilot-emacs/copilot.el/issues/232
+  (use-package jsonrpc
+    :straight t)
+
   (use-package copilot
     :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
     :ensure t
@@ -1847,57 +1863,6 @@ Autodetect indentation:
 : t
 
 ** Git
-*** Magit
-:PROPERTIES:
-:ID:       5A7C93D2-2F53-47EA-BAE1-7F373979B30A
-:END:
-#+BEGIN_SRC emacs-lisp 
-  (use-package magit
-    :straight t
-    :commands (magit-get-current-branch)
-    :defer t
-    :config
-    ;; Uncomment this to improve performance
-    ;; (setq magit-refresh-status-buffer nil)
-    ;; (setq magit-refresh-verbose t)
-    (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
-
-  (use-package forge
-    :straight t
-    :after magit
-    :config
-
-    (defun forge-browse-branch-pullreq ()
-      "Visit the current branch's PR on Github."
-      (interactive)
-      (browse-url (format "https://github.com/%s/pull/new/%s"
-                          (replace-regexp-in-string
-                           "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
-                           (magit-get "remote" (magit-get-push-remote) "url"))
-                          (magit-get-current-branch))))
-
-    ;; Set some sane defaults for working with very large git repositories
-    ;; Usage:
-    ;;
-    ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
-    ;;
-    ;; (dir-locals-set-class-variables
-    ;;  'huge-git-repository
-    ;;  '((magit-status-mode
-    ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
-    ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
-    ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
-    ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
-    ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
-    ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
-    ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
-
-    )
-#+END_SRC
-
-#+RESULTS:
-: t
-
 *** Blamer.el
 :PROPERTIES:
 :ID:       761B966A-2FE2-4FDF-9BF9-01406C89138D
@@ -1964,11 +1929,64 @@ Inline git blame like vscode
     (leader-def ".go" 'blamer-open-remote-at-point)
     (leader-def ".gc" 'blamer-open-magit-at-point)
 
+    (setq blamer-type 'visual)
+
     (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
                             ("<mouse-1>" . blamer-callback-show-commit-diff)))
     
     (global-blamer-mode 1))
 #+end_src
+*** Magit
+:PROPERTIES:
+:ID:       5A7C93D2-2F53-47EA-BAE1-7F373979B30A
+:END:
+#+BEGIN_SRC emacs-lisp 
+  (use-package magit
+    :straight t
+    :commands (magit-get-current-branch)
+    :defer t
+    :config
+    ;; Uncomment this to improve performance
+    (setq magit-refresh-status-buffer nil)
+    ;; (setq magit-refresh-verbose t)
+    (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
+
+  (use-package forge
+    :straight t
+    :after magit
+    :config
+
+    (defun forge-browse-branch-pullreq ()
+      "Visit the current branch's PR on Github."
+      (interactive)
+      (browse-url (format "https://github.com/%s/pull/new/%s"
+                          (replace-regexp-in-string
+                           "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
+                           (magit-get "remote" (magit-get-push-remote) "url"))
+                          (magit-get-current-branch))))
+
+    ;; Set some sane defaults for working with very large git repositories
+    ;; Usage:
+    ;;
+    ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
+    ;;
+    ;; (dir-locals-set-class-variables
+    ;;  'huge-git-repository
+    ;;  '((magit-status-mode
+    ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
+    ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
+    ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
+    ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
+
+    )
+#+END_SRC
+
+#+RESULTS:
+: t
+
 *** Open GitHub from file
 :PROPERTIES:
 :ID:       0D190EFD-ED2F-4219-B777-18AEF8DD3245
@@ -2315,6 +2333,22 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+RESULTS:
 | python-black-on-save-mode-enable-dwim | evil-collection-python-set-evil-shift-width | eglot-ensure |
 
+*** pytest
+:PROPERTIES:
+:ID:       64457FAF-D561-4611-A859-FB838BC2A80E
+:END:
+
+#+begin_src emacs-lisp
+  (use-package pytest
+    :straight t
+
+    :config
+    ;; Use pyproject.toml to find a suitable project root for pytest
+    ;; This is useful for monorepos
+    (add-to-list 'pytest-project-root-files "pyproject.toml")
+    ;; Don't use `-x -s` by default, we like capturing output
+    (setq pytest-cmd-flags ""))
+#+end_src
 ** JSON
 :PROPERTIES:
 :ID:       350A7222-2A8F-4037-8BD1-347CD0C90BAD
@@ -2921,6 +2955,25 @@ Let's use web-mode, which supports font locking for templating.
   (use-package vyper-mode
     :straight t)
 #+end_src
+
+** HTTP
+:PROPERTIES:
+:ID:       C07F1054-34F7-461F-828A-FC0DBB7AD37F
+:END:
+
+#+begin_src emacs-lisp
+  (use-package verb
+    :straight t
+    :config
+    (with-eval-after-load 'org
+      (define-key org-mode-map (kbd "C-c C-r") verb-command-map)
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((verb . t)))))
+#+end_src
+
+#+RESULTS:
+: t
 
 * Org Mode
 I use Org Mode to take notes for work and personal.
