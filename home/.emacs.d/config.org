@@ -1229,14 +1229,14 @@ Enable automatic optimizations for files with long lines
 
 ** Breadcrumb
 :PROPERTIES:
-:ID:       3CCC42CA-7305-45F4-9C3C-8E95FF775400
+:ID:       7CAB30C9-12D8-49AA-AEAE-E0D9AFA3510B
 :END:
 
 #+begin_src emacs-lisp
   (use-package breadcrumb
     :straight t
-    :config
-    (breadcrumb-mode 1))
+    :hook ((yaml-pro-ts-mode . breadcrumb-local-mode)
+           (json-ts-mode . breadcrumb-local-mode)))
 #+end_src
 
 * UI
@@ -1617,6 +1617,10 @@ Dim inactive buffers.
     (dimmer-configure-which-key)
     (dimmer-configure-magit)
     (dimmer-configure-org)
+
+    (defun dimmer-lsp-ui-doc-p ()
+      (string-prefix-p " *lsp-ui-doc-" (buffer-name)))
+    (add-to-list 'dimmer-prevent-dimming-predicates #'dimmer-lsp-ui-doc-p)
 
     (defun advices/dimmer-config-change-handler ()
       (dimmer--dbg-buffers 1 "dimmer-config-change-handler")
@@ -2208,7 +2212,7 @@ Inline git blame like vscode
 #+begin_src emacs-lisp
   (use-package python
     :ensure t
-    :hook ((python-ts-mode . eglot-ensure))
+    :hook ((python-ts-mode . lsp-deferred))
     :mode (("\\.py\\'" . python-ts-mode))
     :config
     (add-hook 'python-ts-mode-hook
@@ -2598,9 +2602,13 @@ I typically use 2 spaces to indent.
 :ID:       85004FDB-D2C8-4D10-8FF4-059F162C3B97
 :END:
 
+Use a YAML mode with treesitter support.
+
 #+BEGIN_SRC emacs-lisp
-  (use-package yaml-mode
-    :ensure t)
+  (use-package yaml-pro
+    :straight t
+    :mode (("\\.yml\\'" . yaml-pro-ts-mode)
+           ("\\.yaml\\'" . yaml-pro-ts-mode)))
 #+END_SRC
 ** Lua
 :PROPERTIES:
@@ -2800,14 +2808,21 @@ Let's use web-mode, which supports font locking for templating.
   (setq gc-cons-threshold 100000000)
   (setq read-process-output-max (* 1024 1024))
 
-
-  (use-package eglot
+  (use-package lsp-mode
+    :straight t
+    :init
+    (setq flymake-allowed-file-name-masks nil)
     :config
-    (defun jsonrpc--log-event (_connection _message &optional type)
-      "Overriding because it grinds completions to a halt on a large python monorepo."
-      nil)
+    (setq lsp-headerline-breadcrumb-enable-diagnostics nil))
 
-    (add-to-list 'eglot-stay-out-of 'flymake))
+   (use-package lsp-ui
+     :straight t
+     :config
+     (setq lsp-ui-doc-show-with-cursor t))
+
+  (use-package lsp-pyright
+    :straight t)
+
 #+end_src
 
 #+RESULTS:
