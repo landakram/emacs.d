@@ -1423,6 +1423,7 @@ These packages succeed selectrum (RIP).
   (use-package consult
     :straight (consult :type git :host github :repo "minad/consult" :branch "main")
     :after projectile
+    :defer 0.5
     :bind (("C-x M-:" . consult-complex-command)
            ("C-c h" . consult-history)
            ("C-c m" . consult-mode-command)

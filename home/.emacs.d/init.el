@@ -749,7 +749,6 @@ Version 2017-01-27"
 
 (setq org-agenda-window-setup 'other-window)
 
-
 (use-package shackle
   :ensure t
   :config
@@ -799,6 +798,7 @@ Version 2017-01-27"
 (use-package consult
   :straight (consult :type git :host github :repo "minad/consult" :branch "main")
   :after projectile
+  :defer 0.5
   :bind (("C-x M-:" . consult-complex-command)
          ("C-c h" . consult-history)
          ("C-c m" . consult-mode-command)
