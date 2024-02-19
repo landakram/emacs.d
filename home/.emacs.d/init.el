@@ -749,6 +749,7 @@ Version 2017-01-27"
 
 (setq org-agenda-window-setup 'other-window)
 
+
 (use-package shackle
   :ensure t
   :config
@@ -758,6 +759,11 @@ Version 2017-01-27"
                      :size 0.4
                      :popup t)
           (compilation-mode :align below
+                            :select t
+                            :size 0.3
+                            :popup t)
+          (" *Embark Actions*"
+           :align below
                             :select t
                             :size 0.3
                             :popup t)
@@ -915,19 +921,38 @@ Version 2017-01-27"
 
 (use-package embark
   :straight (embark :type git :host github :repo "oantolin/embark")
+  :after popper
   :bind
-  ;; TODO: need a different map here
   (:map minibuffer-local-map
         ("C-j" . embark-act))
 
   :config
-  ;; Pop up which-key when running embark-act
-  (setq embark-action-indicator
-        (lambda (map &optional _target)
-          (which-key--show-keymap "Embark" map nil nil 'no-paging)
-          #'which-key--hide-popup-ignore-command)
-        embark-become-indicator embark-action-indicator)
-  (setq embark-prompter 'embark-keymap-prompter))
+  (add-to-list 'popper-reference-buffers "\\*Embark Actions\\*")
+
+  ;; Disabled for now, using shackle/popper for popup
+  ;; (add-to-list 'embark-indicators #'embark-which-key-indicator)
+  (defun embark-which-key-indicator ()
+    "An embark indicator that displays keymaps using which-key.
+The which-key help message will show the type and value of the
+current target followed by an ellipsis if there are further
+targets."
+    (lambda (&optional keymap targets prefix)
+      (if (null keymap)
+          (which-key--hide-popup-ignore-command)
+        (which-key--show-keymap
+         (if (eq (caar targets) 'embark-become)
+             "Become"
+           (format "Act on %s '%s'%s"
+                   (plist-get (car targets) :type)
+                   (embark--truncate-target (plist-get (car targets) :target))
+                   (if (cdr targets) "…" "")))
+         (if prefix
+             (pcase (lookup-key keymap prefix 'accept-default)
+               ((and (pred keymapp) km) km)
+               (_ (key-binding prefix 'accept-default)))
+           keymap)
+         nil nil t)))))
+
 
 (use-package embark-consult
   :straight (embark-consult :type git :host github :repo "oantolin/embark")
