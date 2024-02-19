@@ -917,7 +917,7 @@ Version 2017-01-27"
   :straight (embark :type git :host github :repo "oantolin/embark")
   :bind
   ;; TODO: need a different map here
-  (:map electrum-minibuffer-map
+  (:map minibuffer-local-map
         ("C-j" . embark-act))
 
   :config
