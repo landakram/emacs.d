@@ -1760,6 +1760,10 @@ Automatically pair braces
 :ID:       283EAF79-A1DC-4EFF-B6CD-AE91C3C5AC5D
 :END:
 
+*** tdd
+:PROPERTIES:
+:ID:       E093F37E-8D36-45BA-B42B-1DED16E59E53
+:END:
 Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buffer is saved.
 
 #+BEGIN_SRC emacs-lisp
@@ -1768,6 +1772,17 @@ Install Jorgen Schaefer's ~tdd~ library, which lets me auto-run tests when a buf
 #+END_SRC
 
 #+RESULTS:
+
+*** Keymaps
+:PROPERTIES:
+:ID:       29EDA5EC-B10D-4743-922E-2FC3F25AD6A3
+:END:
+
+#+begin_src emacs-lisp
+(general-define-key
+   "C-c t r" 'recompile)
+#+end_src
+
 ** compilation-mode
 :PROPERTIES:
 :ID:       9E812C88-EB21-40CB-8F3D-AA737F78D7C6
@@ -2291,8 +2306,9 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+END_SRC
 
 #+begin_src emacs-lisp
-  (use-package py-isort
-    :straight t)
+  (use-package python-isort
+    :straight t
+    :hook (python-ts-mode . python-isort-on-save-mode))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -2341,7 +2357,12 @@ We also set up eshell so that it shares its environment with emacs, thus using t
 #+begin_src emacs-lisp
   (use-package pytest
     :straight t
-
+    :general
+    (general-define-key
+     :keymaps '(python-mode-map python-ts-mode-map)
+     "C-c t ." 'pytest-one
+     "C-c t f" 'pytest-module
+     "C-c t p" 'pytest-all)
     :config
     ;; Use pyproject.toml to find a suitable project root for pytest
     ;; This is useful for monorepos
@@ -2450,12 +2471,6 @@ I typically use 2 spaces to indent.
 
   (use-package mocha
     :straight t
-    :general
-    (general-define-key
-     "C-c t ." 'mocha-test-at-point
-     "C-c t f" 'mocha-test-file
-     "C-c t p" 'mocha-test-project
-     "C-c t r" 'recompile) 
     :config
     (setf mocha-environment-variables "FORCE_COLOR=1 NODE_ENV=test")
     (setf mocha-reporter "spec"))

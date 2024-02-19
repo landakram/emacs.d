@@ -1051,6 +1051,9 @@ Version 2017-01-27"
 (use-package tdd
   :load-path "site-lisp/tdd/")
 
+(general-define-key
+   "C-c t r" 'recompile)
+
 (defun local/postprocess-compilation-buffer ()
   (goto-char compilation-filter-start)
   (when (looking-at "\033c")
@@ -1438,8 +1441,9 @@ Version 2017-01-27"
   :hook ((python-mode . python-black-on-save-mode)
          (python-ts-mode . python-black-on-save-mode)))
 
-(use-package py-isort
-  :straight t)
+(use-package python-isort
+  :straight t
+  :hook (python-ts-mode . python-isort-on-save-mode))
 
 (flycheck-def-config-file-var flycheck-python-ruff-config python-ruff
                               '("pyproject.toml" "ruff.toml" ".ruff.toml"))
@@ -1476,7 +1480,12 @@ See URL `https://beta.ruff.rs/docs/'."
 
 (use-package pytest
   :straight t
-
+  :general
+  (general-define-key
+   :keymaps '(python-mode-map python-ts-mode-map)
+   "C-c t ." 'pytest-one
+   "C-c t f" 'pytest-module
+   "C-c t p" 'pytest-all)
   :config
   ;; Use pyproject.toml to find a suitable project root for pytest
   ;; This is useful for monorepos
@@ -1522,12 +1531,6 @@ See URL `https://beta.ruff.rs/docs/'."
 
 (use-package mocha
   :straight t
-  :general
-  (general-define-key
-   "C-c t ." 'mocha-test-at-point
-   "C-c t f" 'mocha-test-file
-   "C-c t p" 'mocha-test-project
-   "C-c t r" 'recompile) 
   :config
   (setf mocha-environment-variables "FORCE_COLOR=1 NODE_ENV=test")
   (setf mocha-reporter "spec"))
