@@ -1988,6 +1988,19 @@ Inline git blame like vscode
     :config
     ;; Uncomment this to improve performance
     (setq magit-refresh-status-buffer nil)
+
+    ;; If magit-refresh-status-buffer is nil, refresh the magit-status buffer on idle timer 
+    (defun magit-refresh-on-idle-timer ()
+      (when-let ((buffer (and (not (derived-mode-p 'magit-status-mode))
+                              (magit-get-mode-buffer 'magit-status-mode))))
+        (when (not magit-refresh-status-buffer)
+          (run-with-idle-timer 1 nil (lambda (buffer)
+                                       (message "Refreshing magit-status buffer")
+                                       (with-current-buffer buffer (magit-refresh-buffer))) buffer))))
+
+
+    (add-hook 'magit-post-refresh-hook 'magit-refresh-on-idle-timer)
+    
     ;; (setq magit-refresh-verbose t)
     (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
 
