@@ -76,8 +76,11 @@ Let's set ~custom-file~, which emacs writes to automatically.
 Without this, the warning buffer pops up whenever native-comp has some warning.
 
 #+begin_src emacs-lisp
-(setq native-comp-async-report-warnings-errors nil)
+  (setq native-comp-async-report-warnings-errors nil)
+
+  (setq warning-minimum-level :error)
 #+end_src
+
 
 #+RESULTS:
 
