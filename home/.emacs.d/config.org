@@ -81,6 +81,30 @@ Without this, the warning buffer pops up whenever native-comp has some warning.
 
 #+RESULTS:
 
+** Utility functions
+:PROPERTIES:
+:ID:       D2455DE8-6C1E-4607-A74C-594B617F797A
+:END:
+
+#+begin_src emacs-lisp
+  (defun eval-after-load-all (my-features form)
+    "Run FORM after all MY-FEATURES are loaded.
+  See `eval-after-load' for the possible formats of FORM."
+    (if (null my-features)
+        (if (functionp form)
+            (funcall form)
+          (eval form))
+      (eval-after-load (car my-features)
+        `(lambda ()
+           (eval-after-load-all
+            (quote ,(cdr my-features))
+            (quote ,form))))))
+
+  (defmacro with-eval-after-loads (my-features &rest body)
+    (declare (indent 1) (debug (form def-body)))
+    `(eval-after-load-all ,my-features (lambda () ,@body)))
+#+end_src
+
 * Packages
 
 ** Set up ~package.el~
@@ -2402,7 +2426,8 @@ We also set up eshell so that it shares its environment with emacs, thus using t
      :keymaps '(python-mode-map python-ts-mode-map)
      "C-c t ." 'pytest-one
      "C-c t f" 'pytest-module
-     "C-c t p" 'pytest-all)
+     "C-c t p" 'pytest-all
+     "C-c t r" 'pytest-again)
     :config
     ;; Use pyproject.toml to find a suitable project root for pytest
     ;; This is useful for monorepos
@@ -2909,16 +2934,47 @@ Let's use web-mode, which supports font locking for templating.
     :init
     (setq flymake-allowed-file-name-masks nil)
     :config
-    (setq lsp-headerline-breadcrumb-enable-diagnostics nil))
+    (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
+    (setq lsp-response-timeout 30)
+    (setq lsp-disabled-clients '(pylsp)) 
 
-   (use-package lsp-ui
-     :straight t
-     :config
-     (setq lsp-ui-doc-show-with-cursor t))
+    (with-eval-after-loads '(lsp-mode lsp-pyright lsp-jedi) 
+      ;; Use jedi for finding references since pyright doesn't seem to find all references / hangs a lot
+      (lsp-disable-method-for-server "textDocument/references" 'pyright)
+
+      ;; Use pyright for hover since it's faster
+      (lsp-disable-method-for-server "textDocument/hover" 'jedi-sidecar)
+
+      ;; Use pyright for jump to definition since it works well and is fast
+      (lsp-disable-method-for-server "textDocument/documentSymbol" 'jedi-sidecar)
+
+      ;; Use pyright for underlining references in document since it's faster
+      (lsp-disable-method-for-server "textDocument/documentHighlight" 'jedi-sidecar)))
+
+
+  (use-package lsp-ui
+    :straight t
+    :config
+    (setq lsp-ui-doc-show-with-cursor t))
 
   (use-package lsp-pyright
-    :straight t)
+    :straight t) 
 
+  (use-package lsp-jedi
+    :straight t
+    :config
+    ;; Register jedi-language-server so it can run alongside pyright
+    (lsp-register-client
+     (make-lsp-client
+      :new-connection (lsp-stdio-connection
+                       (lambda () lsp-jedi-executable-command))
+      :major-modes '(python-mode python-ts-mode cython-mode)
+      :priority -1
+      ;; This is the important line
+      :add-on? t
+      :server-id 'jedi-sidecar
+      :library-folders-fn (lambda (_workspace) lsp-jedi-python-library-directories)
+      :initialization-options (lambda () (gethash "jedi" (lsp-configuration-section "jedi"))))))
 #+end_src
 
 #+RESULTS:
