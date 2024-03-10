@@ -1247,8 +1247,10 @@ Enable automatic optimizations for files with long lines
 #+begin_src emacs-lisp
   (use-package breadcrumb
     :straight t
-    :hook ((yaml-pro-ts-mode . breadcrumb-local-mode)
-           (json-ts-mode . breadcrumb-local-mode)))
+    :config
+    (breadcrumb-mode t)
+    ;; Use lsp-mode's breadcrumbs for LSP-enabled buffers
+    (add-hook 'lsp-mode-hook (lambda () (breadcrumb-local-mode -1))))
 #+end_src
 
 * UI
@@ -2691,11 +2693,18 @@ I typically use 2 spaces to indent.
 
 Use a YAML mode with treesitter support.
 
+#+begin_src emacs-lisp
+  (use-package yaml-mode
+    :straight t
+    :mode (("\\.yml\\'" . yaml-mode)
+           ("\\.yaml\\'" . yaml-mode)))
+#+end_src
+
+
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-pro
     :straight t
-    :mode (("\\.yml\\'" . yaml-pro-ts-mode)
-           ("\\.yaml\\'" . yaml-pro-ts-mode)))
+    :hook ((yaml-mode . yaml-pro-ts-mode)))
 #+END_SRC
 ** Lua
 :PROPERTIES:
