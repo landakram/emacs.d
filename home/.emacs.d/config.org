@@ -2957,18 +2957,18 @@ Let's use web-mode, which supports font locking for templating.
     (setq lsp-disabled-clients '(pylsp)) 
 
     (with-eval-after-loads '(lsp-mode lsp-pyright lsp-jedi) 
+
+      (defun lsp-disable-all-methods-for-server-except (methods server-id)
+        "Disable all methods for SERVER-ID except for METHODS."
+        (let* ((server (gethash server-id lsp-clients))
+               (all-methods (mapcar 'car lsp-method-requirements)))
+          (dolist (method all-methods)
+            (unless (seq-contains-p methods method #'string=)
+              (lsp-disable-method-for-server method server-id)))))
+
       ;; Use jedi for finding references since pyright doesn't seem to find all references / hangs a lot
-      (lsp-disable-method-for-server "textDocument/references" 'pyright)
-
-      ;; Use pyright for hover since it's faster
-      (lsp-disable-method-for-server "textDocument/hover" 'jedi-sidecar)
-
-      ;; Use pyright for jump to definition since it works well and is fast
-      (lsp-disable-method-for-server "textDocument/documentSymbol" 'jedi-sidecar)
-
-      ;; Use pyright for underlining references in document since it's faster
-      (lsp-disable-method-for-server "textDocument/documentHighlight" 'jedi-sidecar)))
-
+      (lsp-disable-all-methods-for-server-except '("textDocument/references") 'jedi-sidecar)
+      (lsp-disable-method-for-server "textDocument/references" 'pyright)))
 
   (use-package lsp-ui
     :straight t
