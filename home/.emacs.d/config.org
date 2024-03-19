@@ -1318,6 +1318,45 @@ Enable automatic optimizations for files with long lines
     ;; Use lsp-mode's breadcrumbs for LSP-enabled buffers
     (add-hook 'lsp-mode-hook (lambda () (breadcrumb-local-mode -1))))
 #+end_src
+** Find test directory with heuristics
+:PROPERTIES:
+:ID:       CC95673A-67A9-416F-AD54-B4DB00FF85E8
+:END:
+
+#+begin_src emacs-lisp
+  (defun find-python-tests-dir ()
+    "Find the tests directory based on the dominating pyproject.toml file and additional heuristics."
+    (interactive)
+    (let ((project-root (locate-dominating-file default-directory "pyproject.toml")))
+      (if project-root
+          (let* ((project-name (file-name-nondirectory (directory-file-name project-root)))
+                 (potential-dir (concat (file-name-as-directory project-root) project-name))
+                 (search-dir (if (file-directory-p potential-dir) potential-dir project-root))
+                 (top-level-tests-dir (concat (file-name-as-directory potential-dir) "tests"))
+                 (tests-dirs (if (file-directory-p top-level-tests-dir)
+                                 (list top-level-tests-dir)
+                               (directory-files-recursively search-dir "tests$" t))))
+            (if tests-dirs
+                (progn
+                  (message "Tests directory found: %s" (car tests-dirs))
+                  (car tests-dirs))
+              (message "Tests directory not found.")))
+        (message "pyproject.toml not found in any dominating directory."))))
+
+  (defun jump-to-python-tests-dir ()
+    "Jump to the tests directory based on the dominating pyproject.toml file and additional heuristics."
+    (interactive)
+    (let ((tests-dir (find-python-tests-dir)))
+      (when tests-dir
+        (dired tests-dir))))
+
+  (defun pytest-run-current-project ()
+    (interactive)
+    (let ((tests-dir (find-python-tests-dir)))
+      (when tests-dir
+        (pytest-run tests-dir nil))))
+#+end_src
+
 
 * UI
 ** Set the font
