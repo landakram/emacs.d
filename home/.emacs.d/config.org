@@ -1443,6 +1443,21 @@ Make scrolling behavior more like vim:
 #+RESULTS:
 : t
 
+** Recentf 
+:PROPERTIES:
+:ID:       46EB8CC2-9FEA-45DE-A750-6965A019131D
+:END:
+
+#+begin_src emacs-lisp
+  (use-package recentf
+    :config
+    (setq recentf-save-file (expand-file-name "recentf" user-emacs-directory)
+          recentf-max-saved-items 100 
+          recentf-auto-cleanup 'never)
+    (recentf-mode 1))
+
+#+end_src
+
 ** Vertico, Consult, Orderless
 :PROPERTIES:
 :ID:       0D765ADF-6C61-4F8F-9885-4AE57A7526BD
