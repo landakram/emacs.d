@@ -1996,15 +1996,16 @@ Inline git blame like vscode
 #+begin_src emacs-lisp
   (use-package blamer
     :straight t
-    :defer 20
+    :defer 1
     :after forge
     :config
     (setq blamer-force-truncate-long-line t)
     (setq blamer-max-commit-message-length 100)
+    (setq blamer-idle-time 1)
     (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
     (set-face-attribute 'blamer-face
                             nil
-                            :foreground (plist-get my/base16-colors :base03))
+                            :foreground (plist-get my/base16-colors :base04))
 
     (add-hook 'evil-insert-state-entry-hook (lambda ()
                                               (setq blamer--block-render-p t)
@@ -2078,7 +2079,7 @@ Inline git blame like vscode
                               (magit-get-mode-buffer 'magit-status-mode))))
         (when (not magit-refresh-status-buffer)
           (run-with-idle-timer 1 nil (lambda (buffer)
-                                       (message "Refreshing magit-status buffer")
+                                       (message "Refreshing magit-status buffer %s" buffer)
                                        (with-current-buffer buffer (magit-refresh-buffer))) buffer))))
 
 
