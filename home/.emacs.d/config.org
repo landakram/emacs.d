@@ -212,6 +212,36 @@ Without this, the warning buffer pops up whenever native-comp has some warning.
 : diminish
 
 
+*** Custom use-package config hooks
+:PROPERTIES:
+:ID:       A5142067-984A-4417-B25A-7EF28A354B91
+:END:
+
+#+begin_src emacs-lisp
+  (defvar use-package-config-hooks nil
+    "Alist of hooks to run after a use-package config block.")
+
+  (defun add-use-package-config-hook (package hook)
+    "Add a function to the list of hooks to be run after PACKAGE's use-package config."
+    (let ((entry (assoc package use-package-config-hooks)))
+      (if entry
+          (setcdr entry (append (cdr entry) (list hook)))
+        (push (cons package (list hook)) use-package-config-hooks))))
+
+  (defun run-use-package-config-hooks (package)
+    "Run all hooks for the given PACKAGE."
+    (dolist (hook (cdr (assoc package use-package-config-hooks)))
+      (funcall hook)))
+
+  (defmacro with-eval-after-use-package-config (package &rest body)
+    "Specify actions to run after PACKAGE is configured via use-package."
+    `(add-use-package-config-hook ',package (lambda () ,@body)))
+#+end_src
+
+#+RESULTS:
+: with-eval-after-use-package-config
+
+
 ** Install ~diminish~
 :PROPERTIES:
 :ID:       6E6D6418-A509-4C0C-9791-E27BDD2686E3
@@ -643,7 +673,9 @@ I need this to pull mail for m4ue.
 
 #+BEGIN_SRC emacs-lisp
   (let ((host-specific-config (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el")))) 
+    (message "Attempting to load host-specific config file %s" host-specific-config)
     (when (file-readable-p host-specific-config)
+      (message "Found host-specific config file %s. Loading." host-specific-config)
       (load-file host-specific-config)))
 #+END_SRC
 ** Save session variables
@@ -1007,6 +1039,26 @@ Avy lets me jump around buffers and windows with hints.
 
 #+RESULTS:
 : t
+
+
+*** link-hint
+:PROPERTIES:
+:ID:       9B79EBE5-0602-4FA9-A21B-28AA4FA52858
+:END:
+
+#+begin_src emacs-lisp
+  (use-package link-hint
+    :straight t
+    :bind
+    ("C-c l o" . link-hint-open-link)
+    ("C-c l c" . link-hint-copy-link)
+    :general
+    (leader-def :infix "l"
+      "o" 'link-hint-open-link
+      "c" 'link-hint-copy-link)
+  )
+#+end_src
+
 ** Ace-Window
 :PROPERTIES:
 :ID:       6F181FA4-52E3-44EB-A11D-1772CD6B9BB2
@@ -1168,27 +1220,27 @@ Reduce the amount that the mouse scrolls.
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(defun xah-copy-file-path (&optional *dir-path-only-p)
-  "Copy the current buffer's file path or dired path to `kill-ring'.
-Result is full path.
-If `universal-argument' is called first, copy only the dir path.
-URL `http://ergoemacs.org/emacs/emacs_copy_file_path.html'
-Version 2017-01-27"
-  (interactive "P")
-  (let ((-fpath
-         (if (equal major-mode 'dired-mode)
-             (expand-file-name default-directory)
-           (if (buffer-file-name)
-               (buffer-file-name)
-             (user-error "Current buffer is not associated with a file.")))))
-    (kill-new
-     (if *dir-path-only-p
-         (progn
-           (message "Directory path copied: %s" (file-name-directory -fpath))
-           (file-name-directory -fpath))
-       (progn
-         (message "File path copied: %s" -fpath)
-         -fpath )))))
+  (defun xah-copy-file-path (&optional *dir-path-only-p)
+    "Copy the current buffer's file path or dired path to `kill-ring'.
+  Result is full path or relative path if a root is specified.
+  If `universal-argument' is called first, prompt for root and copy the relative path.
+  URL `http://ergoemacs.org/emacs/emacs_copy_file_path.html'
+  Version 2024-06-06"
+    (interactive "P")
+    (let* ((root-path (if *dir-path-only-p
+                          (read-directory-name "Select root: ")
+                        nil))
+           (-fpath (if (equal major-mode 'dired-mode)
+                       (expand-file-name default-directory)
+                     (if (buffer-file-name)
+                         (buffer-file-name)
+                       (user-error "Current buffer is not associated with a file."))))
+           (result-path (if root-path
+                            (file-relative-name -fpath root-path)
+                          -fpath)))
+      (kill-new result-path)
+      (message "Path copied: %s" result-path)))
+
 #+END_SRC
 
 #+RESULTS:
@@ -1217,10 +1269,10 @@ Version 2017-01-27"
     (:keymaps
      'dired-mode-map
      "h" 'dired-up-directory
-     "l" 'dired-find-file)
+     "l" 'dired-find-file
+     "/" 'find-file)
     :config
-    (setq dired-listing-switches "-alh")
-    )
+    (setq dired-listing-switches "-alh"))
 
   (use-package diredfl
     :straight t
