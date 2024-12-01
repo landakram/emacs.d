@@ -90,6 +90,25 @@ See `eval-after-load' for the possible formats of FORM."
 ;; These should be loaded early on
 (straight-use-package 'org)
 
+(defvar use-package-config-hooks nil
+  "Alist of hooks to run after a use-package config block.")
+
+(defun add-use-package-config-hook (package hook)
+  "Add a function to the list of hooks to be run after PACKAGE's use-package config."
+  (let ((entry (assoc package use-package-config-hooks)))
+    (if entry
+        (setcdr entry (append (cdr entry) (list hook)))
+      (push (cons package (list hook)) use-package-config-hooks))))
+
+(defun run-use-package-config-hooks (package)
+  "Run all hooks for the given PACKAGE."
+  (dolist (hook (cdr (assoc package use-package-config-hooks)))
+    (funcall hook)))
+
+(defmacro with-eval-after-use-package-config (package &rest body)
+  "Specify actions to run after PACKAGE is configured via use-package."
+  `(add-use-package-config-hook ',package (lambda () ,@body)))
+
 (unless (package-installed-p 'diminish)
   (package-install 'diminish))
 
@@ -292,7 +311,9 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
             (kill-buffer)))))))
 
 (let ((host-specific-config (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el")))) 
+  (message "Attempting to load host-specific config file %s" host-specific-config)
   (when (file-readable-p host-specific-config)
+    (message "Found host-specific config file %s. Loading." host-specific-config)
     (load-file host-specific-config)))
 
 (use-package session
@@ -576,6 +597,17 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   (setq avy-keys
         '(?h ?j ?k ?l ?a ?s ?d ?f ?g ?y ?u ?i ?o ?p ?q ?w ?e ?r ?t ?n ?m ?z ?x ?c ?v ?b)))
 
+(use-package link-hint
+  :straight t
+  :bind
+  ("C-c l o" . link-hint-open-link)
+  ("C-c l c" . link-hint-copy-link)
+  :general
+  (leader-def :infix "l"
+    "o" 'link-hint-open-link
+    "c" 'link-hint-copy-link)
+)
+
 (use-package ace-window
   :ensure t
   :config
@@ -646,25 +678,24 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
 (defun xah-copy-file-path (&optional *dir-path-only-p)
   "Copy the current buffer's file path or dired path to `kill-ring'.
-Result is full path.
-If `universal-argument' is called first, copy only the dir path.
+Result is full path or relative path if a root is specified.
+If `universal-argument' is called first, prompt for root and copy the relative path.
 URL `http://ergoemacs.org/emacs/emacs_copy_file_path.html'
-Version 2017-01-27"
+Version 2024-06-06"
   (interactive "P")
-  (let ((-fpath
-         (if (equal major-mode 'dired-mode)
-             (expand-file-name default-directory)
-           (if (buffer-file-name)
-               (buffer-file-name)
-             (user-error "Current buffer is not associated with a file.")))))
-    (kill-new
-     (if *dir-path-only-p
-         (progn
-           (message "Directory path copied: %s" (file-name-directory -fpath))
-           (file-name-directory -fpath))
-       (progn
-         (message "File path copied: %s" -fpath)
-         -fpath )))))
+  (let* ((root-path (if *dir-path-only-p
+                        (read-directory-name "Select root: ")
+                      nil))
+         (-fpath (if (equal major-mode 'dired-mode)
+                     (expand-file-name default-directory)
+                   (if (buffer-file-name)
+                       (buffer-file-name)
+                     (user-error "Current buffer is not associated with a file."))))
+         (result-path (if root-path
+                          (file-relative-name -fpath root-path)
+                        -fpath)))
+    (kill-new result-path)
+    (message "Path copied: %s" result-path)))
 
 (use-package direnv
   :ensure t
@@ -679,10 +710,10 @@ Version 2017-01-27"
   (:keymaps
    'dired-mode-map
    "h" 'dired-up-directory
-   "l" 'dired-find-file)
+   "l" 'dired-find-file
+   "/" 'find-file)
   :config
-  (setq dired-listing-switches "-alh")
-  )
+  (setq dired-listing-switches "-alh"))
 
 (use-package diredfl
   :straight t
@@ -776,11 +807,41 @@ Version 2017-01-27"
     (when tests-dir
       (dired tests-dir))))
 
+(autoload 'pytest-run "pytest")
+(autoload 'pytest-get-command "pytest")
 (defun pytest-run-current-project ()
   (interactive)
   (let ((tests-dir (find-python-tests-dir)))
-    (when tests-dir
-      (pytest-run tests-dir nil))))
+    (when-let* (( abs-test-dir (expand-file-name tests-dir))
+                (buffer-file-name abs-test-dir))
+      (pytest-run (expand-file-name tests-dir) nil))))
+
+(defun pytest-realgud-run-current-project ()
+  (interactive)
+  (let ((tests-dir (find-python-tests-dir)))
+    (when-let* (( abs-test-dir (expand-file-name tests-dir))
+                (buffer-file-name abs-test-dir)
+                (pytest-command
+                 (let ((pytest-cmd-format-string "%2$s %3$s '%4$s'"))
+                   (pytest-get-command (expand-file-name tests-dir) nil))))
+      (realgud:pdb (format "pytest --pdb %s" tests-dir)))))
+
+(defun pytest-realgud-one (&optional flags)
+  (interactive)
+  (realgud:pdb (format "pytest --pdb %s %s"  (or flags "") (pytest-py-testable))))
+
+(defun pytest-realgud-module (&optional flags)
+  (interactive)
+  (realgud:pdb (format "pytest --pdb %s %s"  (or flags "") buffer-file-name)))
+
+
+(use-package pdb-capf
+  :straight t
+  :config
+  (add-hook 'pdb-track-mode-hook
+            (lambda ()
+              (add-hook 'completion-at-point-functions
+                        'pdb-capf nil t))))
 
 ;;(add-to-list 'default-frame-alist
 ;;             '(font . "Fira Code Medium-12"))
@@ -849,6 +910,11 @@ Version 2017-01-27"
                             :select t
                             :size 0.3
                             :popup t)
+          ("*HTTP Response*"
+           :align below
+                            :select t
+                            :size 0.3
+                            :popup t)
           (" *Agenda Commands*"
            :align below
            :size 0.4
@@ -866,6 +932,8 @@ Version 2017-01-27"
   (setq popper-reference-buffers
         '("\\*Messages\\*"
           "Output\\*$"
+          "\\*HTTP Response\\*"
+          "\\*Embark Actions\\*"
           help-mode
           compilation-mode))
   (popper-mode +1)
@@ -886,162 +954,191 @@ Version 2017-01-27"
   (recentf-mode 1))
 
 (use-package consult
-  :straight (consult :type git :host github :repo "minad/consult" :branch "main")
-  :after projectile
-  :defer 0.5
-  :bind (("C-x M-:" . consult-complex-command)
-         ("C-c h" . consult-history)
-         ("C-c m" . consult-mode-command)
-         ("C-x b" . consult-buffer)
-         ("C-x 4 b" . consult-buffer-other-window)
-         ("C-x 5 b" . consult-buffer-other-frame)
-         ("C-x r x" . consult-register)
-         ("C-x r b" . consult-bookmark)
-         ("M-g g" . consult-goto-line)
-         ("M-g M-g" . consult-goto-line)
-         ("M-g o" . consult-outline)
-         ("M-g l" . consult-line)
-         ("M-g m" . consult-mark)
-         ("M-g k" . consult-global-mark)
-         ("M-g r" . consult-git-grep)
-         ("M-g f" . consult-find)
-         ("M-g i" . consult-project-imenu)
-         ("M-g e" . consult-error)
-         ("M-s m" . consult-multi-occur)
-         ("M-y" . consult-yank-pop)
-         ("<help> a" . consult-apropos))
-  :init
-  ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
-  (fset 'multi-occur #'consult-multi-occur)
+   :straight (consult :type git :host github :repo "minad/consult" :branch "main")
+   :after projectile
+   :defer 0.5
+   :bind (("C-x M-:" . consult-complex-command)
+          ("C-c h" . consult-history)
+          ("C-c m" . consult-mode-command)
+          ("C-x b" . consult-buffer)
+          ("C-x 4 b" . consult-buffer-other-window)
+          ("C-x 5 b" . consult-buffer-other-frame)
+          ("C-x r x" . consult-register)
+          ("C-x r b" . consult-bookmark)
+          ("M-g g" . consult-goto-line)
+          ("M-g M-g" . consult-goto-line)
+          ("M-g o" . consult-outline)
+          ("M-g l" . consult-line)
+          ("M-g m" . consult-mark)
+          ("M-g k" . consult-global-mark)
+          ("M-g r" . consult-git-grep)
+          ("M-g f" . consult-find)
+          ("M-g i" . consult-project-imenu)
+          ("M-g e" . consult-error)
+          ("M-s m" . consult-multi-occur)
+          ("M-y" . consult-yank-pop)
+          ("<help> a" . consult-apropos))
+   :init
+   ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
+   (fset 'multi-occur #'consult-multi-occur)
 
-  :config
-  (autoload 'projectile-project-root "projectile")
-  (setq consult-project-root-function #'projectile-project-root)
+   :config
+   (autoload 'projectile-project-root "projectile")
+   (setq consult-project-root-function #'projectile-project-root)
 
-  (setq consult-narrow-key "<")
+   (setq consult-narrow-key "<")
 
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
+   (setq xref-show-xrefs-function #'consult-xref
+         xref-show-definitions-function #'consult-xref)
 
-  (leader-def :infix "b"
-    "b" 'consult-buffer)
+   (leader-def :infix "b"
+     "b" 'consult-buffer)
 
-  (defun consult-ripgrep-at-point ()
-    (interactive)
-    (consult-ripgrep default-directory (thing-at-point 'symbol)))
+   (defun consult-ripgrep-at-point ()
+     (interactive)
+     (consult-ripgrep default-directory (thing-at-point 'symbol)))
 
-  (defun consult-project-ripgrep-at-point ()
-    (interactive)
-    (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
+   (defun consult-project-ripgrep-at-point ()
+     (interactive)
+     (consult-ripgrep (projectile-project-root) (thing-at-point 'symbol)))
 
-  (leader-def :infix "p"
-    "a" 'consult-project-ripgrep-at-point)
+   (defun consult-project-subdir-ripgrep-at-point (arg)
+     "Search with `consult-ripgrep` from one directory down from the project root towards the file's directory.
+ With a prefix argument ARG, prompt for the search root starting at the project root."
+     (interactive "P")
+     (let* ((project-root (project-root (project-current t)))
+            (file-path (or buffer-file-name
+                           (user-error "Buffer is not visiting a file")))
+            (relative-path (file-relative-name (directory-file-name (file-name-directory file-path)) project-root))
+            (path-components (split-string relative-path "/"))
+            (search-root (if arg
+                             (read-directory-name "Select directory: " project-root project-root)
+                           (if (> (length path-components) 0)
+                               (expand-file-name (car path-components) project-root)
+                             project-root))))
+       (consult-ripgrep search-root (thing-at-point 'symbol))))
 
-  (defun consult--buffer-sort-visibility-in-other-windows (buffers)
-    "Sort BUFFERS by visibility, only excluding a visibile buffer if its in the current window."
-    (let ((hidden)
-          (current (current-buffer)))
-      (consult--keep! buffers
-        (unless (eq it current)
-          (if
-              (eq (get-buffer-window it 'visible)
-                  (selected-window))
-              it
-            (push it hidden)
-            nil)))
-      (nconc (nreverse hidden) buffers (list (current-buffer)))))
+   (message "in consult :config")
+   (leader-def :infix "p"
+     "a" 'consult-project-ripgrep-at-point)
 
-  ;; Overriding to change the 'visibility sort. This makes the last visited buffer
-  ;; appear in the buffer list, even if it is open in a different window.
-  (setq consult--source-buffer
-        `(:name     "Buffer"
-                    :narrow   ?b
-                    :category buffer
-                    :face     consult-buffer
-                    :history  buffer-name-history
-                    :state    ,#'consult--buffer-state
-                    :default  t
-                    :items
-                    ,(lambda () (consult--buffer-query :sort 'visibility-in-other-windows
-                                                  :as #'buffer-name))))
-
-  (def-projectile-commander-method ?a
-    "Full text search in the project."
-    (consult-project-ripgrep-at-point))
-
-  (add-hook 'eshell-mode-hook
-            (lambda()
-              (define-key eshell-mode-map (kbd "M-r") 'consult-history))))
-
-(use-package consult-imenu
-  :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
-  :general (general-define-key
-            :states '(normal)
-            "F" 'consult-imenu))
-
-(use-package vertico
-  :straight t
-  :init
-  (vertico-mode))
-
-(use-package orderless
-  :straight t
-  :init
-  (setq completion-styles '(orderless basic)
-        completion-category-overrides '((file (styles partial-completion))))
-
-  :config
-  (setq completion-category-defaults nil)
-  (leader-def :infix "f"
-    "f" 'find-file)
-
-  (leader-def 
-    "x" 'execute-extended-command)
-
-  (leader-def :infix "b"
-    "b" 'consult-buffer)
-  )
+   (general-define-key
+    "C-c s ." 'consult-ripgrep-at-point
+    "C-c s p" 'consult-project-ripgrep-at-point
+    "C-c s s" 'consult-project-subdir-ripgrep-at-point)
 
 
-;; Optionally add the `consult-flycheck' command.
-(use-package consult-flycheck
-  :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
-  :bind (:map flycheck-command-map
-              ("!" . consult-flycheck)))
+   (defun consult--buffer-sort-visibility-in-other-windows (buffers)
+     "Sort BUFFERS by visibility, only excluding a visibile buffer if its in the current window."
+     (let ((hidden)
+           (current (current-buffer)))
+       (consult--keep! buffers
+         (unless (eq it current)
+           (if
+               (eq (get-buffer-window it 'visible)
+                   (selected-window))
+               it
+             (push it hidden)
+             nil)))
+       (nconc (nreverse hidden) buffers (list (current-buffer)))))
 
-(use-package embark
-  :straight (embark :type git :host github :repo "oantolin/embark")
-  :after popper
-  :bind
-  (:map minibuffer-local-map
-        ("C-j" . embark-act))
+   ;; Overriding to change the 'visibility sort. This makes the last visited buffer
+   ;; appear in the buffer list, even if it is open in a different window.
+   (setq consult--source-buffer
+         `(:name     "Buffer"
+                     :narrow   ?b
+                     :category buffer
+                     :face     consult-buffer
+                     :history  buffer-name-history
+                     :state    ,#'consult--buffer-state
+                     :default  t
+                     :items
+                     ,(lambda () (consult--buffer-query :sort 'visibility-in-other-windows
+                                                   :as #'buffer-name))))
 
-  :config
-  (add-to-list 'popper-reference-buffers "\\*Embark Actions\\*")
+   (def-projectile-commander-method ?a
+     "Full text search in the project."
+     (consult-project-ripgrep-at-point))
 
-  ;; Disabled for now, using shackle/popper for popup
-  ;; (add-to-list 'embark-indicators #'embark-which-key-indicator)
-  (defun embark-which-key-indicator ()
-    "An embark indicator that displays keymaps using which-key.
-The which-key help message will show the type and value of the
-current target followed by an ellipsis if there are further
-targets."
-    (lambda (&optional keymap targets prefix)
-      (if (null keymap)
-          (which-key--hide-popup-ignore-command)
-        (which-key--show-keymap
-         (if (eq (caar targets) 'embark-become)
-             "Become"
-           (format "Act on %s '%s'%s"
-                   (plist-get (car targets) :type)
-                   (embark--truncate-target (plist-get (car targets) :target))
-                   (if (cdr targets) "…" "")))
-         (if prefix
-             (pcase (lookup-key keymap prefix 'accept-default)
-               ((and (pred keymapp) km) km)
-               (_ (key-binding prefix 'accept-default)))
-           keymap)
-         nil nil t)))))
+   (add-hook 'eshell-mode-hook
+             (lambda()
+               (define-key eshell-mode-map (kbd "M-r") 'consult-history)))
+
+   (message "running config-hook 'consult")
+   (message "%s" use-package-config-hooks)
+   (run-use-package-config-hooks 'consult))
+
+ (use-package consult-imenu
+   :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
+   :general (general-define-key
+             :states '(normal)
+             "F" 'consult-imenu))
+
+ (use-package vertico
+   :straight t
+   :init
+   (vertico-mode))
+
+ (use-package orderless
+   :straight t
+   :init
+   (setq completion-styles '(orderless basic)
+         completion-category-overrides '((file (styles partial-completion))))
+
+   :config
+   (setq completion-category-defaults nil)
+   (leader-def :infix "f"
+     "f" 'find-file)
+
+   (leader-def 
+     "x" 'execute-extended-command)
+
+   (leader-def :infix "b"
+     "b" 'consult-buffer))
+
+
+ ;; Optionally add the `consult-flycheck' command.
+ (use-package consult-flycheck
+   :straight (consult-flycheck :type git :host github :repo "minad/consult" :branch "main")
+   :bind (:map flycheck-command-map
+               ("!" . consult-flycheck)))
+
+ (use-package embark
+   :straight (embark :type git :host github :repo "oantolin/embark")
+   :after popper
+   :bind
+   (:map minibuffer-local-map
+         ("C-j" . embark-act))
+
+   :config
+   
+
+   ;; Disabled for now, using shackle/popper for popup
+   ;; (add-to-list 'embark-indicators #'embark-which-key-indicator)
+   (defun embark-which-key-indicator ()
+     "An embark indicator that displays keymaps using which-key.
+ The which-key help message will show the type and value of the
+ current target followed by an ellipsis if there are further
+ targets."
+     (lambda (&optional keymap targets prefix)
+       (if (null keymap)
+           (which-key--hide-popup-ignore-command)
+         (which-key--show-keymap
+          (if (eq (caar targets) 'embark-become)
+              "Become"
+            (format "Act on %s '%s'%s"
+                    (plist-get (car targets) :type)
+                    (embark--truncate-target (plist-get (car targets) :target))
+                    (if (cdr targets) "…" "")))
+          (if prefix
+              (pcase (lookup-key keymap prefix 'accept-default)
+                ((and (pred keymapp) km) km)
+                (_ (key-binding prefix 'accept-default)))
+            keymap)
+          nil nil t)))))
+
+(use-package wgrep
+  :straight t)
 
 
 (use-package embark-consult
@@ -1051,12 +1148,12 @@ targets."
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
-(use-package marginalia
-  :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
-  :bind (:map minibuffer-local-map
-              ("C-M-a" . marginalia-cycle))
-  :init
-  (marginalia-mode))
+ (use-package marginalia
+   :straight (marginalia :type git :host github :branch "main" :repo "minad/marginalia")
+   :bind (:map minibuffer-local-map
+               ("C-M-a" . marginalia-cycle))
+   :init
+   (marginalia-mode))
 
 (column-number-mode)
 
@@ -1159,9 +1256,10 @@ targets."
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :ensure t
   :config
+  (setq copilot-version "1.15.0")
   (add-hook 'prog-mode-hook 'copilot-mode)
 
-  (setq copilot-max-char 200000)
+  (setq copilot-max-char 30000)
 
   (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
   (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion))
@@ -1222,71 +1320,9 @@ targets."
 
   (global-corfu-mode))
 
-(use-package blamer
-  :straight t
-  :defer 1
-  :after forge
-  :config
-  (setq blamer-force-truncate-long-line t)
-  (setq blamer-max-commit-message-length 100)
-  (setq blamer-idle-time 1)
-  (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
-  (set-face-attribute 'blamer-face
-                          nil
-                          :foreground (plist-get my/base16-colors :base04))
-
-  (add-hook 'evil-insert-state-entry-hook (lambda ()
-                                            (setq blamer--block-render-p t)
-                                            (blamer--clear-overlay)))
-  (add-hook 'evil-normal-state-entry-hook (lambda ()
-                                            (setq blamer--block-render-p nil)
-                                            (copilot-clear-overlay)))
-
-  (defun blamer-callback-show-commit-diff (commit-info)
-    (interactive)
-    (let ((commit-hash (plist-get commit-info :commit-hash)))
-      (when commit-hash)
-      ;; Split window vertically
-      (let ((split-height-threshold nil)
-            (split-width-threshold 0))
-        (magit-show-commit commit-hash))))
-
-  (defun blamer-callback-open-remote (commit-info)
-    (interactive)
-    (let ((commit-hash (plist-get commit-info :commit-hash)))
-      (when commit-hash
-        (message commit-hash)
-        (forge-browse-commit commit-hash))))
-
-  (defun blamer-commit-into-at-point ()
-    (let* ((line-number (line-number-at-pos))
-           (file-name (blamer--get-local-name (buffer-file-name)))
-           (blame-cmd-res (when file-name
-                            (apply #'vc-git--run-command-string file-name
-                                   (append blamer--git-blame-cmd
-                                           (list (format "%s,%s" line-number line-number))))))
-           (blame-cmd-res (when blame-cmd-res (butlast (split-string blame-cmd-res "\n")))))
-      (blamer--parse-line-info (first blame-cmd-res) nil)))
-
-  (defun blamer-open-remote-at-point ()
-    (interactive)
-    (let ((commit-info (blamer-commit-into-at-point)))
-      (blamer-callback-open-remote commit-info)))
-
-  (defun blamer-open-magit-at-point ()
-    (interactive)
-    (let ((commit-info (blamer-commit-into-at-point)))
-      (blamer-callback-show-commit-diff commit-info)))
-
-  (leader-def ".go" 'blamer-open-remote-at-point)
-  (leader-def ".gc" 'blamer-open-magit-at-point)
-
-  (setq blamer-type 'visual)
-
-  (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
-                          ("<mouse-1>" . blamer-callback-show-commit-diff)))
-  
-  (global-blamer-mode 1))
+(use-package git-commit
+  :straight (git-commit :type git :host github :repo "magit/magit")
+  :after magit)
 
 (use-package magit
   :straight t
@@ -1301,47 +1337,14 @@ targets."
     (when-let ((buffer (and (not (derived-mode-p 'magit-status-mode))
                             (magit-get-mode-buffer 'magit-status-mode))))
       (when (not magit-refresh-status-buffer)
-        (run-with-idle-timer 1 nil (lambda (buffer)
+        (run-with-idle-timer 2 nil (lambda (buffer)
                                      (message "Refreshing magit-status buffer %s" buffer)
                                      (with-current-buffer buffer (magit-refresh-buffer))) buffer))))
-
 
   (add-hook 'magit-post-refresh-hook 'magit-refresh-on-idle-timer)
   
   ;; (setq magit-refresh-verbose t)
   (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
-
-(use-package forge
-  :straight t
-  :after magit
-  :config
-
-  (defun forge-browse-branch-pullreq ()
-    "Visit the current branch's PR on Github."
-    (interactive)
-    (browse-url (format "https://github.com/%s/pull/new/%s"
-                        (replace-regexp-in-string
-                         "\\`.+github\\.com:\\(.+\\)\\.git\\'" "\\1"
-                         (magit-get "remote" (magit-get-push-remote) "url"))
-                        (magit-get-current-branch))))
-
-  ;; Set some sane defaults for working with very large git repositories
-  ;; Usage:
-  ;;
-  ;;   (dir-locals-set-directory-class "/some/huge/git/repo" 'huge-git-repository)
-  ;;
-  ;; (dir-locals-set-class-variables
-  ;;  'huge-git-repository
-  ;;  '((magit-status-mode
-  ;;     . ((eval . (progn (magit-disable-section-inserter 'magit-insert-tags-header)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-upstream-or-recent)
-  ;;                       (magit-disable-section-inserter 'magit-insert-stashes)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
-  ;;                       (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote)))))
-  ;;    (nil . ((forge-add-pullreq-refspec . nil)))))
-
-  )
 
 (defun parse-host-path-syntax (host-path-string)
   (let ((ssh-host-path-regex "\\(.*\\)\@\\(.*\\):\\(.*\\)"))
@@ -1402,6 +1405,10 @@ targets."
 
 (require 'subr-x)
 
+(defun github-commit-url (commit-hash)
+  (let* ((base-url (infer-browse-url-from-remote "origin")))
+     (format "%s/commit/%s" base-url commit-hash)))
+
 (defun github-file-url (&optional default-branch)
   (let* ((branch (if default-branch default-branch (open-github--branch)))
          (current-file (buffer-file-name))
@@ -1431,6 +1438,71 @@ targets."
          (repo-path (file-relative-name current-file root))
          (github-link (github-file-url)))
     (add-to-list 'org-stored-links (list github-link repo-path))))
+
+(use-package blamer
+  :straight t
+  :defer 1
+  :config
+  (setq blamer-force-truncate-long-line t)
+  (setq blamer-max-commit-message-length 100)
+  (setq blamer-idle-time 1)
+  (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
+  (set-face-attribute 'blamer-face
+                          nil
+                          :foreground (plist-get my/base16-colors :base04))
+
+  (add-hook 'evil-insert-state-entry-hook (lambda ()
+                                            (setq blamer--block-render-p t)
+                                            (blamer--clear-overlay)))
+  (add-hook 'evil-normal-state-entry-hook (lambda ()
+                                            (setq blamer--block-render-p nil)
+                                            (copilot-clear-overlay)))
+
+  (defun blamer-callback-show-commit-diff (commit-info)
+    (interactive)
+    (let ((commit-hash (plist-get commit-info :commit-hash)))
+      (when commit-hash)
+      ;; Split window vertically
+      (let ((split-height-threshold nil)
+            (split-width-threshold 0))
+        (magit-show-commit commit-hash))))
+
+  (defun blamer-callback-open-remote (commit-info)
+    (interactive)
+    (let ((commit-hash (plist-get commit-info :commit-hash)))
+      (when commit-hash
+        (message commit-hash)
+        (browse-url (github-commit-url commit-hash)))))
+
+  (defun blamer-commit-into-at-point ()
+    (let* ((line-number (line-number-at-pos))
+           (file-name (blamer--get-local-name (buffer-file-name)))
+           (blame-cmd-res (when file-name
+                            (apply #'vc-git--run-command-string file-name
+                                   (append blamer--git-blame-cmd
+                                           (list (format "%s,%s" line-number line-number))))))
+           (blame-cmd-res (when blame-cmd-res (butlast (split-string blame-cmd-res "\n")))))
+      (blamer--parse-line-info (first blame-cmd-res) nil)))
+
+  (defun blamer-open-remote-at-point ()
+    (interactive)
+    (let ((commit-info (blamer-commit-into-at-point)))
+      (blamer-callback-open-remote commit-info)))
+
+  (defun blamer-open-magit-at-point ()
+    (interactive)
+    (let ((commit-info (blamer-commit-into-at-point)))
+      (blamer-callback-show-commit-diff commit-info)))
+
+  (leader-def ".go" 'blamer-open-remote-at-point)
+  (leader-def ".gc" 'blamer-open-magit-at-point)
+
+  (setq blamer-type 'visual)
+
+  (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
+                          ("<mouse-1>" . blamer-callback-show-commit-diff)))
+  
+  (global-blamer-mode 1))
 
 (use-package yasnippet
   :ensure t
@@ -1504,6 +1576,9 @@ targets."
   :straight t
   :init
   (setq geiser-active-implementations '(chicken guile)))
+
+(use-package geiser-guile
+  :straight t)
 
 (use-package paredit
   :ensure t
@@ -1625,6 +1700,12 @@ See URL `https://beta.ruff.rs/docs/'."
   (add-to-list 'pytest-project-root-files "pyproject.toml")
   ;; Don't use `-x -s` by default, we like capturing output
   (setq pytest-cmd-flags ""))
+
+(use-package realgud
+  :straight t
+
+  :config
+  (setq realgud:pdb-command-name "pytest --pdb"))
 
 (use-package json-mode
   :ensure t
@@ -1781,6 +1862,8 @@ See URL `https://beta.ruff.rs/docs/'."
 
   (add-hook 'eshell-mode-hook 'esh-customize-faces))
 
+
+
 (use-package yaml-mode
   :straight t
   :mode (("\\.yml\\'" . yaml-mode)
@@ -1831,6 +1914,7 @@ See URL `https://beta.ruff.rs/docs/'."
   :ensure t
   :mode (("go\\.mod\\'" . go-mod-ts-mode)
          ("\\.go\\'" . go-ts-mode))
+  :hook ((go-ts-mode . lsp-deferred))
   :config)
 
 (use-package gotest
@@ -1892,6 +1976,7 @@ See URL `https://beta.ruff.rs/docs/'."
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024))
 
+
 (use-package lsp-mode
   :straight t
   :init
@@ -1912,12 +1997,48 @@ See URL `https://beta.ruff.rs/docs/'."
             (lsp-disable-method-for-server method server-id)))))
 
     ;; Use jedi for finding references since pyright doesn't seem to find all references / hangs a lot
-    (lsp-disable-all-methods-for-server-except '("textDocument/references") 'jedi-sidecar)
-    (lsp-disable-method-for-server "textDocument/references" 'pyright)))
+    ;; Disabling because it's too slow / buggy
+    ;; (lsp-disable-all-methods-for-server-except '("textDocument/references") 'jedi-sidecar)
+    (lsp-disable-method-for-server "textDocument/references" 'pyright))
+
+
+  ;; Set up emacs-lsp-booster
+  ;; Currently broken
+  ;; (defun lsp-booster--advice-json-parse (old-fn &rest args)
+  ;;   "Try to parse bytecode instead of json."
+  ;;   (or
+  ;;    (when (equal (following-char) ?#)
+  ;;      (let ((bytecode (read (current-buffer))))
+  ;;        (when (byte-code-function-p bytecode)
+  ;;          (funcall bytecode))))
+  ;;    (apply old-fn args)))
+
+  ;; (advice-add (if (progn (require 'json)
+  ;;                        (fboundp 'json-parse-buffer))
+  ;;                 'json-parse-buffer
+  ;;               'json-read)
+  ;;             :around
+  ;;             #'lsp-booster--advice-json-parse)
+
+  ;; (defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+  ;;   "Prepend emacs-lsp-booster command to lsp CMD."
+  ;;   (let ((orig-result (funcall old-fn cmd test?)))
+  ;;     (if (and (not test?)                             ;; for check lsp-server-present?
+  ;;              (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+  ;;              lsp-use-plists
+  ;;              (not (functionp 'json-rpc-connection))  ;; native json-rpc
+  ;;              (executable-find "emacs-lsp-booster"))
+  ;;         (progn
+  ;;           (message "Using emacs-lsp-booster for %s!" orig-result)
+  ;;           (cons "emacs-lsp-booster" orig-result))
+  ;;       orig-result)))
+  ;; (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+  )
 
 (use-package lsp-ui
   :straight t
   :config
+  (setq lsp-ui-doc-delay 0.5)
   (setq lsp-ui-doc-show-with-cursor t))
 
 (use-package lsp-pyright
@@ -1934,7 +2055,7 @@ See URL `https://beta.ruff.rs/docs/'."
     :major-modes '(python-mode python-ts-mode cython-mode)
     :priority -1
     ;; This is the important line
-    :add-on? t
+    ;; :add-on? t
     :server-id 'jedi-sidecar
     :library-folders-fn (lambda (_workspace) lsp-jedi-python-library-directories)
     :initialization-options (lambda () (gethash "jedi" (lsp-configuration-section "jedi"))))))
@@ -1991,7 +2112,9 @@ See URL `https://beta.ruff.rs/docs/'."
     (define-key org-mode-map (kbd "C-c C-r") verb-command-map)
     (org-babel-do-load-languages
      'org-babel-load-languages
-     '((verb . t)))))
+     '((verb . t))))
+  (setq verb-auto-kill-response-buffers t)
+  )
 
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
@@ -2734,8 +2857,13 @@ belongs as a list."
 (use-package lru
   :straight (lru :type git :host github :repo "landakram/lru"))
 
+(use-package ready-player
+  :ensure t)
+
 (use-package gptel
   :straight t
+  :bind
+  ("C-c RET" . gptel-send)
   :config
   (defun gptel-code-action (task)
     "Send a command to gptel, with a prompt to only output code and comments. The resulting completion is ediffed with the highlighted region."
