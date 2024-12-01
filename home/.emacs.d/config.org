@@ -1740,9 +1740,13 @@ Small padding:
 #+begin_src emacs-lisp
   (set-fringe-mode 10)
 
-  (set-face-attribute 'fringe nil
-                       :foreground (face-foreground 'default)
-                       :background (face-background 'default))
+  (add-hook 'after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (set-face-attribute 'fringe nil
+                                    :foreground (face-foreground 'default)
+                                    :background (face-background 'default)))))
+
 #+end_src
 
 #+RESULTS:

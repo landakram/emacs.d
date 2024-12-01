@@ -12,6 +12,55 @@
 
 (setq native-comp-async-report-warnings-errors nil)
 
+(setq warning-minimum-level :error)
+
+(defun eval-after-load-all (my-features form)
+  "Run FORM after all MY-FEATURES are loaded.
+See `eval-after-load' for the possible formats of FORM."
+  (if (null my-features)
+      (if (functionp form)
+          (funcall form)
+        (eval form))
+    (eval-after-load (car my-features)
+      `(lambda ()
+         (eval-after-load-all
+          (quote ,(cdr my-features))
+          (quote ,form))))))
+
+(defmacro with-eval-after-loads (my-features &rest body)
+  (declare (indent 1) (debug (form def-body)))
+  `(eval-after-load-all ,my-features (lambda () ,@body)))
+
+(defun image-to-base64-data-url (image-path)
+  "Converts an image at IMAGE-PATH to a Base64-encoded data URL."
+  (interactive "fSelect image file: ")
+  (let* ((image-type (file-name-extension image-path))
+         (mime-type (cond ((string= image-type "png") "image/png")
+                          ((string= image-type "jpg") "image/jpeg")
+                          ((string= image-type "jpeg") "image/jpeg")
+                          ((string= image-type "gif") "image/gif")
+                          (t (error "Unsupported image type"))))
+         (base64-string (with-temp-buffer
+                          (insert-file-contents-literally image-path)
+                          (base64-encode-region (point-min) (point-max) t)
+                          (buffer-string))))
+     (concat "data:" mime-type ";base64," base64-string)))
+
+(defun image-to-base64 (image-path)
+  "Converts an image at IMAGE-PATH to a Base64-encoded data URL."
+  (interactive "fSelect image file: ")
+  (let* ((image-type (file-name-extension image-path))
+         (mime-type (cond ((string= image-type "png") "image/png")
+                          ((string= image-type "jpg") "image/jpeg")
+                          ((string= image-type "jpeg") "image/jpeg")
+                          ((string= image-type "gif") "image/gif")
+                          (t (error "Unsupported image type"))))
+         (base64-string (with-temp-buffer
+                          (insert-file-contents-literally image-path)
+                          (base64-encode-region (point-min) (point-max) t)
+                          (buffer-string))))
+     base64-string))
+
 (require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
@@ -696,8 +745,42 @@ Version 2017-01-27"
 
 (use-package breadcrumb
   :straight t
-  :hook ((yaml-pro-ts-mode . breadcrumb-local-mode)
-         (json-ts-mode . breadcrumb-local-mode)))
+  :config
+  (breadcrumb-mode t)
+  ;; Use lsp-mode's breadcrumbs for LSP-enabled buffers
+  (add-hook 'lsp-mode-hook (lambda () (breadcrumb-local-mode -1))))
+
+(defun find-python-tests-dir ()
+  "Find the tests directory based on the dominating pyproject.toml file and additional heuristics."
+  (interactive)
+  (let ((project-root (locate-dominating-file default-directory "pyproject.toml")))
+    (if project-root
+        (let* ((project-name (file-name-nondirectory (directory-file-name project-root)))
+               (potential-dir (concat (file-name-as-directory project-root) project-name))
+               (search-dir (if (file-directory-p potential-dir) potential-dir project-root))
+               (top-level-tests-dir (concat (file-name-as-directory potential-dir) "tests"))
+               (tests-dirs (if (file-directory-p top-level-tests-dir)
+                               (list top-level-tests-dir)
+                             (directory-files-recursively search-dir "tests$" t))))
+          (if tests-dirs
+              (progn
+                (message "Tests directory found: %s" (car tests-dirs))
+                (car tests-dirs))
+            (message "Tests directory not found.")))
+      (message "pyproject.toml not found in any dominating directory."))))
+
+(defun jump-to-python-tests-dir ()
+  "Jump to the tests directory based on the dominating pyproject.toml file and additional heuristics."
+  (interactive)
+  (let ((tests-dir (find-python-tests-dir)))
+    (when tests-dir
+      (dired tests-dir))))
+
+(defun pytest-run-current-project ()
+  (interactive)
+  (let ((tests-dir (find-python-tests-dir)))
+    (when tests-dir
+      (pytest-run tests-dir nil))))
 
 ;;(add-to-list 'default-frame-alist
 ;;             '(font . "Fira Code Medium-12"))
@@ -794,6 +877,13 @@ Version 2017-01-27"
   :config
   (smooth-scrolling-mode 1)
   (setq smooth-scroll-margin 5))
+
+(use-package recentf
+  :config
+  (setq recentf-save-file (expand-file-name "recentf" user-emacs-directory)
+        recentf-max-saved-items 100 
+        recentf-auto-cleanup 'never)
+  (recentf-mode 1))
 
 (use-package consult
   :straight (consult :type git :host github :repo "minad/consult" :branch "main")
@@ -972,9 +1062,12 @@ targets."
 
 (set-fringe-mode 10)
 
-(set-face-attribute 'fringe nil
-                     :foreground (face-foreground 'default)
-                     :background (face-background 'default))
+(add-hook 'after-make-frame-functions
+          (lambda (frame)
+            (with-selected-frame frame
+              (set-face-attribute 'fringe nil
+                                  :foreground (face-foreground 'default)
+                                  :background (face-background 'default)))))
 
 (use-package beacon
   :straight t
@@ -1131,15 +1224,16 @@ targets."
 
 (use-package blamer
   :straight t
-  :defer 20
+  :defer 1
   :after forge
   :config
   (setq blamer-force-truncate-long-line t)
   (setq blamer-max-commit-message-length 100)
+  (setq blamer-idle-time 1)
   (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
   (set-face-attribute 'blamer-face
                           nil
-                          :foreground (plist-get my/base16-colors :base03))
+                          :foreground (plist-get my/base16-colors :base04))
 
   (add-hook 'evil-insert-state-entry-hook (lambda ()
                                             (setq blamer--block-render-p t)
@@ -1208,7 +1302,7 @@ targets."
                             (magit-get-mode-buffer 'magit-status-mode))))
       (when (not magit-refresh-status-buffer)
         (run-with-idle-timer 1 nil (lambda (buffer)
-                                     (message "Refreshing magit-status buffer")
+                                     (message "Refreshing magit-status buffer %s" buffer)
                                      (with-current-buffer buffer (magit-refresh-buffer))) buffer))))
 
 
@@ -1523,7 +1617,8 @@ See URL `https://beta.ruff.rs/docs/'."
    :keymaps '(python-mode-map python-ts-mode-map)
    "C-c t ." 'pytest-one
    "C-c t f" 'pytest-module
-   "C-c t p" 'pytest-all)
+   "C-c t p" 'pytest-all
+   "C-c t r" 'pytest-again)
   :config
   ;; Use pyproject.toml to find a suitable project root for pytest
   ;; This is useful for monorepos
@@ -1686,10 +1781,14 @@ See URL `https://beta.ruff.rs/docs/'."
 
   (add-hook 'eshell-mode-hook 'esh-customize-faces))
 
+(use-package yaml-mode
+  :straight t
+  :mode (("\\.yml\\'" . yaml-mode)
+         ("\\.yaml\\'" . yaml-mode)))
+
 (use-package yaml-pro
   :straight t
-  :mode (("\\.yml\\'" . yaml-pro-ts-mode)
-         ("\\.yaml\\'" . yaml-pro-ts-mode)))
+  :hook ((yaml-mode . yaml-pro-ts-mode)))
 
 (use-package lua-mode
   :ensure t)
@@ -1798,15 +1897,47 @@ See URL `https://beta.ruff.rs/docs/'."
   :init
   (setq flymake-allowed-file-name-masks nil)
   :config
-  (setq lsp-headerline-breadcrumb-enable-diagnostics nil))
+  (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
+  (setq lsp-response-timeout 30)
+  (setq lsp-disabled-clients '(pylsp)) 
 
- (use-package lsp-ui
-   :straight t
-   :config
-   (setq lsp-ui-doc-show-with-cursor t))
+  (with-eval-after-loads '(lsp-mode lsp-pyright lsp-jedi) 
+
+    (defun lsp-disable-all-methods-for-server-except (methods server-id)
+      "Disable all methods for SERVER-ID except for METHODS."
+      (let* ((server (gethash server-id lsp-clients))
+             (all-methods (mapcar 'car lsp-method-requirements)))
+        (dolist (method all-methods)
+          (unless (seq-contains-p methods method #'string=)
+            (lsp-disable-method-for-server method server-id)))))
+
+    ;; Use jedi for finding references since pyright doesn't seem to find all references / hangs a lot
+    (lsp-disable-all-methods-for-server-except '("textDocument/references") 'jedi-sidecar)
+    (lsp-disable-method-for-server "textDocument/references" 'pyright)))
+
+(use-package lsp-ui
+  :straight t
+  :config
+  (setq lsp-ui-doc-show-with-cursor t))
 
 (use-package lsp-pyright
-  :straight t)
+  :straight t) 
+
+(use-package lsp-jedi
+  :straight t
+  :config
+  ;; Register jedi-language-server so it can run alongside pyright
+  (lsp-register-client
+   (make-lsp-client
+    :new-connection (lsp-stdio-connection
+                     (lambda () lsp-jedi-executable-command))
+    :major-modes '(python-mode python-ts-mode cython-mode)
+    :priority -1
+    ;; This is the important line
+    :add-on? t
+    :server-id 'jedi-sidecar
+    :library-folders-fn (lambda (_workspace) lsp-jedi-python-library-directories)
+    :initialization-options (lambda () (gethash "jedi" (lsp-configuration-section "jedi"))))))
 
 (use-package rust-mode
   :ensure t
