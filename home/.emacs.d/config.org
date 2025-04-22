@@ -723,7 +723,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (leader-def :infix "b"
       "" '(:ignore t :which-key "buffers")
-      "k" 'kill-this-buffer
+      "k" 'kill-current-buffer
       "q" 'delete-window)
 
     ;; Bookmarks
@@ -1857,9 +1857,13 @@ Small padding:
 #+begin_src emacs-lisp
   (set-fringe-mode 10)
 
-  (set-face-attribute 'fringe nil
-                       :foreground (face-foreground 'default)
-                       :background (face-background 'default))
+  (add-hook 'after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (set-face-attribute 'fringe nil
+                                    :foreground (face-foreground 'default)
+                                    :background (face-background 'default)))))
+
 #+end_src
 
 #+RESULTS:

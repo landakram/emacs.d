@@ -337,7 +337,7 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
   (leader-def :infix "b"
     "" '(:ignore t :which-key "buffers")
-    "k" 'kill-this-buffer
+    "k" 'kill-current-buffer
     "q" 'delete-window)
 
   ;; Bookmarks
@@ -1158,9 +1158,12 @@ Version 2024-06-06"
 
 (set-fringe-mode 10)
 
-(set-face-attribute 'fringe nil
-                     :foreground (face-foreground 'default)
-                     :background (face-background 'default))
+(add-hook 'after-make-frame-functions
+          (lambda (frame)
+            (with-selected-frame frame
+              (set-face-attribute 'fringe nil
+                                  :foreground (face-foreground 'default)
+                                  :background (face-background 'default)))))
 
 (use-package beacon
   :straight t
