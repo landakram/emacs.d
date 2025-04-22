@@ -9,6 +9,14 @@
            (magit-disable-section-inserter
             'magit-insert-unpushed-to-upstream-or-recent)
            (magit-disable-section-inserter 'magit-insert-stashes)
+           (magit-disable-section-inserter 'magit-insert-merge-log)
+           (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
+           (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote))
+     (eval progn (magit-disable-section-inserter 'magit-insert-tags-header)
+           (magit-disable-section-inserter 'magit-insert-unpulled-from-upstream)
+           (magit-disable-section-inserter
+            'magit-insert-unpushed-to-upstream-or-recent)
+           (magit-disable-section-inserter 'magit-insert-stashes)
            (magit-disable-section-inserter 'magit-insert-unpushed-to-pushremote)
            (magit-disable-section-inserter 'magit-insert-unpulled-from-pushremote))
      (eval progn (magit-disable-section-inserter 'magit-insert-tags-header)

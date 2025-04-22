@@ -97,8 +97,9 @@ See `eval-after-load' for the possible formats of FORM."
   "Add a function to the list of hooks to be run after PACKAGE's use-package config."
   (let ((entry (assoc package use-package-config-hooks)))
     (if entry
-        (setcdr entry (append (cdr entry) (list hook)))
-      (push (cons package (list hook)) use-package-config-hooks))))
+        (push hook (cdr entry))
+      (setq use-package-config-hooks
+            (acons package (list hook) use-package-config-hooks)))))
 
 (defun run-use-package-config-hooks (package)
   "Run all hooks for the given PACKAGE."
@@ -107,7 +108,7 @@ See `eval-after-load' for the possible formats of FORM."
 
 (defmacro with-eval-after-use-package-config (package &rest body)
   "Specify actions to run after PACKAGE is configured via use-package."
-  `(add-use-package-config-hook ',package (lambda () ,@body)))
+  `(add-use-package-config-hook ,package (lambda () ,@body)))
 
 (unless (package-installed-p 'diminish)
   (package-install 'diminish))
@@ -489,6 +490,8 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   ;; it will match "this-variable" rather than just "this".
   (setq-default evil-symbol-word-search 1)
   (setq-default evil-want-fine-undo t)
+
+  (setq evil-want-minibuffer t)
 
   ;; Make insert mode just like regular emacs
   (setq evil-insert-state-map (make-sparse-keymap))
@@ -1018,7 +1021,6 @@ Version 2024-06-06"
                              project-root))))
        (consult-ripgrep search-root (thing-at-point 'symbol))))
 
-   (message "in consult :config")
    (leader-def :infix "p"
      "a" 'consult-project-ripgrep-at-point)
 
@@ -1063,16 +1065,13 @@ Version 2024-06-06"
    (add-hook 'eshell-mode-hook
              (lambda()
                (define-key eshell-mode-map (kbd "M-r") 'consult-history)))
-
-   (message "running config-hook 'consult")
-   (message "%s" use-package-config-hooks)
    (run-use-package-config-hooks 'consult))
 
- (use-package consult-imenu
-   :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
-   :general (general-define-key
-             :states '(normal)
-             "F" 'consult-imenu))
+(use-package consult-imenu
+  :straight (consult-imenu :type git :host github :repo "minad/consult" :branch "main")
+  :general (general-define-key
+            :states '(normal)
+            "F" 'consult-imenu))
 
  (use-package vertico
    :straight t
@@ -1253,7 +1252,6 @@ Version 2024-06-06"
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :ensure t
   :config
-  (setq copilot-version "1.15.0")
   (add-hook 'prog-mode-hook 'copilot-mode)
 
   (setq copilot-max-char 30000)
@@ -1342,6 +1340,22 @@ Version 2024-06-06"
   
   ;; (setq magit-refresh-verbose t)
   (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
+
+(defun magit-open-pull-request ()
+  "Open the pull request on GitHub for the current branch."
+  (interactive)
+  (require 'magit)
+  (browse-url (magit-pull-request-url)))
+
+(defun magit-pull-request-url ()
+  "Build the URL or the pull requestion on GitHub corresponding
+to the current branch. Uses Magit."
+  (format "%s/compare/%s"
+          (replace-regexp-in-string
+           (rx (and string-start (1+ any) "github.com:" (group (1+ any)) ".git" string-end))
+           "https://github.com/\\1"
+           (magit-get "remote" (magit-get-current-remote) "url"))
+          (magit-get-current-branch)))
 
 (defun parse-host-path-syntax (host-path-string)
   (let ((ssh-host-path-regex "\\(.*\\)\@\\(.*\\):\\(.*\\)"))
@@ -1527,7 +1541,8 @@ Version 2024-06-06"
     lisp-mode-hook
     lisp-interaction-mode-hook
     scheme-mode-hook
-    clojure-mode-hook))
+    clojure-mode-hook
+    janet-ts-mode-hook))
 
 (use-package evil-cleverparens
   :ensure t
@@ -2001,35 +2016,36 @@ See URL `https://beta.ruff.rs/docs/'."
 
   ;; Set up emacs-lsp-booster
   ;; Currently broken
-  ;; (defun lsp-booster--advice-json-parse (old-fn &rest args)
-  ;;   "Try to parse bytecode instead of json."
-  ;;   (or
-  ;;    (when (equal (following-char) ?#)
-  ;;      (let ((bytecode (read (current-buffer))))
-  ;;        (when (byte-code-function-p bytecode)
-  ;;          (funcall bytecode))))
-  ;;    (apply old-fn args)))
+  (defun lsp-booster--advice-json-parse (old-fn &rest args)
+    "Try to parse bytecode instead of json."
+    (or
+     (when (equal (following-char) ?#)
+       (let ((bytecode (read (current-buffer))))
+         (when (byte-code-function-p bytecode)
+           (funcall bytecode))))
+     (apply old-fn args)))
 
-  ;; (advice-add (if (progn (require 'json)
-  ;;                        (fboundp 'json-parse-buffer))
-  ;;                 'json-parse-buffer
-  ;;               'json-read)
-  ;;             :around
-  ;;             #'lsp-booster--advice-json-parse)
+  (advice-add (if (progn (require 'json)
+                         (fboundp 'json-parse-buffer))
+                  'json-parse-buffer
+                'json-read)
+              :around
+              #'lsp-booster--advice-json-parse)
 
-  ;; (defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
-  ;;   "Prepend emacs-lsp-booster command to lsp CMD."
-  ;;   (let ((orig-result (funcall old-fn cmd test?)))
-  ;;     (if (and (not test?)                             ;; for check lsp-server-present?
-  ;;              (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
-  ;;              lsp-use-plists
-  ;;              (not (functionp 'json-rpc-connection))  ;; native json-rpc
-  ;;              (executable-find "emacs-lsp-booster"))
-  ;;         (progn
-  ;;           (message "Using emacs-lsp-booster for %s!" orig-result)
-  ;;           (cons "emacs-lsp-booster" orig-result))
-  ;;       orig-result)))
-  ;; (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
+  (defun lsp-booster--advice-final-command (old-fn cmd &optional test?)
+    "Prepend emacs-lsp-booster command to lsp CMD."
+    (let ((orig-result (funcall old-fn cmd test?)))
+      (if (and (not test?)                             ;; for check lsp-server-present?
+               (not (file-remote-p default-directory)) ;; see lsp-resolve-final-command, it would add extra shell wrapper
+               lsp-use-plists
+               (not (functionp 'json-rpc-connection))  ;; native json-rpc
+               (executable-find "emacs-lsp-booster"))
+          (progn
+            (message "Using emacs-lsp-booster for %s!" orig-result)
+            (cons "emacs-lsp-booster" orig-result))
+        orig-result)))
+
+  (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
   )
 
 (use-package lsp-ui
@@ -2112,6 +2128,45 @@ See URL `https://beta.ruff.rs/docs/'."
      '((verb . t))))
   (setq verb-auto-kill-response-buffers t)
   )
+
+(use-package terraform-mode
+  :straight t
+  :mode ("\\.tf\\'" . terraform-mode))
+
+(setq treesit-language-source-alist
+      (if (eq 'windows-nt system-type)
+          '((janet-simple
+             . ("https://github.com/sogaiu/tree-sitter-janet-simple"
+                nil nil "gcc.exe")))
+        '((janet-simple
+           . ("https://github.com/sogaiu/tree-sitter-janet-simple")))))
+
+(when (not (treesit-language-available-p 'janet-simple))
+  (treesit-install-language-grammar 'janet-simple))
+
+(use-package janet-ts-mode
+  :straight (janet-ts-mode :type git :host github :repo "sogaiu/janet-ts-mode")
+  :mode (("\\.janet\\'" . janet-ts-mode)))
+
+(straight-use-package
+  '(ajrepl :host github
+           :repo "sogaiu/ajrepl"
+           :files ("*.el" "ajrepl")))
+
+(use-package ajrepl
+  :straight t
+  :config
+  (add-hook 'janet-ts-mode-hook
+            #'ajrepl-interaction-mode))
+
+(with-eval-after-loads '(janet-ts-mode lsp-mode) 
+  (add-to-list 'lsp-language-id-configuration
+               '(janet-ts-mode . "janet"))
+
+  (lsp-register-client (make-lsp-client
+                        :new-connection (lsp-stdio-connection "janet-lsp")
+                        :activation-fn (lsp-activate-on "janet")
+                        :server-id 'janet-lsp)))
 
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
@@ -2862,42 +2917,30 @@ belongs as a list."
   :bind
   ("C-c RET" . gptel-send)
   :config
-  (defun gptel-code-action (task)
-    "Send a command to gptel, with a prompt to only output code and comments. The resulting completion is ediffed with the highlighted region."
-    (interactive "sCommand: ")
-    (let* ((prompt (concat "TASK: " task "\n\nCONTEXT:\n\n" (buffer-substring-no-properties
-                             (region-beginning) (region-end))))
-         (gptel--system-message
-          (concat "Perform the following task (TASK), only generating code and comments based on "
-                  "the provided context (CONTEXT) with no additional explanation. Your output is going to be "
-                  "used to directly replace the code, which is in an emacs buffer with major mode"
-                  (format "%s" (symbol-name major-mode)) ". Be sure to respect existing indentation.")))
-    (message "Waiting for response... ")
-    (gptel-request
-     prompt
-     :context (cons (region-beginning) (region-end))
-     :callback
-     (lambda (response info)
-       (if (not response)
-           (message "ChatGPT response error: %s" (plist-get info :status))
-         (let* ((gptel-buffer (plist-get info :buffer))
-                (gptel-bounds (plist-get info :context))
-                (buffer-mode
-                 (buffer-local-value 'major-mode gptel-buffer)))
-           (pcase-let ((`(,new-buf ,new-beg ,new-end)
-                        (with-current-buffer (get-buffer-create "*gptel-rewrite-Region.B-*")
-                          (erase-buffer)
-                          (funcall buffer-mode)
-                          (insert response)
-                          (goto-char (point-min))
-                          (list (current-buffer) (point-min) (point-max)))))
-             (require 'ediff)
-             (apply
-              #'ediff-regions-internal
-              (get-buffer (ediff-make-cloned-buffer gptel-buffer "-Region.A-"))
-              (car gptel-bounds) (cdr gptel-bounds)
-              new-buf new-beg new-end
-              nil
-              (list 'ediff-regions-linewise nil nil)))))))))
-  
+
+  (setq gptel-default-mode 'org-mode)
+
+  (setq gptel-expert-commands t)
   )
+
+
+(use-package elysium
+  :straight (elysium :type git :host github :repo "lanceberge/elysium"))
+
+(use-package smerge-mode
+  :straight t
+  :hook
+  (prog-mode . smerge-mode))
+
+(use-package aidermacs
+  :straight (aidermacs :type git :host github :repo "MatthewZMD/aidermacs" :branch "main")
+  :bind (("C-c p" . aidermacs-transient-menu))
+
+  :config
+  ; Enable minor mode for Aider files
+  (aidermacs-setup-minor-mode)
+
+  :custom
+  ; See the Configuration section below
+  (aidermacs-auto-commits t)
+  (aidermacs-default-model "o3-mini"))
