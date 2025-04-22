@@ -1600,11 +1600,13 @@ Treat some windows like popups.
 Make scrolling behavior more like vim:
 
 #+BEGIN_SRC emacs-lisp
-  (use-package smooth-scrolling
-    :ensure t
+  (use-package ultra-scroll
+    :straight (ultra-scroll :type git :host github :repo "jdtsmith/ultra-scroll" :branch "main")
+    :init
+    (setq scroll-conservatively 101 ; important!
+          scroll-margin 0) 
     :config
-    (smooth-scrolling-mode 1)
-    (setq smooth-scroll-margin 5))
+    (ultra-scroll-mode 1)) 
 #+END_SRC
 
 #+RESULTS:
@@ -1869,20 +1871,6 @@ Small padding:
 
 #+RESULTS:
 : ((ns-appearance . dark) (ns-transparent-titlebar . t) (horizontal-scroll-bars) (fullscreen . maximized) (vertical-scroll-bars) (left-fringe . 10) (right-fringe . 10))
-
-** Beacon
-:PROPERTIES:
-:ID:       02E65DC6-7FC2-4673-964E-AEE554BF1966
-:END:
-Highlight the cursor whenever I scroll around.
-
-#+begin_src emacs-lisp
-    (use-package beacon
-      :straight t
-      :config
-      (beacon-mode 1)
-      (setq beacon-color (plist-get my/base16-colors :base02)))
-#+end_src
 
 ** Dimmer
 :PROPERTIES:
@@ -3162,6 +3150,7 @@ Let's use web-mode, which supports font locking for templating.
     (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
     (setq lsp-response-timeout 30)
     (setq lsp-disabled-clients '(pylsp)) 
+    (setq lsp-completion-provider :none)
 
     (with-eval-after-loads '(lsp-mode lsp-pyright lsp-jedi) 
 
