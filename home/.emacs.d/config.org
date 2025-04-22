@@ -722,7 +722,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (leader-def :infix "b"
       "" '(:ignore t :which-key "buffers")
-      "k" 'kill-this-buffer
+      "k" 'kill-current-buffer
       "q" 'delete-window)
 
     ;; Bookmarks

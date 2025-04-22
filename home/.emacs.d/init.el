@@ -336,7 +336,7 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
   (leader-def :infix "b"
     "" '(:ignore t :which-key "buffers")
-    "k" 'kill-this-buffer
+    "k" 'kill-current-buffer
     "q" 'delete-window)
 
   ;; Bookmarks
