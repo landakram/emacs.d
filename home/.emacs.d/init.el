@@ -945,11 +945,13 @@ Version 2024-06-06"
   :config
   (setq popper-display-control nil))
 
-(use-package smooth-scrolling
-  :ensure t
+(use-package ultra-scroll
+  :straight (ultra-scroll :type git :host github :repo "jdtsmith/ultra-scroll" :branch "main")
+  :init
+  (setq scroll-conservatively 101 ; important!
+        scroll-margin 0) 
   :config
-  (smooth-scrolling-mode 1)
-  (setq smooth-scroll-margin 5))
+  (ultra-scroll-mode 1))
 
 (use-package recentf
   :config
@@ -1166,12 +1168,6 @@ Version 2024-06-06"
               (set-face-attribute 'fringe nil
                                   :foreground (face-foreground 'default)
                                   :background (face-background 'default)))))
-
-(use-package beacon
-  :straight t
-  :config
-  (beacon-mode 1)
-  (setq beacon-color (plist-get my/base16-colors :base02)))
 
 (use-package dimmer
   :straight t
@@ -2002,6 +1998,7 @@ See URL `https://beta.ruff.rs/docs/'."
   (setq lsp-headerline-breadcrumb-enable-diagnostics nil)
   (setq lsp-response-timeout 30)
   (setq lsp-disabled-clients '(pylsp)) 
+  (setq lsp-completion-provider :none)
 
   (with-eval-after-loads '(lsp-mode lsp-pyright lsp-jedi) 
 
