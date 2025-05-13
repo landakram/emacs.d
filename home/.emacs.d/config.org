@@ -204,7 +204,7 @@ Without this, the warning buffer pops up whenever native-comp has some warning.
     (require 'use-package))
 
 ;; These should be loaded early on
-(straight-use-package 'org)
+(straight-use-package '(org :type built-in))
 
 #+END_SRC
 
@@ -3566,8 +3566,10 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
 
   (setq-default fill-column 85)
 
+  (use-package org-contrib
+    :straight t)
+
   (use-package org
-    :straight org-contrib
     :config
     (require 'org-eldoc))
 

@@ -88,7 +88,7 @@ See `eval-after-load' for the possible formats of FORM."
     (require 'use-package))
 
 ;; These should be loaded early on
-(straight-use-package 'org)
+(straight-use-package '(org :type built-in))
 
 (defvar use-package-config-hooks nil
   "Alist of hooks to run after a use-package config block.")
@@ -2251,8 +2251,10 @@ See URL `https://beta.ruff.rs/docs/'."
 
 (setq-default fill-column 85)
 
+(use-package org-contrib
+  :straight t)
+
 (use-package org
-  :straight org-contrib
   :config
   (require 'org-eldoc))
 
