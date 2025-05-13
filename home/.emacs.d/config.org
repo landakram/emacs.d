@@ -2203,6 +2203,14 @@ Autodetect indentation:
     (setq corfu-quit-at-boundary 'separator)
 
     (global-corfu-mode))
+
+  (use-package cape
+    :straight t
+    :init
+    (add-hook 'completion-at-point-functions #'cape-dabbrev)
+    (add-hook 'completion-at-point-functions #'cape-file)
+    (add-hook 'completion-at-point-functions #'cape-elisp-block))
+
 #+END_SRC
 
 #+RESULTS:

@@ -1379,6 +1379,13 @@ Version 2024-06-06"
 
   (global-corfu-mode))
 
+(use-package cape
+  :straight t
+  :init
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file)
+  (add-hook 'completion-at-point-functions #'cape-elisp-block))
+
 (use-package git-commit
   :straight (git-commit :type git :host github :repo "magit/magit")
   :after magit)
