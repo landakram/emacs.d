@@ -834,7 +834,9 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
 
     (general-define-key
      :states '(normal)
-     "f" 'avy-goto-word-or-subword-1))
+     "f" 'avy-goto-word-or-subword-1)
+
+    (run-use-package-config-hooks 'general))
 #+END_SRC
 
 #+RESULTS:
@@ -1442,7 +1444,6 @@ Enable automatic optimizations for files with long lines
                           'pdb-capf nil t))))
 #+end_src
 
-
 * UI
 ** Set the font
 :PROPERTIES:
@@ -1660,7 +1661,7 @@ These packages succeed selectrum (RIP).
             ("M-g e" . consult-error)
             ("M-s m" . consult-multi-occur)
             ("M-y" . consult-yank-pop)
-            ("<help> a" . consult-apropos))
+            ("<help> a" . describe-symbol))
      :init
      ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
      (fset 'multi-occur #'consult-multi-occur)
@@ -3414,6 +3415,30 @@ Let's use web-mode, which supports font locking for templating.
                           :new-connection (lsp-stdio-connection "janet-lsp")
                           :activation-fn (lsp-activate-on "janet")
                           :server-id 'janet-lsp)))
+
+  (with-eval-after-loads '(janet-ts-mode)
+    (require 'reformatter)
+    
+    (defgroup janet-format nil
+      "Python reformatting using black."
+      :group 'janet
+      :prefix "janet-format-")
+
+    (reformatter-define janet-format
+      :program "janet-format"
+      :group 'janet-format)
+
+    (add-hook 'janet-ts-mode-hook 'janet-format-on-save-mode))
+#+end_src
+
+** Kubernetes
+:PROPERTIES:
+:ID:       A65DD20B-BB9B-4F11-A144-7A6BD3BB513C
+:END:
+
+#+begin_src emacs-lisp
+  (use-package kubed
+    :straight (kubed :type git :host github :repo "eshelyaron/kubed"))
 #+end_src
 
 * Org Mode
@@ -3813,7 +3838,9 @@ I often link to JIRA issues in my tasks. This function lets me add link JIRA iss
             ("m" "Email follow-up" entry (file+headline "~/org/inbox.org" "Tasks")
              "* TODO Follow up with %:fromname\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n%?")
             ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
-             "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n"))))
+             "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")))
+
+    (run-use-package-config-hooks 'org-capture))
 #+END_SRC
 
 

@@ -448,7 +448,9 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
   (general-define-key
    :states '(normal)
-   "f" 'avy-goto-word-or-subword-1))
+   "f" 'avy-goto-word-or-subword-1)
+
+  (run-use-package-config-hooks 'general))
 
 (define-key global-map (kbd "C-+") 'text-scale-increase)
 (define-key global-map (kbd "C--") 'text-scale-decrease)
@@ -982,7 +984,7 @@ Version 2024-06-06"
           ("M-g e" . consult-error)
           ("M-s m" . consult-multi-occur)
           ("M-y" . consult-yank-pop)
-          ("<help> a" . consult-apropos))
+          ("<help> a" . describe-symbol))
    :init
    ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
    (fset 'multi-occur #'consult-multi-occur)
@@ -2168,6 +2170,23 @@ See URL `https://beta.ruff.rs/docs/'."
                         :activation-fn (lsp-activate-on "janet")
                         :server-id 'janet-lsp)))
 
+(with-eval-after-loads '(janet-ts-mode)
+  (require 'reformatter)
+  
+  (defgroup janet-format nil
+    "Python reformatting using black."
+    :group 'janet
+    :prefix "janet-format-")
+
+  (reformatter-define janet-format
+    :program "janet-format"
+    :group 'janet-format)
+
+  (add-hook 'janet-ts-mode-hook 'janet-format-on-save-mode))
+
+(use-package kubed
+  :straight (kubed :type git :host github :repo "eshelyaron/kubed"))
+
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
   (setq org-default-notes-file "~/org/inbox.org")
@@ -2410,7 +2429,9 @@ See URL `https://beta.ruff.rs/docs/'."
           ("m" "Email follow-up" entry (file+headline "~/org/inbox.org" "Tasks")
            "* TODO Follow up with %:fromname\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n%?")
           ("t" "Todo" entry (file+headline "~/org/inbox.org" "Tasks")
-           "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n"))))
+           "* TODO %?\nSCHEDULED: %(org-insert-time-stamp (org-read-date nil t \"+0d\"))\n:LOGBOOK:\n- Added %U\n:END:\n%a\n")))
+
+  (run-use-package-config-hooks 'org-capture))
 
 (defun my/configure-org-protocol ()
   (use-package org-protocol)
