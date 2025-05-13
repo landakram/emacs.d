@@ -129,9 +129,8 @@ See `eval-after-load' for the possible formats of FORM."
 (use-package mood-line
   :straight t
   :config
-  (set-face-attribute 'mood-line-buffer-name
-                      nil
-                      :weight 'bold)
+  (setq mood-line-glyph-alist mood-line-glyphs-fira-code)
+  (setq mood-line-format mood-line-format-default)
   (mood-line-mode))
 
 (use-package catppuccin-theme
