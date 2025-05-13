@@ -134,26 +134,63 @@ See `eval-after-load' for the possible formats of FORM."
                       :weight 'bold)
   (mood-line-mode))
 
+(use-package catppuccin-theme
+  :straight t
+  :config
+  (setq catppuccin-flavor 'mocha)
+  (load-theme 'catppuccin :no-confirm)
+  )
+
 (use-package base16-theme
   :ensure t
   :config
   (setq base16-theme-256-color-source 'base16-shell)
-  (setq base16-distinct-fringe-background nil)
-  (load-theme 'base16-material-darker t)
+  (setq base16-distinct-fringe-background nil))
 
-  (defvar my/base16-colors base16-material-darker-theme-colors))
+(defvar my/base16-color-alist
+  '((rosewater . nil)
+    (flamingo  . nil)
+    (pink      . nil)
+    (mauve     . :base0E)
+    (red       . :base08)
+    (maroon    . :base0F)
+    (peach     . :base09)
+    (yellow    . :base0A)
+    (green     . :base0B)
+    (teal      . nil)
+    (sky       . :base0C)
+    (sapphire  . nil)
+    (blue      . :base0D)
+    (lavender  . :base07)
+    (text      . :base06)
+    (subtext1  . :base04)
+    (overlay2  . :base03)
+    (overlay1  . :base02)
+    (overlay0  . :base01)
+    (surface2  . :base03)
+    (surface1  . :base02)
+    (surface0  . :base00)
+    (base      . :base00)
+    (mantle    . :base00)
+    (crust     . :base00)))
 
-;; (use-package monokai-theme
-;;   :ensure t
-;;   :config
-;;   (setq monokai-use-variable-pitch nil)
-;;   (load-theme 'monokai t))
+(with-eval-after-loads '(catppuccin-theme base16-theme)
+  (defun my/base16-color-get (name)
+    "Lookup NAME (e.g. 'blue) from base16 using base16-color-alist."
+    (let* ((base16-key (alist-get name my/base16-color-alist)))
+      (unless base16-key
+        (error "Base16 color '%s' not mapped to a base key" name))
+      (or (plist-get base16-material-darker-theme-colors base16-key)
+          (error "Base16 key %s not found in my/base16-colors" base16-key))))
 
+  (defun my/catppuccin-color-get (name)
+    "Lookup NAME (e.g. 'blue) from catppuccin color alist."
+    (or (cdr (assoc name catppuccin-mocha-colors))
+        (error "Catppuccin color '%s' not found" name)))
 
-;; (use-package color-theme-sanityinc-tomorrow
-;;   :ensure t
-;;   :config
-;;   (color-theme-sanityinc-tomorrow-eighties))
+  (defun my/theme-color-get (name)
+    "Call the active theme color getter with NAME."
+    (my/catppuccin-color-get name)))
 
 ;; (use-package color-theme
 ;;   :ensure t)
@@ -744,53 +781,53 @@ Version 2024-06-06"
   (diredfl-global-mode)
 
   (set-face-attribute 'diredfl-dir-priv nil
-                      :foreground (plist-get my/base16-colors :base0D)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'blue)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-read-priv nil
-                      :foreground (plist-get my/base16-colors :base0B)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'green)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-write-priv nil
-                      :foreground (plist-get my/base16-colors :base0A)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'yellow)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-exec-priv nil
-                      :foreground (plist-get my/base16-colors :base08)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'red)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-no-priv nil
-                      :foreground (plist-get my/base16-colors :base03)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'overlay2)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-dir-name nil
-                      :foreground (plist-get my/base16-colors :base0C)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'sky)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-symlink nil
-                      :foreground (plist-get my/base16-colors :base05)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'text)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-dir-heading nil
                       :weight 'bold
-                      :foreground (plist-get my/base16-colors :base0B)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'green)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-file-name nil
-                      :foreground (plist-get my/base16-colors :base05)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'text)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-file-suffix nil
-                      :foreground (plist-get my/base16-colors :base0B)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'green)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-number nil
-                      :foreground (plist-get my/base16-colors :base0A)
-                      :background (plist-get my/base16-colors :base00))
+                      :foreground (my/theme-color-get 'yellow)
+                      :background (my/theme-color-get 'base))
 
   (set-face-attribute 'diredfl-date-time nil
-                      :foreground (plist-get my/base16-colors :base0D)
-                      :background (plist-get my/base16-colors :base00)))
+                      :foreground (my/theme-color-get 'blue)
+                      :background (my/theme-color-get 'base)))
 
 ;;(use-package json-navigator
 ;;  :straight t)
@@ -1261,6 +1298,15 @@ Version 2024-06-06"
   :mode (("\\.gmi\\'" . gemini-mode))
   :straight t)
 
+(setq major-mode-remap-alist
+ '((yaml-mode . yaml-ts-mode)
+   (bash-mode . bash-ts-mode)
+   (js2-mode . js-ts-mode)
+   (typescript-mode . typescript-ts-mode)
+   (json-mode . json-ts-mode)
+   (css-mode . css-ts-mode)
+   (python-mode . python-ts-mode)))
+
 (electric-pair-mode t)
 
 ;; Added this because I ran into this issue: https://github.com/copilot-emacs/copilot.el/issues/232
@@ -1477,9 +1523,9 @@ to the current branch. Uses Magit."
   (setq blamer-max-commit-message-length 100)
   (setq blamer-idle-time 1)
   (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
-  (set-face-attribute 'blamer-face
-                          nil
-                          :foreground (plist-get my/base16-colors :base04))
+  
+  (set-face-attribute 'blamer-face nil
+                      :foreground (my/theme-color-get 'subtext1))
 
   (add-hook 'evil-insert-state-entry-hook (lambda ()
                                             (setq blamer--block-render-p t)
@@ -1838,10 +1884,9 @@ See URL `https://beta.ruff.rs/docs/'."
   :commands (eshell)
   :config
   (defun esh-customize-faces ()
-    (set-face-attribute 'eshell-ls-directory
-                        nil
-                        :foreground (plist-get my/base16-colors :base0C)
-                        :background (plist-get my/base16-colors :base00)))
+    (set-face-attribute 'eshell-ls-directory nil
+                        :foreground (my/theme-color-get 'sky)
+                        :background (my/theme-color-get 'base)))
 
   (defmacro esh-section (name form &rest props)
     `(setq ,name
@@ -1865,24 +1910,24 @@ See URL `https://beta.ruff.rs/docs/'."
 
   (esh-section esh-header
                "λ"
-               `(:foreground ,(plist-get my/base16-colors :base08)))
+               `(:foreground ,(my/theme-color-get 'red)))
 
   (esh-section esh-user
                (user-login-name)
-               `(:foreground ,(plist-get my/base16-colors :base0B)))
+               `(:foreground ,(my/theme-color-get 'green)))
 
   (esh-section esh-dir
                (concat "[" (abbreviate-file-name (eshell/pwd)) "]")
-               `(:foreground ,(plist-get my/base16-colors :base0E)))
+               `(:foreground ,(my/theme-color-get 'mauve)))
 
   (esh-section esh-git
                (when-let ((branch (magit-get-current-branch))) 
                  (concat " " branch))
-               `(:foreground ,(plist-get my/base16-colors :base0D)))
+               `(:foreground ,(my/theme-color-get 'blue)))
 
   (esh-section esh-footer
                "\n→"
-               `(:foreground ,(plist-get my/base16-colors :base0A)))
+               `(:foreground ,(my/theme-color-get 'yellow)))
 
   (setq eshell-prompt-regexp "→ ")
   (setq eshell-skip-prompt-function #'eshell-skip-prompt)
