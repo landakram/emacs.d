@@ -325,6 +325,17 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
 
 (ido-mode -1)
 
+(setq gc-cons-threshold 100000000)
+(setq read-process-output-max (* 1024 1024))
+(setq jit-lock-defer-time 0.05)
+
+(use-package gcmh
+  :straight t
+  :config
+  (setq gcmh-high-cons-threshold (* 1024 1024 1024))
+  (setq gcmh-idle-delay-factor 20)
+  (gcmh-mode 1))
+
 (use-package general
   :ensure t
   :config
@@ -526,7 +537,14 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   ;; bind `function.outer`(entire function block) to `f` for use in things like `vaf`, `yaf`
   (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
   ;; bind `function.inner`(function block without name and args) to `f` for use in things like `vif`, `yif`
-  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner")))
+  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+
+  (define-key evil-inner-text-objects-map "b" (evil-textobj-tree-sitter-get-textobj ("block.inner"))) 
+  (define-key evil-outer-text-objects-map "b" (evil-textobj-tree-sitter-get-textobj ("block.outer")))
+
+  (define-key evil-outer-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.outer"))
+
+  (define-key evil-inner-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.inner")))
 
 (use-package jumpy
   :demand t
@@ -1985,9 +2003,6 @@ See URL `https://beta.ruff.rs/docs/'."
   :straight t
   :commands yas-minor-mode
   :hook (go-mode . yas-minor-mode))
-
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024))
 
 
 (use-package lsp-mode
