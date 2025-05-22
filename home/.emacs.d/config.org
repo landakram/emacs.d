@@ -55,19 +55,6 @@ Let's set ~custom-file~, which emacs writes to automatically.
 #+RESULTS:
 : t
 
-** Use org for the scratch buffer
-:PROPERTIES:
-:ID:       7B52A965-0E32-44B9-8E21-E8F999EDAFE9
-:END:
-
-#+BEGIN_SRC emacs-lisp
-  (setq initial-major-mode 'org-mode)
-  (setq initial-scratch-message "# This buffer is for notes you don't want to save.")
-#+END_SRC
-
-#+RESULTS:
-: # This buffer is for notes you don't want to save.
-
 ** Silence native comp warnings
 :PROPERTIES:
 :ID:       41BBB331-1054-4FF1-BE8E-F68F47DAAE61
@@ -159,7 +146,6 @@ Without this, the warning buffer pops up whenever native-comp has some warning.
 (require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
-        ("org" . "http://orgmode.org/elpa/")
         ("melpa" . "http://melpa.org/packages/")))
 
 (package-initialize)
@@ -210,6 +196,19 @@ Without this, the warning buffer pops up whenever native-comp has some warning.
 
 #+RESULTS:
 : diminish
+
+** Use org for the scratch buffer
+:PROPERTIES:
+:ID:       7B52A965-0E32-44B9-8E21-E8F999EDAFE9
+:END:
+
+#+BEGIN_SRC emacs-lisp
+  (setq initial-major-mode 'org-mode)
+  (setq initial-scratch-message "# This buffer is for notes you don't want to save.")
+#+END_SRC
+
+#+RESULTS:
+: # This buffer is for notes you don't want to save.
 
 
 *** Custom use-package config hooks
@@ -330,6 +329,8 @@ This mode line is pretty.
     :straight t
     :config
     (setq catppuccin-flavor 'mocha)
+    ;; Slightly darker background
+    (catppuccin-set-color 'base "#15151f")
     (load-theme 'catppuccin :no-confirm)
     )
 
@@ -372,7 +373,7 @@ This mode line is pretty.
       (let* ((base16-key (alist-get name my/base16-color-alist)))
         (unless base16-key
           (error "Base16 color '%s' not mapped to a base key" name))
-        (or (plist-get base16-material-darker-theme-colors base16-key)
+        (or (plist-get base16-theme-shell-colors-256 base16-key)
             (error "Base16 key %s not found in my/base16-colors" base16-key))))
 
     (defun my/catppuccin-color-get (name)
@@ -383,6 +384,9 @@ This mode line is pretty.
     (defun my/theme-color-get (name)
       "Call the active theme color getter with NAME."
       (my/catppuccin-color-get name)))
+
+
+
 #+END_SRC
 
 #+RESULTS:
@@ -993,6 +997,30 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (define-key evil-outer-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.outer"))
 
     (define-key evil-inner-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.inner")))
+
+  (use-package expreg
+    :straight (:host github :repo "casouri/expreg")
+    :init
+    ;; Optional: turn on subword-mode for better word selection in camelCase
+    (add-hook 'prog-mode-hook #'subword-mode)
+
+    :config
+    ;; Leader-based bindings (adjust prefix as needed)
+    (general-define-key
+     :states '(normal visual)
+     :keymaps 'override
+     :prefix "SPC e"
+     "e" '(expreg-expand :which-key "expand region")
+     "r" '(expreg-contract :which-key "contract region"))
+
+    ;; Optional: ergonomic bindings in visual mode
+    (general-define-key
+     :states '(visual)
+     "v" #'expreg-expand
+     "V" #'expreg-contract))
+
+
+  (use-package evil-ts :straight (evil-ts :type git :host github :repo "foxfriday/evil-ts"))
 #+END_SRC
 
 #+RESULTS:
@@ -2502,13 +2530,6 @@ Inline git blame like vscode
       clojure-mode-hook
       janet-ts-mode-hook))
 
-  (use-package evil-cleverparens
-    :ensure t
-    :commands (evil-cleverparens-mode)
-    :init
-    (dolist (mode my/lisp-mode-hooks)
-      (add-hook mode #'evil-cleverparens-mode)))
-
   (use-package cider
     :ensure t
     :defer t
@@ -2546,9 +2567,6 @@ Inline git blame like vscode
     :straight t
     :init
     (setq geiser-active-implementations '(chicken guile)))
-
-  (use-package geiser-guile
-    :straight t)
 
   (use-package paredit
     :ensure t
@@ -3586,6 +3604,7 @@ I can type timestamped notes for a given tree with ~C-c C-z~. By default, they a
     :straight t)
 
   (use-package org
+    :straight t
     :config
     (require 'org-eldoc))
 

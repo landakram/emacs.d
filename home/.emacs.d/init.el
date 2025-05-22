@@ -7,9 +7,6 @@
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (setq frame-resize-pixelwise t))
 
-(setq initial-major-mode 'org-mode)
-(setq initial-scratch-message "# This buffer is for notes you don't want to save.")
-
 (setq native-comp-async-report-warnings-errors nil)
 
 (setq warning-minimum-level :error)
@@ -64,7 +61,6 @@ See `eval-after-load' for the possible formats of FORM."
 (require 'package)
 (setq package-archives
       '(("gnu" . "http://elpa.gnu.org/packages/")
-        ("org" . "http://orgmode.org/elpa/")
         ("melpa" . "http://melpa.org/packages/")))
 
 (package-initialize)
@@ -89,6 +85,9 @@ See `eval-after-load' for the possible formats of FORM."
 
 ;; These should be loaded early on
 (straight-use-package '(org :type built-in))
+
+(setq initial-major-mode 'org-mode)
+(setq initial-scratch-message "# This buffer is for notes you don't want to save.")
 
 (defvar use-package-config-hooks nil
   "Alist of hooks to run after a use-package config block.")
@@ -137,6 +136,8 @@ See `eval-after-load' for the possible formats of FORM."
   :straight t
   :config
   (setq catppuccin-flavor 'mocha)
+  ;; Slightly darker background
+  (catppuccin-set-color 'base "#15151f")
   (load-theme 'catppuccin :no-confirm)
   )
 
@@ -179,7 +180,7 @@ See `eval-after-load' for the possible formats of FORM."
     (let* ((base16-key (alist-get name my/base16-color-alist)))
       (unless base16-key
         (error "Base16 color '%s' not mapped to a base key" name))
-      (or (plist-get base16-material-darker-theme-colors base16-key)
+      (or (plist-get base16-theme-shell-colors-256 base16-key)
           (error "Base16 key %s not found in my/base16-colors" base16-key))))
 
   (defun my/catppuccin-color-get (name)
@@ -581,6 +582,30 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   (define-key evil-outer-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.outer"))
 
   (define-key evil-inner-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.inner")))
+
+(use-package expreg
+  :straight (:host github :repo "casouri/expreg")
+  :init
+  ;; Optional: turn on subword-mode for better word selection in camelCase
+  (add-hook 'prog-mode-hook #'subword-mode)
+
+  :config
+  ;; Leader-based bindings (adjust prefix as needed)
+  (general-define-key
+   :states '(normal visual)
+   :keymaps 'override
+   :prefix "SPC e"
+   "e" '(expreg-expand :which-key "expand region")
+   "r" '(expreg-contract :which-key "contract region"))
+
+  ;; Optional: ergonomic bindings in visual mode
+  (general-define-key
+   :states '(visual)
+   "v" #'expreg-expand
+   "V" #'expreg-contract))
+
+
+(use-package evil-ts :straight (evil-ts :type git :host github :repo "foxfriday/evil-ts"))
 
 (use-package jumpy
   :demand t
@@ -1176,7 +1201,7 @@ Version 2024-06-06"
          ("C-j" . embark-act))
 
    :config
-   
+
 
    ;; Disabled for now, using shackle/popper for popup
    ;; (add-to-list 'embark-indicators #'embark-which-key-indicator)
@@ -1416,7 +1441,7 @@ Version 2024-06-06"
                                      (with-current-buffer buffer (magit-refresh-buffer))) buffer))))
 
   (add-hook 'magit-post-refresh-hook 'magit-refresh-on-idle-timer)
-  
+
   ;; (setq magit-refresh-verbose t)
   (setf magit-git-environment (append magit-git-environment '("FORCE_COLOR=0"))))
 
@@ -1537,7 +1562,7 @@ to the current branch. Uses Magit."
   (setq blamer-max-commit-message-length 100)
   (setq blamer-idle-time 1)
   (setq blamer-tooltip-function 'blamer-tooltip-keybindings)
-  
+
   (set-face-attribute 'blamer-face nil
                       :foreground (my/theme-color-get 'subtext1))
 
@@ -1591,7 +1616,7 @@ to the current branch. Uses Magit."
 
   (setq blamer-bindings '(("<mouse-3>" . blamer-callback-open-remote)
                           ("<mouse-1>" . blamer-callback-show-commit-diff)))
-  
+
   (global-blamer-mode 1))
 
 (use-package yasnippet
@@ -1622,13 +1647,6 @@ to the current branch. Uses Magit."
     scheme-mode-hook
     clojure-mode-hook
     janet-ts-mode-hook))
-
-(use-package evil-cleverparens
-  :ensure t
-  :commands (evil-cleverparens-mode)
-  :init
-  (dolist (mode my/lisp-mode-hooks)
-    (add-hook mode #'evil-cleverparens-mode)))
 
 (use-package cider
   :ensure t
@@ -1667,9 +1685,6 @@ to the current branch. Uses Magit."
   :straight t
   :init
   (setq geiser-active-implementations '(chicken guile)))
-
-(use-package geiser-guile
-  :straight t)
 
 (use-package paredit
   :ensure t
@@ -2194,7 +2209,7 @@ See URL `https://beta.ruff.rs/docs/'."
 
 (with-eval-after-loads '(janet-ts-mode)
   (require 'reformatter)
-  
+
   (defgroup janet-format nil
     "Python reformatting using black."
     :group 'janet
@@ -2296,6 +2311,7 @@ See URL `https://beta.ruff.rs/docs/'."
   :straight t)
 
 (use-package org
+  :straight t
   :config
   (require 'org-eldoc))
 
