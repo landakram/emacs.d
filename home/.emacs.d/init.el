@@ -2268,6 +2268,10 @@ See URL `https://beta.ruff.rs/docs/'."
 (use-package kubed
   :straight (kubed :type git :host github :repo "eshelyaron/kubed"))
 
+(use-package protobuf-mode
+  :straight t
+  :mode ("\\.proto\\'" . protobuf-mode))
+
 (defun my/configure-org-directories ()
   (setq org-directory "~/org")
   (setq org-default-notes-file "~/org/inbox.org")

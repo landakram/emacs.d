@@ -3537,6 +3537,14 @@ Let's use web-mode, which supports font locking for templating.
     :straight (kubed :type git :host github :repo "eshelyaron/kubed"))
 #+end_src
 
+** Protobuf
+
+#+begin_src emacs-lisp
+  (use-package protobuf-mode
+    :straight t
+    :mode ("\\.proto\\'" . protobuf-mode))
+#+end_src
+
 * Org Mode
 I use Org Mode to take notes for work and personal.
 
