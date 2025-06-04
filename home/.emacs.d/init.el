@@ -2159,11 +2159,12 @@ See URL `https://beta.ruff.rs/docs/'."
 (use-package rust-mode
   :ensure t
   :after general
+  :hook ((rust-mode . lsp-deferred)
+         (rust-ts-mode . lsp-deferred))
   :config
   (add-hook 'rust-mode-hook
             (lambda () (setq indent-tabs-mode nil)))
-  (setq rust-format-on-save t)
-  )
+  (setq rust-format-on-save t))
 
 (use-package vimrc-mode
   :ensure t
