@@ -927,6 +927,14 @@ Version 2024-06-06"
               (add-hook 'completion-at-point-functions
                         'pdb-capf nil t))))
 
+(use-package evil-mc
+  :straight t
+  :config
+  (global-evil-mc-mode 1)
+  (evil-define-key 'visual evil-mc-key-map
+    "A" #'evil-mc-make-cursor-in-visual-selection-end
+    "I" #'evil-mc-make-cursor-in-visual-selection-beg))
+
 ;;(add-to-list 'default-frame-alist
 ;;             '(font . "Fira Code Medium-12"))
 
@@ -1728,16 +1736,6 @@ to the current branch. Uses Magit."
                 (setq python-shell-interpreter "ipython")
                 (setq python-shell-interpreter-args "--simple-prompt")))))
 
-(use-package pyvenv
-  :ensure t
-  :config
-  (setq eshell-modify-global-environment t)
-  (add-hook 'pyvenv-post-activate-hooks (lambda ()
-                                          (setq eshell-path-env (getenv "PATH"))))
-  (add-hook 'pyvenv-post-deactivate-hooks (lambda ()
-                                          (setq eshell-path-env (getenv "PATH"))))
-  )
-
 
 
 (use-package python-black
@@ -1818,34 +1816,12 @@ See URL `https://beta.ruff.rs/docs/'."
   :ensure t
   :mode ("\\.swift\\'" . swift-mode))
 
-(use-package coffee-mode
-  :ensure t
-  :mode ("\\.coffee\\'" . coffee-mode))
-
-
-
-(use-package js-comint
-  :defer t
-  :ensure t)
-
-(setq js-indent-level 2)
-
-(use-package typescript-mode
-  :mode ("\\.tsx?\\'" . typescript-mode)
-  :ensure t)
-
 (use-package js2-mode
   :straight t
   :hook ((js-mode . js2-minor-mode))
   :config
   (setf js2-mode-show-parse-errors nil)
   (setf js2-strict-missing-semi-warning nil))
-
-(use-package mocha
-  :straight t
-  :config
-  (setf mocha-environment-variables "FORCE_COLOR=1 NODE_ENV=test")
-  (setf mocha-reporter "spec"))
 
 (use-package add-node-modules-path
   :straight t
@@ -1874,15 +1850,15 @@ See URL `https://beta.ruff.rs/docs/'."
           (lambda ()
             (setq imenu-create-index-function 'js2-imenu-make-index)))
 
-(defcustom prepend-mocha-generate-command ""
-  "Prepend the mocha command with this string. Useful for running compilation step before tests."
-  :safe #'stringp)
+(use-package js-comint
+  :defer t
+  :ensure t)
 
-(defun wrap-mocha-generate-command (fn &rest args)
-  (let ((cmd (apply fn args)))
-    (concat prepend-mocha-generate-command cmd)))
+(setq js-indent-level 2)
 
-(advice-add 'mocha-generate-command :around #'wrap-mocha-generate-command)
+(use-package typescript-mode
+  :mode ("\\.tsx?\\'" . typescript-mode)
+  :ensure t)
 
 (use-package haskell-mode
   :mode ("\\.hs\\'" . haskell-mode)
@@ -1959,8 +1935,6 @@ See URL `https://beta.ruff.rs/docs/'."
 
   (add-hook 'eshell-mode-hook 'esh-customize-faces))
 
-
-
 (use-package yaml-mode
   :straight t
   :mode (("\\.yml\\'" . yaml-mode)
@@ -1989,23 +1963,10 @@ See URL `https://beta.ruff.rs/docs/'."
   :ensure t
   :mode ("\\.php\\'" . php-mode))
 
-;; (use-package phpunit
-;;   :load-path "~/.emacs.d/site-lisp/phpunit"
-;;   :config
-;;     (general-define-key
-;;      :states '(normal)
-;;      :keymaps 'php-mode-map
-;;      :prefix "C-c"
-;;      "C-t" 'phpunit-current-test))
-
 (use-package auctex
   :ensure t
   :mode ("\\.tex\\'" . latex-mode)
   :commands (latex-mode LaTeX-mode plain-tex-mode))
-
-(use-package restclient
-  :defer t
-  :ensure t)
 
 (use-package go-mode
   :ensure t
@@ -2052,18 +2013,18 @@ See URL `https://beta.ruff.rs/docs/'."
   (add-hook 'rspec-compilation-mode-hook 'my/rspec-init)
   :ensure t)
 
+(use-package bundler
+  :ensure t
+  )
+
+(add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
+
 (use-package slime
   :ensure t
   :defer t
   :config
   (setq inferior-lisp-program "sbcl")
   (setq slime-contribs '(slime-fancy)))
-
-(use-package bundler
-  :ensure t
-  )
-
-(add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
 
 (use-package yasnippet
   :straight t
@@ -2098,7 +2059,6 @@ See URL `https://beta.ruff.rs/docs/'."
 
 
   ;; Set up emacs-lsp-booster
-  ;; Currently broken
   (defun lsp-booster--advice-json-parse (old-fn &rest args)
     "Try to parse bytecode instead of json."
     (or
@@ -2128,8 +2088,7 @@ See URL `https://beta.ruff.rs/docs/'."
             (cons "emacs-lsp-booster" orig-result))
         orig-result)))
 
-  (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
-  )
+  (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command))
 
 (use-package lsp-ui
   :straight t
@@ -2232,13 +2191,10 @@ See URL `https://beta.ruff.rs/docs/'."
   :straight (janet-ts-mode :type git :host github :repo "sogaiu/janet-ts-mode")
   :mode (("\\.janet\\'" . janet-ts-mode)))
 
-(straight-use-package
-  '(ajrepl :host github
-           :repo "sogaiu/ajrepl"
-           :files ("*.el" "ajrepl")))
-
 (use-package ajrepl
-  :straight t
+  :straight (ajrepl :host github
+                    :repo "sogaiu/ajrepl"
+                    :files ("*.el" "ajrepl"))
   :config
   (add-hook 'janet-ts-mode-hook
             #'ajrepl-interaction-mode))

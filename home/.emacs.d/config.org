@@ -1533,6 +1533,17 @@ Enable automatic optimizations for files with long lines
                           'pdb-capf nil t))))
 #+end_src
 
+** multiple-cursors
+
+#+begin_src emacs-lisp
+  (use-package evil-mc
+    :straight t
+    :config
+    (global-evil-mc-mode 1)
+    (evil-define-key 'visual evil-mc-key-map
+      "A" #'evil-mc-make-cursor-in-visual-selection-end
+      "I" #'evil-mc-make-cursor-in-visual-selection-beg))
+#+end_src
 * UI
 ** Set the font
 :PROPERTIES:
@@ -2627,31 +2638,6 @@ Inline git blame like vscode
                   (setq python-shell-interpreter-args "--simple-prompt")))))
 #+end_src
 
-*** Virtualenv
-:PROPERTIES:
-:ID:       DD126725-5346-49C2-B480-49A306D3BEBB
-:END:
-
-pyvenv is nice because it lets me choose between virtualenvs made through mkvirtualenvwrapper and virtulenvs that are in other places on the filesystem.
-
-We also set up eshell so that it shares its environment with emacs, thus using the virtualenv if it is set.
-
-#+BEGIN_SRC emacs-lisp 
-
-  (use-package pyvenv
-    :ensure t
-    :config
-    (setq eshell-modify-global-environment t)
-    (add-hook 'pyvenv-post-activate-hooks (lambda ()
-                                            (setq eshell-path-env (getenv "PATH"))))
-    (add-hook 'pyvenv-post-deactivate-hooks (lambda ()
-                                            (setq eshell-path-env (getenv "PATH"))))
-    )
-
-#+END_SRC
-
-#+RESULTS:
-: t
 *** Refactoring
 :PROPERTIES:
 :ID:       4BC8C17C-C6B0-4BBF-AFA4-994B0236F2EE
@@ -2786,24 +2772,45 @@ We also set up eshell so that it shares its environment with emacs, thus using t
     :mode ("\\.swift\\'" . swift-mode))
 
 #+END_SRC
-** CoffeeScript
-:PROPERTIES:
-:ID:       212AD2FD-FB6C-4A4C-B09A-D064AF0AE7DA
-:END:
-#+BEGIN_SRC emacs-lisp 
-
-  (use-package coffee-mode
-    :ensure t
-    :mode ("\\.coffee\\'" . coffee-mode))
-
-#+END_SRC
 ** JavaScript
 :PROPERTIES:
 :ID:       0426E873-0B57-4A19-BDD7-64F855FB9093
 :END:
 
 #+begin_src emacs-lisp
+  (use-package js2-mode
+    :straight t
+    :hook ((js-mode . js2-minor-mode))
+    :config
+    (setf js2-mode-show-parse-errors nil)
+    (setf js2-strict-missing-semi-warning nil))
 
+  (use-package add-node-modules-path
+    :straight t
+    :hook ((js-mode . add-node-modules-path)
+           (solidity-mode . add-node-modules-path)))
+
+  (use-package nvm
+    :straight t
+    :hook ((js-mode . nvm-use-for)
+           (solidity-mode . nvm-use-for)))
+
+   (defun js2-imenu-make-index ()
+      (save-excursion
+      (imenu--generic-function '(("describe" "\\s-*describe\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                                 ("it" "\\s-*it\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                                 ("before" "\\s-*before\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+                                 ("after" "\\s-*after\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
+
+                                  ;;add more keyword for mocha here
+                                 ("Function" "function[ \t]+\\([a-zA-Z0-9_$.]+\\)[ \t]*(" 1)
+                                 ("Function" "^[ \t]*\\([a-zA-Z0-9_$.]+\\)[ \t]*=[ \t]*function[ \t]*(" 1)
+
+                                 ))))
+
+   (add-hook 'js2-minor-mode-hook
+            (lambda ()
+              (setq imenu-create-index-function 'js2-imenu-make-index)))
 #+end_src
 
 *** REPL
@@ -2841,65 +2848,6 @@ I typically use 2 spaces to indent.
 #+END_SRC
 
 #+RESULTS:
-*** Mocha
-:PROPERTIES:
-:ID:       580bd8ed-d929-4ab3-add9-2a3686a75c59
-:END:
-
-#+begin_src emacs-lisp
-  (use-package js2-mode
-    :straight t
-    :hook ((js-mode . js2-minor-mode))
-    :config
-    (setf js2-mode-show-parse-errors nil)
-    (setf js2-strict-missing-semi-warning nil))
-
-  (use-package mocha
-    :straight t
-    :config
-    (setf mocha-environment-variables "FORCE_COLOR=1 NODE_ENV=test")
-    (setf mocha-reporter "spec"))
-
-  (use-package add-node-modules-path
-    :straight t
-    :hook ((js-mode . add-node-modules-path)
-           (solidity-mode . add-node-modules-path)))
-
-  (use-package nvm
-    :straight t
-    :hook ((js-mode . nvm-use-for)
-           (solidity-mode . nvm-use-for)))
-
-   (defun js2-imenu-make-index ()
-      (save-excursion
-      (imenu--generic-function '(("describe" "\\s-*describe\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
-                                 ("it" "\\s-*it\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
-                                 ("before" "\\s-*before\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
-                                 ("after" "\\s-*after\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
-
-                                  ;;add more keyword for mocha here
-                                 ("Function" "function[ \t]+\\([a-zA-Z0-9_$.]+\\)[ \t]*(" 1)
-                                 ("Function" "^[ \t]*\\([a-zA-Z0-9_$.]+\\)[ \t]*=[ \t]*function[ \t]*(" 1)
-
-                                 ))))
-
-   (add-hook 'js2-minor-mode-hook
-            (lambda ()
-              (setq imenu-create-index-function 'js2-imenu-make-index)))
-
-  (defcustom prepend-mocha-generate-command ""
-    "Prepend the mocha command with this string. Useful for running compilation step before tests."
-    :safe #'stringp)
-
-  (defun wrap-mocha-generate-command (fn &rest args)
-    (let ((cmd (apply fn args)))
-      (concat prepend-mocha-generate-command cmd)))
-
-  (advice-add 'mocha-generate-command :around #'wrap-mocha-generate-command)
-#+end_src
-
-#+RESULTS:
-| (lambda nil (setq imenu-create-index-function 'js2-imenu-make-index)) | evil-collection-js2-set-evil-shift-width | er/add-js2-mode-expansions | er/add-js-mode-expansions |
 
 
 ** Haskell
@@ -3029,15 +2977,6 @@ I typically use 2 spaces to indent.
 
 #+RESULTS:
 : t
-
-*** eat
-:PROPERTIES:
-:ID:       F1FD1EDA-AC79-44FC-92B2-E32677E97033
-:END:
-
-#+begin_src emacs-lisp
-
-#+end_src
 ** YAML
 :PROPERTIES:
 :ID:       85004FDB-D2C8-4D10-8FF4-059F162C3B97
@@ -3099,17 +3038,6 @@ Let's use web-mode, which supports font locking for templating.
     :ensure t
     :mode ("\\.php\\'" . php-mode))
 #+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package phpunit
-  ;;   :load-path "~/.emacs.d/site-lisp/phpunit"
-  ;;   :config
-  ;;     (general-define-key
-  ;;      :states '(normal)
-  ;;      :keymaps 'php-mode-map
-  ;;      :prefix "C-c"
-  ;;      "C-t" 'phpunit-current-test))
-#+END_SRC
 ** LaTeX
 :PROPERTIES:
 :ID:       BE8826FB-91A0-41E9-B4EE-B6230F333817
@@ -3123,16 +3051,6 @@ Let's use web-mode, which supports font locking for templating.
 #+END_SRC
 
 #+RESULTS:
-** API exploration
-:PROPERTIES:
-:ID:       6AF8C327-1DF8-4F41-86DC-0DC0B40F5F47
-:END:
-
-#+BEGIN_SRC emacs-lisp
-  (use-package restclient
-    :defer t
-    :ensure t)
-#+END_SRC
 ** Go
 :PROPERTIES:
 :ID:       902F963C-3D6A-4A23-A383-847EC6971E31
@@ -3211,22 +3129,6 @@ Let's use web-mode, which supports font locking for templating.
 
 #+RESULTS:
 : t
-** Common Lisp
-:PROPERTIES:
-:ID:       7F5509D9-9207-4999-9800-7E1D315501CD
-:END:
-
-#+BEGIN_SRC emacs-lisp
-  (use-package slime
-    :ensure t
-    :defer t
-    :config
-    (setq inferior-lisp-program "sbcl")
-    (setq slime-contribs '(slime-fancy)))
-#+END_SRC
-
-#+RESULTS:
-: t
 
 #+BEGIN_SRC emacs-lisp
   (use-package bundler
@@ -3244,6 +3146,22 @@ Let's use web-mode, which supports font locking for templating.
 (add-to-list 'auto-mode-alist '("\\.rbi$" . ruby-mode))
 #+END_SRC
 
+** Common Lisp
+:PROPERTIES:
+:ID:       7F5509D9-9207-4999-9800-7E1D315501CD
+:END:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package slime
+    :ensure t
+    :defer t
+    :config
+    (setq inferior-lisp-program "sbcl")
+    (setq slime-contribs '(slime-fancy)))
+#+END_SRC
+
+#+RESULTS:
+: t
 ** LSP
 :PROPERTIES:
 :ID:       C0674ED2-A9C5-41FB-9D18-2B8BF72D5E80
@@ -3282,7 +3200,6 @@ Let's use web-mode, which supports font locking for templating.
 
 
     ;; Set up emacs-lsp-booster
-    ;; Currently broken
     (defun lsp-booster--advice-json-parse (old-fn &rest args)
       "Try to parse bytecode instead of json."
       (or
@@ -3312,8 +3229,7 @@ Let's use web-mode, which supports font locking for templating.
               (cons "emacs-lsp-booster" orig-result))
           orig-result)))
 
-    (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
-    )
+    (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command))
 
   (use-package lsp-ui
     :straight t
@@ -3493,13 +3409,10 @@ Let's use web-mode, which supports font locking for templating.
     :straight (janet-ts-mode :type git :host github :repo "sogaiu/janet-ts-mode")
     :mode (("\\.janet\\'" . janet-ts-mode)))
 
-  (straight-use-package
-    '(ajrepl :host github
-             :repo "sogaiu/ajrepl"
-             :files ("*.el" "ajrepl")))
-
   (use-package ajrepl
-    :straight t
+    :straight (ajrepl :host github
+                      :repo "sogaiu/ajrepl"
+                      :files ("*.el" "ajrepl"))
     :config
     (add-hook 'janet-ts-mode-hook
               #'ajrepl-interaction-mode))
