@@ -541,7 +541,7 @@ This is extra useful if you use gpg-agent with --enable-ssh-support"
   (setq-default evil-symbol-word-search 1)
   (setq-default evil-want-fine-undo t)
 
-  (setq evil-want-minibuffer t)
+  (setq evil-want-minibuffer nil)
 
   ;; Make insert mode just like regular emacs
   (setq evil-insert-state-map (make-sparse-keymap))

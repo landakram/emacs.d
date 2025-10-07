@@ -956,7 +956,7 @@ General.el is like evil-leader, but lets you define multiple leader keys / prefi
     (setq-default evil-symbol-word-search 1)
     (setq-default evil-want-fine-undo t)
 
-    (setq evil-want-minibuffer t)
+    (setq evil-want-minibuffer nil)
 
     ;; Make insert mode just like regular emacs
     (setq evil-insert-state-map (make-sparse-keymap))
