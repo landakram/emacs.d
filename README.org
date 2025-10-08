@@ -4,7 +4,6 @@ This is my Emacs config. Peruse it if you wish -- it is highly personal and twea
 
 A few things to note:
 
- - [[home/.emacs.d/config.org][My configuration]] is implemented as a [[https://en.wikipedia.org/wiki/Literate_programming][literate]] [[http://orgmode.org/worg/org-contrib/babel/intro.html][org]] document.
  - As a recovering vim user, I use [[https://www.emacswiki.org/emacs/Evil][evil-mode]]. Maybe one day I will learn the default Emacs keybindings.
  - I use [[https://github.com/raxod502/selectrum][selectrum]] for completion. I find it to be simple and fast. Previously, I used helm and then ivy and then helm. They all change the experience of using Emacs pretty significantly -- I think for the better. 
  - I make some assumptions that I am running on OS X, but it loads and mostly works in a linux environment.
