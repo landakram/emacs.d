@@ -5,16 +5,16 @@ This is my Emacs config. Peruse it if you wish -- it is highly personal and twea
 A few things to note:
 
  - As a recovering vim user, I use [[https://www.emacswiki.org/emacs/Evil][evil-mode]]. Maybe one day I will learn the default Emacs keybindings.
- - I use [[https://github.com/raxod502/selectrum][selectrum]] for completion. I find it to be simple and fast. Previously, I used helm and then ivy and then helm. They all change the experience of using Emacs pretty significantly -- I think for the better. 
- - I make some assumptions that I am running on OS X, but it loads and mostly works in a linux environment.
+ - Completion is built around [[https://github.com/minad/vertico][vertico]] + [[https://github.com/oantolin/orderless][orderless]] with [[https://github.com/minad/consult][consult]] (and [[https://github.com/oantolin/embark][embark]] / [[https://github.com/minad/marginalia][marginalia]]) layered on top. selectrum is out of date and no longer used.
+ - It works fine on linux and macOS; host-specific tweaks usually live in =site-lisp/host-specific/<hostname>.el= (loaded by =lisp/os/env.el=).
 
-Emacs took me a really long time to get into. I started my journey with [[http://spacemacs.org/][Spacemacs]], a fantastic Emacs starter kit that works well for vim users. After some time, I wanted to understand what was going on under the hood, and so I stopped using Spacemacs and made my own config.
+Emacs took me a long time to get into, but even with LLM-assisted coding and agents, I haven't been able to use anything else. I started my journey with [[http://spacemacs.org/][Spacemacs]], a fantastic Emacs starter kit that works well for vim users. After some time, I wanted to understand what was going on under the hood, and so I stopped using Spacemacs and made my own config.
 
 Learning Emacs was/is hard work, but well worth it. Emacs has reshaped my understanding of what is possible with an editor, and I feel like I could use Emacs /for the rest of my life/.
 
 ** Installation
 
-Clone this repository directly into =~/.emacs.d:
+Clone this repository directly into ~~/.emacs.d~:
 
 1. Move any existing =~/.emacs.d= out of the way.
 2. ~git clone git@github.com:landakram/emacs.d.git ~~/.emacs.d~
