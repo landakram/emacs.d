@@ -15,5 +15,18 @@
   (aidermacs-auto-commits t)
   (aidermacs-default-model "o3-mini"))
 
+(use-package gptel
+  :straight t
+  :bind
+  (("s-k" . gptel-rewrite)
+   ("s-j" . (lambda (arg) (interactive "p") (gptel-send arg)))))
+
+(use-package agent-shell
+  :straight t
+  :bind
+  (("s-l" . agent-shell-openai-start-codex))
+  :config
+  (setq agent-shell-thought-process-expand-by-default t))
+
 (provide 'apps/gpt)
 ;;; apps/gpt.el ends here

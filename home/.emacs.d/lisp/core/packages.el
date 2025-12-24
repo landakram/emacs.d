@@ -42,9 +42,8 @@
   "Add a function to the list of hooks to be run after PACKAGE's use-package config."
   (let ((entry (assoc package use-package-config-hooks)))
     (if entry
-        (push hook (cdr entry))
-      (setq use-package-config-hooks
-            (acons package (list hook) use-package-config-hooks)))))
+        (setcdr entry (cons hook (cdr entry)))
+      (push (cons package (list hook)) use-package-config-hooks))))
 
 (defun run-use-package-config-hooks (package)
   "Run all hooks for the given PACKAGE."
