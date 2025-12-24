@@ -32,11 +32,26 @@ This is extra useful if you use gpg-agent with --enable-ssh-support."
 (run-with-idle-timer 60 t #'my/gpg-agent)
 (my/gpg-agent)
 
-(let ((host-specific-config (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el")))) 
-  (message "Attempting to load host-specific config file %s" host-specific-config)
-  (when (file-readable-p host-specific-config)
-    (message "Found host-specific config file %s. Loading." host-specific-config)
-    (load-file host-specific-config)))
+(let* ((host-dir (expand-file-name "~/.emacs.d/site-lisp/host-specific"))
+       (host-file (expand-file-name (concat (system-name) ".el") host-dir))
+       (legacy-file (expand-file-name (concat "~/.emacs.d/site-lisp/" (system-name) ".el"))))
+  ;; Migrate legacy host file into host-specific/ if still present.
+  (when (and (file-readable-p legacy-file)
+             (not (file-readable-p host-file)))
+    (message "Migrating legacy host file %s to %s" legacy-file host-file)
+    (make-directory host-dir t)
+    (rename-file legacy-file host-file t))
+
+  (when (file-directory-p host-dir)
+    (message "Loading host-specific config from %s" host-dir)
+    ;; Load host-named file first (if present), then any other *.el for the host.
+    (when (file-readable-p host-file)
+      (message "Loading host file %s" host-file)
+      (load-file host-file))
+    (dolist (file (directory-files host-dir t "\\.el$"))
+      (unless (string= file host-file)
+        (message "Loading host file %s" file)
+        (load-file file)))))
 
 (provide 'os/env)
 ;;; os/env.el ends here
