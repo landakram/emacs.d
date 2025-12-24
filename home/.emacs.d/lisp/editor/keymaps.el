@@ -21,7 +21,7 @@
   (leader-def :infix "bo"
     "" '(:ignore t :which-key "b[o]okmarks")
     "c" '(:which-key "config-file"
-                     :def (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
+                     :def (lambda () (interactive) (find-file "~/.emacs.d/lisp/")))
     "m" '(mu4e :which-key "mu4e")
     "s" '(:which-key "stump"
                        :def (lambda () (interactive) (find-file "~/.stumpwmrc")))
