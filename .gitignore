@@ -40,8 +40,29 @@ places
 projectile.cache
 recentf
 *.eld
-/home/.emacs.d/snippets/git-commit-mode/.yas-parents
+snippets/git-commit-mode/.yas-parents
 config.el
 config.html
 **/url/**
 **/pcache/**
+
+# native compilation
+eln-cache/
+
+# package managers and caches
+straight/
+.cache/
+
+# persistent editor state
+backups/
+projects/
+projectile-bookmarks.eld
+transient/
+undo-tree/
+.lsp-session-v1
+.mc-lists.el
+tree-sitter/
+.session
+
+# host-specific config: put machine overrides in site-lisp/host-specific/*.el
+site-lisp/host-specific/**
