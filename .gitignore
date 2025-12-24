@@ -40,7 +40,7 @@ places
 projectile.cache
 recentf
 *.eld
-/home/.emacs.d/snippets/git-commit-mode/.yas-parents
+snippets/git-commit-mode/.yas-parents
 config.el
 config.html
 **/url/**

@@ -14,8 +14,8 @@ Learning Emacs was/is hard work, but well worth it. Emacs has reshaped my unders
 
 ** Installation
 
-This repository is set up for use with [[https://github.com/andsens/homeshick][homeshick]]. To install it: 
+Clone this repository directly into =~/.emacs.d:
 
-1. Install homeshick.
-2. ~git clone git@github.com:landakram/emacs.d.git ~/.homesick/repos/emacs~
-3. ~homeshick link emacs~
+1. Move any existing =~/.emacs.d= out of the way.
+2. ~git clone git@github.com:landakram/emacs.d.git ~~/.emacs.d~
+3. Start Emacs; it will load from the checked out tree.
