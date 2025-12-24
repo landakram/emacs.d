@@ -66,3 +66,5 @@ tree-sitter/
 
 # host-specific config: put machine overrides in site-lisp/host-specific/*.el
 site-lisp/host-specific/**
+
+.agent-shell
