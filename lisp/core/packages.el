@@ -2,14 +2,6 @@
 
 ;;; Code:
 
-
-(require 'package)
-(setq package-archives
-      '(("gnu" . "http://elpa.gnu.org/packages/")
-        ("melpa" . "http://melpa.org/packages/")))
-
-(package-initialize)
-
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -25,6 +17,8 @@
 
 
   (straight-use-package 'use-package)
+  (setq straight-use-package-by-default t)
+  (setq use-package-ensure-function 'straight-use-package)
 
   (eval-when-compile
     (require 'use-package))
@@ -55,21 +49,17 @@
   `(add-use-package-config-hook ,package (lambda () ,@body)))
 
 
-(unless (package-installed-p 'diminish)
-  (package-install 'diminish))
-
-(require 'diminish)
-
-(global-auto-revert-mode)
-(diminish 'auto-revert-mode)
+(use-package diminish
+  :demand t
+  :config
+  (global-auto-revert-mode)
+  (diminish 'auto-revert-mode))
 
 (use-package try
-  :defer t
-  :ensure t)
+  :defer t)
 
 (use-package paradox
-  :defer t
-  :ensure t)
+  :defer t)
 
 (provide 'core/packages)
 ;;; core/packages.el ends here

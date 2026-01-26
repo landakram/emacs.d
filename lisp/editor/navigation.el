@@ -160,6 +160,7 @@ Version 2024-06-06"
   (direnv-mode))
 
 (use-package dired
+  :straight nil
   :general
   ("C-x j" 'dired-jump)
   (leader-def
