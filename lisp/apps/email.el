@@ -5,8 +5,17 @@
 
   (setq mm-sign-option 'guided)
 
+  (defvar my/mu4e-load-path
+    (let ((opt-homebrew "/opt/homebrew/opt/mu/share/emacs/site-lisp/mu/mu4e")
+          (usr-local "/usr/local/opt/mu/share/emacs/site-lisp/mu/mu4e"))
+      (cond
+       ((file-directory-p opt-homebrew) opt-homebrew)
+       ((file-directory-p usr-local) usr-local)
+       (t opt-homebrew))))
+
   (use-package mu4e
-    :load-path "/usr/local/opt/mu/share/emacs/site-lisp/mu/mu4e"
+    :straight nil
+    :load-path my/mu4e-load-path
     :commands (mu4e)
     :after general
     :config
@@ -85,6 +94,8 @@
             smtpmail-debug-info t))
 
     (use-package org-mu4e
+      :straight nil
+      :after mu4e
       :config)
 
     (setq mu4e-tags '(

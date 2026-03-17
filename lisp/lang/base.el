@@ -27,6 +27,7 @@
   (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion))
 
 (use-package tdd
+  :straight nil
   :load-path "site-lisp/tdd/")
 
 (general-define-key

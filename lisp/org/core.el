@@ -204,9 +204,11 @@
   (use-package ox-gfm
     :ensure t)
 
-  (use-package org-habit)
+  (use-package org-habit
+    :straight nil)
 
   (use-package ox-odt
+    :straight nil
     :config
     (setq org-odt-preferred-output-format "rtf"))
 
@@ -227,6 +229,7 @@
     (org-insert-link nil (concat "https://" default-jira-repository "/browse/" issue-name) desc)))
 
 (use-package org-capture
+  :straight nil
   :general
   (leader-def
     "c" 'org-capture) 
@@ -258,7 +261,8 @@
   (run-use-package-config-hooks 'org-capture))
 
 (defun my/configure-org-protocol ()
-  (use-package org-protocol)
+  (use-package org-protocol
+    :straight nil)
   (server-start))
 
 
@@ -302,6 +306,7 @@
   :hook (org-mode . org-bullets-mode))
 
 (use-package org-archive
+  :straight nil
   :bind (:map org-mode-map
               ("C-c $" . org-archive-subtree))
   :config

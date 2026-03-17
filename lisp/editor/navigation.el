@@ -2,7 +2,8 @@
 
 ;;; Code:
 
-(use-package project)
+(use-package project
+  :straight nil)
 
 (use-package projectile
   :ensure t
