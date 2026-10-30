@@ -84,7 +84,10 @@ With CHOOSE, select the search directory.  Includes definitions and comments."
 
 (with-eval-after-load 'evil
   (advice-add 'evil-goto-definition :around #'my/browser-goto-definition)
-  (define-key evil-normal-state-map (kbd "g r") #'my/browser-find-references))
+  (define-key evil-normal-state-map (kbd "g r") #'my/browser-find-references)
+  ;; Evil Collection also binds this sequence in the Emacs Lisp mode map.
+  (with-eval-after-load 'elisp-mode
+    (evil-define-key 'normal emacs-lisp-mode-map (kbd "g r") #'my/browser-find-references)))
 
 (provide 'editor/browser-navigation)
 ;;; browser-navigation.el ends here

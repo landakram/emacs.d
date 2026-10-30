@@ -2,6 +2,8 @@
 
 ;;; Code:
 
+(require 'core/utils)
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -28,26 +30,6 @@
 
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message "# This buffer is for notes you don't want to save.")
-
-(defvar use-package-config-hooks nil
-  "Alist of hooks to run after a use-package config block.")
-
-(defun add-use-package-config-hook (package hook)
-  "Add a function to the list of hooks to be run after PACKAGE's use-package config."
-  (let ((entry (assoc package use-package-config-hooks)))
-    (if entry
-        (setcdr entry (cons hook (cdr entry)))
-      (push (cons package (list hook)) use-package-config-hooks))))
-
-(defun run-use-package-config-hooks (package)
-  "Run all hooks for the given PACKAGE."
-  (dolist (hook (cdr (assoc package use-package-config-hooks)))
-    (funcall hook)))
-
-(defmacro with-eval-after-use-package-config (package &rest body)
-  "Specify actions to run after PACKAGE is configured via use-package."
-  `(add-use-package-config-hook ,package (lambda () ,@body)))
-
 
 (use-package diminish
   :demand t

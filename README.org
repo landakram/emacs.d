@@ -23,6 +23,10 @@ and fzf for this picker.
 lets you choose another search directory. Source remains writable. The viewer
 uses syntax highlighting and idle line blame without starting a language server.
 
+Without a host file, the picker, =g d= and =g r= search the current local Git
+checkout, and Blamer uses ordinary Git. Emacs loads the host file named after
+=(system-name)= when one exists.
+
 Set =my/browser-roots= in a host override to limit browsing to particular
 canonical checkouts and their worktrees. =my/browser-search-roots-function=
 and =my/browser-git-command-function= customize navigation and Git invocation
