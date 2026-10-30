@@ -12,6 +12,24 @@ Emacs took me a long time to get into, but even with LLM-assisted coding and age
 
 Learning Emacs was/is hard work, but well worth it. Emacs has reshaped my understanding of what is possible with an editor, and I feel like I could use Emacs /for the rest of my life/.
 
+** Browsing source
+
+In a local Git checkout, =SPC p f= searches a saved ripgrep file list with fzf.
+The first search indexes files in the background. =C-c r= refreshes the current
+checkout. Each linked worktree has its own index. Install Python 3.9+, ripgrep
+and fzf for this picker.
+
+=g d= jumps to a definition and =g r= searches textual references. =C-u=
+lets you choose another search directory. Source remains writable. The viewer
+uses syntax highlighting and idle line blame without starting a language server.
+
+Set =my/browser-roots= in a host override to limit browsing to particular
+canonical checkouts and their worktrees. =my/browser-search-roots-function=
+and =my/browser-git-command-function= customize navigation and Git invocation
+locally. An optional scheduled command, =python3 bin/emacs-browser.py warm-recent
+/path/to/checkout=, rebuilds the file lists of linked worktrees browsed in the
+last seven days. It writes only to the editor cache.
+
 ** Installation
 
 Clone this repository directly into ~~/.emacs.d~:

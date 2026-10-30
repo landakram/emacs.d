@@ -15,29 +15,18 @@
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 
-(use-package flycheck
-  :ensure t
-  :hook (after-init . global-flycheck-mode)
-  :diminish flycheck-mode
-  :config
-  (flycheck-add-mode 'javascript-eslint 'js2-mode)
-  (flycheck-add-mode 'javascript-eslint 'js-mode)
+(defconst my/viewer-source-modes
+  '(prog-mode conf-mode yaml-mode yaml-ts-mode json-mode json-ts-mode
+    nxml-mode web-mode toml-ts-mode dockerfile-mode))
 
-  ;; Disable syntax checking on new-line for emacs lisp, since for some reason 
-  ;; it is really slow
-  (add-hook 'emacs-lisp-mode-hook
-            (lambda ()
-              (setq-local flycheck-check-syntax-automatically '(idle-check mode-enabled save))))
+(defun my/viewer-source-p ()
+  (apply #'derived-mode-p my/viewer-source-modes))
 
+(defun my/viewer-undo-history ()
+  (when (my/viewer-source-p)
+    (setq-local undo-tree-auto-save-history nil)))
 
-  (setq-default flycheck-disabled-checkers
-                (append flycheck-disabled-checkers
-                        '(javascript-jshint
-                          python-flake8
-                          ruby-rubocop
-                          ruby-reek
-                          emacs-lisp-checkdoc))))
-
+(add-hook 'after-change-major-mode-hook #'my/viewer-undo-history)
 
 (setq ring-bell-function 'ignore)
 

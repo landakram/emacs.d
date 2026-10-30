@@ -2,14 +2,6 @@
 
 ;;; Code:
 
-(defvar my/lisp-mode-hooks
-  '(emacs-lisp-mode-hook
-    lisp-mode-hook
-    lisp-interaction-mode-hook
-    scheme-mode-hook
-    clojure-mode-hook
-    janet-ts-mode-hook))
-
 (use-package cider
   :ensure t
   :defer t
@@ -30,9 +22,6 @@
    :keymaps 'cider-mode-map
    "C-c r" 'cider-system-reset))
 
-(use-package cljsbuild-mode
-  :ensure t)
-
 (use-package clojure-mode
   :mode (("\\.clj\\'" . clojure-mode)
          ("\\.cljs\\'" . clojurescript-mode)
@@ -45,23 +34,9 @@
 
 (use-package geiser
   :straight t
+  :defer t
   :init
   (setq geiser-active-implementations '(chicken guile)))
-
-(use-package paredit
-  :ensure t
-  :commands (enable-paredit-mode)
-  :init
-  (dolist (mode my/lisp-mode-hooks)
-    (add-hook mode #'enable-paredit-mode)))
-
-(use-package clj-refactor
-  :ensure t
-  :hook (clojure-mode . clj-refactor-mode)
-  :config
-  (cljr-add-keybindings-with-prefix "C-c RET"))
-
-(add-hook 'clojure-mode-hook #'yas-minor-mode)
 
 (use-package extempore-mode
   :ensure t)

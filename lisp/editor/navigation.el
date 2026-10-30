@@ -155,11 +155,6 @@ Version 2024-06-06"
     (kill-new result-path)
     (message "Path copied: %s" result-path)))
 
-(use-package direnv
-  :ensure t
-  :config
-  (direnv-mode))
-
 (use-package dired
   :straight nil
   :general
@@ -266,46 +261,14 @@ Version 2024-06-06"
     (when tests-dir
       (dired tests-dir))))
 
-(autoload 'pytest-run "pytest")
-(autoload 'pytest-get-command "pytest")
-(defun pytest-run-current-project ()
-  (interactive)
-  (let ((tests-dir (find-python-tests-dir)))
-    (when-let* (( abs-test-dir (expand-file-name tests-dir))
-                (buffer-file-name abs-test-dir))
-      (pytest-run (expand-file-name tests-dir) nil))))
-
-(defun pytest-realgud-run-current-project ()
-  (interactive)
-  (let ((tests-dir (find-python-tests-dir)))
-    (when-let* (( abs-test-dir (expand-file-name tests-dir))
-                (buffer-file-name abs-test-dir)
-                (pytest-command
-                 (let ((pytest-cmd-format-string "%2$s %3$s '%4$s'"))
-                   (pytest-get-command (expand-file-name tests-dir) nil))))
-      (realgud:pdb (format "pytest --pdb %s" tests-dir)))))
-
-(defun pytest-realgud-one (&optional flags)
-  (interactive)
-  (realgud:pdb (format "pytest --pdb %s %s"  (or flags "") (pytest-py-testable))))
-
-(defun pytest-realgud-module (&optional flags)
-  (interactive)
-  (realgud:pdb (format "pytest --pdb %s %s"  (or flags "") buffer-file-name)))
-
-
-(use-package pdb-capf
-  :straight t
-  :config
-  (add-hook 'pdb-track-mode-hook
-            (lambda ()
-              (add-hook 'completion-at-point-functions
-                        'pdb-capf nil t))))
+(defun my/enable-writing-multicursors ()
+  (unless (my/viewer-source-p) (evil-mc-mode 1)))
 
 (use-package evil-mc
   :straight t
+  :hook (text-mode . my/enable-writing-multicursors)
+  :commands evil-mc-mode
   :config
-  (global-evil-mc-mode 1)
   (evil-define-key 'visual evil-mc-key-map
     "A" #'evil-mc-make-cursor-in-visual-selection-end
     "I" #'evil-mc-make-cursor-in-visual-selection-beg))

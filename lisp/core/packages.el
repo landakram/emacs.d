@@ -52,7 +52,8 @@
 (use-package diminish
   :demand t
   :config
-  (global-auto-revert-mode)
+  (setq auto-revert-avoid-polling t)
+  (global-auto-revert-mode 1)
   (diminish 'auto-revert-mode))
 
 (use-package try

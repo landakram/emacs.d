@@ -153,8 +153,7 @@ to the current branch. Uses Magit."
                                             (setq blamer--block-render-p t)
                                             (blamer--clear-overlay)))
   (add-hook 'evil-normal-state-entry-hook (lambda ()
-                                            (setq blamer--block-render-p nil)
-                                            (copilot-clear-overlay)))
+                                            (setq blamer--block-render-p nil)))
 
   (defun blamer-callback-show-commit-diff (commit-info)
     (interactive)
@@ -173,14 +172,15 @@ to the current branch. Uses Magit."
         (browse-url (github-commit-url commit-hash)))))
 
   (defun blamer-commit-into-at-point ()
-    (let* ((line-number (line-number-at-pos))
-           (file-name (blamer--get-local-name (buffer-file-name)))
-           (blame-cmd-res (when file-name
-                            (apply #'vc-git--run-command-string file-name
-                                   (append blamer--git-blame-cmd
-                                           (list (format "%s,%s" line-number line-number))))))
-           (blame-cmd-res (when blame-cmd-res (butlast (split-string blame-cmd-res "\n")))))
-      (blamer--parse-line-info (first blame-cmd-res) nil)))
+    (require 'editor/browser-blame)
+    (let* ((line (line-number-at-pos nil t))
+           (default-directory (file-name-directory buffer-file-name))
+           (args (append (my/browser-blame-git)
+                         (list "--no-optional-locks" "--literal-pathspecs" "blame"
+                               "--porcelain" "-L" (format "%d,+1" line)
+                               "--" (file-name-nondirectory buffer-file-name))))
+           (hash (car (split-string (car (apply #'process-lines args))))))
+      (list :commit-hash hash)))
 
   (defun blamer-open-remote-at-point ()
     (interactive)

@@ -55,7 +55,9 @@ straight/
 
 # persistent editor state
 backups/
-projects/
+/projects
+/browser-cache/
+/bin/__pycache__/
 projectile-bookmarks.eld
 transient/
 undo-tree/

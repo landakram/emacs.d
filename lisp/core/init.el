@@ -54,5 +54,6 @@
                apps/gpt))
   (require app))
 
+(require 'editor/browser)
 (provide 'core/init)
 ;;; core/init.el ends here

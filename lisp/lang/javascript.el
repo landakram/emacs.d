@@ -9,16 +9,6 @@
   (setf js2-mode-show-parse-errors nil)
   (setf js2-strict-missing-semi-warning nil))
 
-(use-package add-node-modules-path
-  :straight t
-  :hook ((js-mode . add-node-modules-path)
-         (solidity-mode . add-node-modules-path)))
-
-(use-package nvm
-  :straight t
-  :hook ((js-mode . nvm-use-for)
-         (solidity-mode . nvm-use-for)))
-
  (defun js2-imenu-make-index ()
     (save-excursion
     (imenu--generic-function '(("describe" "\\s-*describe\\s-*([\"']\\(.+\\)[\"']\\s-*,.*" 1)
@@ -36,10 +26,6 @@
           (lambda ()
             (setq imenu-create-index-function 'js2-imenu-make-index)))
 
-
-(use-package js-comint
-  :defer t
-  :ensure t)
 
 (setq js-indent-level 2)
 
